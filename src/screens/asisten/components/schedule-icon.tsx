@@ -1,6 +1,15 @@
 import { Image } from 'expo-image';
 
 const assets = {
+  formChevron: require('../../../../assets/asisten/form-chevron.svg'),
+  formCalendar: require('../../../../assets/asisten/form-calendar.svg'),
+  formClock: require('../../../../assets/asisten/form-clock.svg'),
+  formPin: require('../../../../assets/asisten/form-pin.svg'),
+  formInfo: require('../../../../assets/asisten/form-info.svg'),
+  formCheck: require('../../../../assets/asisten/form-check.svg'),
+  formError: require('../../../../assets/asisten/form-error.svg'),
+  formChevronError: require('../../../../assets/asisten/form-chevron-error.svg'),
+  formClockError: require('../../../../assets/asisten/form-clock-error.svg'),
   filterCalendar: require('../../../../assets/asisten/filter-calendar.svg'),
   chevron: require('../../../../assets/asisten/chevron.svg'),
   detailArrow: require('../../../../assets/asisten/detail-arrow.svg'),

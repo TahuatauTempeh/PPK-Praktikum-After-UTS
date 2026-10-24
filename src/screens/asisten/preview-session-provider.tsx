@@ -1,14 +1,18 @@
-import { createContext, useContext, useState, type PropsWithChildren } from 'react';
+import { createContext, useContext, useRef, useState, type PropsWithChildren } from 'react';
 
 import {
   type AssistantSession, type AssistantAttendance, type AssistantParticipant,
-  previewSessions, previewAttendance, previewParticipants,
+  previewSessions, previewAttendance, previewParticipants, previewDate,
 } from './schedule-data';
 
+import { createSession, sessionChoices, type SessionForm } from './session-form';
+
 type SessionSource = {
+  scheduleDate: string;
   sessions: readonly AssistantSession[];
   attendance: readonly AssistantAttendance[];
   participants: readonly AssistantParticipant[];
+  addSession: (form: SessionForm) => AssistantSession;
   openSession: (id: string) => void;
   closeSession: (id: string) => void;
 };
@@ -17,6 +21,15 @@ const PreviewSessionContext = createContext<SessionSource | null>(null);
 /** Adapter demo sisi Asisten saja, bukan implementasi SessionContext bersama P1. */
 export function AssistantPreviewProvider({ children }: PropsWithChildren) {
   const [sessions, setSessions] = useState(previewSessions);
+  const [scheduleDate, setScheduleDate] = useState(previewDate);
+  const sequence = useRef(0);
+
+  function addSession(form: SessionForm) {
+    const session = createSession(form, sessionChoices(sessions), `session-${Date.now()}-${++sequence.current}`);
+    setSessions(current => [...current, session]);
+    setScheduleDate(session.date);
+    return session;
+  }
 
   function openSession(id: string) {
     setSessions(current => current.map(session => session.id === id && session.status === 'pending'
@@ -31,7 +44,7 @@ export function AssistantPreviewProvider({ children }: PropsWithChildren) {
 
   return (
     <PreviewSessionContext.Provider value={{
-      sessions, attendance: previewAttendance, participants: previewParticipants, openSession, closeSession,
+      scheduleDate, sessions, attendance: previewAttendance, participants: previewParticipants, openSession, closeSession, addSession,
     }}>
       {children}
     </PreviewSessionContext.Provider>

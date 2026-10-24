@@ -20,6 +20,7 @@ type Props = {
   sessions?: readonly AssistantSession[];
   attendance?: readonly AssistantAttendance[];
   date?: string;
+  feedback?: string;
   onAdd?: () => void;
   onManage?: (id: string) => void;
   onRecap?: () => void;
@@ -27,8 +28,9 @@ type Props = {
 
 export default function ScheduleScreen({
   sessions = previewSessions, attendance = previewAttendance, date = previewDate,
-  onAdd, onManage, onRecap,
+  onAdd, onManage, onRecap, feedback,
 }: Props) {
+  const [dismissed, setDismissed] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
   const daySessions = sessions.filter(session => session.date === date)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -37,13 +39,21 @@ export default function ScheduleScreen({
   // A date-only value is interpreted at midnight WIB, never in the device timezone.
   const activeDate = new Date(`${date}T00:00:00+07:00`);
   const dateOptions = { timeZone: 'Asia/Jakarta' };
-  const fullDate = new Intl.DateTimeFormat('id-ID', {
+  const dateFormatter = new Intl.DateTimeFormat('id-ID', {
     ...dateOptions, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  }).format(activeDate);
+  });
+  const fullDate = dateFormatter.format(activeDate);
+  const today = fullDate === dateFormatter.format(new Date());
 
   return (
     <AssistantScreen footer={<AssistantNavigation active="schedule" onRecap={onRecap} />}>
       <AssistantHeader greeting="Selamat pagi, Nadia" title="Jadwal asisten" initials="NA" identityLabel="Nadia, asisten (identitas contoh)" />
+      {feedback && !dismissed && <View style={styles.feedback}>
+        <AssistantText tone="accent" accessibilityLiveRegion="polite" style={styles.feedbackText}>{feedback}</AssistantText>
+        <Pressable accessibilityRole="button" accessibilityLabel="Tutup pesan" onPress={() => setDismissed(true)} style={styles.dismiss}>
+          <AssistantText tone="accent">Tutup</AssistantText>
+        </Pressable>
+      </View>}
       <View style={styles.dayBanner}>
         <View style={styles.dateBlock}>
           <AssistantText style={styles.day}>{new Intl.DateTimeFormat('id-ID', { ...dateOptions, day: 'numeric' }).format(activeDate)}</AssistantText>
@@ -51,7 +61,7 @@ export default function ScheduleScreen({
         </View>
         <View style={styles.agenda}>
           <AssistantText style={styles.dateLabel}>{fullDate}</AssistantText>
-          <AssistantText variant="caption" style={styles.white}>{daySessions.length} sesi hari ini · {openCount} sedang dibuka</AssistantText>
+          <AssistantText variant="caption" style={styles.white}>{daySessions.length} sesi{today ? ' hari ini' : ''} · {openCount} sedang dibuka</AssistantText>
         </View>
         <ScheduleIcon name="calendarWhite" size={21} />
       </View>
@@ -68,7 +78,7 @@ export default function ScheduleScreen({
         ))}
       </View>
       <View style={styles.listHeading}>
-        <AssistantText variant="sectionTitle" accessibilityRole="header">Sesi hari ini</AssistantText>
+        <AssistantText variant="sectionTitle" accessibilityRole="header">{today ? 'Sesi hari ini' : 'Sesi pada tanggal ini'}</AssistantText>
         <Pressable accessibilityRole="button" disabled={!onAdd} onPress={onAdd}
           accessibilityState={{ disabled: !onAdd }} accessibilityHint={!onAdd ? 'Penambahan sesi belum tersedia.' : undefined}
           style={[styles.add, !onAdd && styles.disabled]}>
@@ -112,6 +122,9 @@ export default function ScheduleScreen({
 }
 
 const styles = StyleSheet.create({
+  feedback: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, backgroundColor: theme.colors.primarySoft, borderRadius: theme.radius.control },
+  feedbackText: { flex: 1 },
+  dismiss: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'center' },
   dayBanner: { flexDirection: 'row', alignItems: 'center', padding: 18, gap: 16, minHeight: 88, backgroundColor: theme.colors.primary, borderRadius: theme.radius.card },
   dateBlock: { alignItems: 'center', minWidth: 42 },
   day: { fontSize: 32, lineHeight: 39, fontFamily: theme.fonts.bold, color: theme.colors.surface },
