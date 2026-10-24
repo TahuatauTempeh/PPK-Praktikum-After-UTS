@@ -8,7 +8,7 @@ type Props = { children: ReactNode; onCancel: () => void; onShow: () => void };
 
 export function AssistantSheet({ children, onCancel, onShow }: Props) {
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={onCancel} onShow={onShow}>
+    <Modal visible transparent animationType="none" onRequestClose={onCancel} onShow={onShow}>
       <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <Pressable accessibilityRole="button" accessibilityLabel="Tutup sheet" onPress={onCancel} style={StyleSheet.absoluteFill} />
         <SafeAreaView edges={['top', 'left', 'right']} style={styles.frame} pointerEvents="box-none">
