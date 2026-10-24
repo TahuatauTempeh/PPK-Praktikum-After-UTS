@@ -66,8 +66,7 @@ export default function AddSessionScreen({ onCancel, onSaved }: Props) {
           <View style={styles.footer}>
             <Pressable accessibilityRole="button" disabled={saving} accessibilityState={{ disabled: saving, busy: saving }} onPress={save}
               style={({ pressed }) => [styles.save, saving && styles.disabled, pressed && styles.pressed]}>
-              <ScheduleIcon name="formCheck" size={18} />
-              <AssistantText variant="label" style={styles.white}>{saving ? 'Menyimpan sesi…' : 'Simpan sesi'}</AssistantText>
+              <AssistantText variant="label" style={styles.white}>Tambahkan</AssistantText>
             </Pressable>
           </View>
         }>
