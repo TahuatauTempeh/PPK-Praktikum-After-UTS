@@ -83,9 +83,11 @@ export default function AddSessionScreen({ onCancel, onSaved }: Props) {
           <View style={styles.form}>
             <View style={styles.intro}>
               <AssistantText style={styles.title} accessibilityRole="header">Siapkan praktikum baru</AssistantText>
-              <AssistantText variant="caption" tone="secondary" accessibilityLiveRegion="polite" style={hasErrors && styles.errorText}>
-                {hasErrors ? 'Periksa kembali kolom yang ditandai.' : 'Lengkapi detail sesi. Semua kolom wajib diisi.'}
-              </AssistantText>
+              {hasErrors && (
+                <AssistantText variant="caption" tone="secondary" accessibilityLiveRegion="polite" style={styles.errorText}>
+                  Periksa kembali kolom yang ditandai.
+                </AssistantText>
+              )}
             </View>
             <SessionFormField label="Mata kuliah / praktikum" value={form.course} placeholder="Pilih mata kuliah" error={errors.course}
               icon={errors.course ? 'formChevronError' : 'formChevron'} onPress={() => setPicker('course')} />
