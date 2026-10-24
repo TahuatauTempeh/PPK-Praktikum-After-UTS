@@ -11,8 +11,11 @@ export type AssistantSession = {
   room: string;
   status: SessionStatus;
   participantIds: readonly string[];
+  closedAt?: string;
+  closedBy?: string;
 };
-export type AssistantAttendance = { sessionId: string; participantId: string };
+export type AssistantAttendance = { sessionId: string; participantId: string; recordedAt: string };
+export type AssistantParticipant = { id: string; name: string };
 export const statusLabels: Record<SessionStatus, string> = {
   pending: 'Belum dibuka', open: 'Dibuka', closed: 'Ditutup',
 };
@@ -32,7 +35,7 @@ export const previewSessions: readonly AssistantSession[] = [
   },
 ];
 export const previewAttendance: readonly AssistantAttendance[] = participants.slice(0, 4).map(
-  participantId => ({ sessionId: 'web-04', participantId }),
+  (participantId, index) => ({ sessionId: 'web-04', participantId, recordedAt: `2026-10-19T${['08:05:12', '08:07:38', '08:12:06', '08:18:45'][index]}+07:00` }),
 );
 
 export function countAttendance(session: AssistantSession, attendance: readonly AssistantAttendance[]) {
@@ -41,3 +44,12 @@ export function countAttendance(session: AssistantSession, attendance: readonly 
     item.sessionId === session.id && registered.has(item.participantId),
   ).map(item => item.participantId)).size;
 }
+
+export const previewParticipants: readonly AssistantParticipant[] = [
+  { id: '231110001', name: 'Aditya Pratama' },
+  { id: '231110002', name: 'Bunga Maharani' },
+  { id: '231110003', name: 'Citra Lestari' },
+  { id: '231110004', name: 'Dimas Saputra' },
+  { id: '231110005', name: 'Farhan Hakim' },
+  { id: '231110006', name: 'Intan Permata' },
+];

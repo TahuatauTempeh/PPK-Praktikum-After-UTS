@@ -10,6 +10,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { AssistantPreviewProvider } from '@/screens/asisten/preview-session-provider';
 import { assistantTheme } from '@/screens/asisten/theme';
 
 void SplashScreen.preventAutoHideAsync();
@@ -31,10 +32,12 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar style="dark" />
-      <Stack screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: assistantTheme.colors.background },
-      }} />
+      <AssistantPreviewProvider>
+        <Stack screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: assistantTheme.colors.background },
+        }} />
+      </AssistantPreviewProvider>
     </>
   );
 }
