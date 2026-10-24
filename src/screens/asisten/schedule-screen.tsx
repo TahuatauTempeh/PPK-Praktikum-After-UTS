@@ -112,11 +112,6 @@ export default function ScheduleScreen({
           </View>
         )}
       </View>
-      <View style={styles.note}>
-        <ScheduleIcon name="info" size={14} />
-        <AssistantText variant="caption" tone="secondary" style={styles.noteText}>Semua jadwal menggunakan Waktu Indonesia Barat.</AssistantText>
-      </View>
-      <AssistantText variant="caption" tone="secondary">Data contoh · identitas dan sesi mengikuti desain.</AssistantText>
     </AssistantScreen>
   );
 }
@@ -142,8 +137,6 @@ const styles = StyleSheet.create({
   addText: { fontSize: 13, fontFamily: theme.fonts.semibold },
   disabled: { opacity: 0.5 },
   list: { gap: 14 },
-  note: { flexDirection: 'row', gap: 7, alignItems: 'center' },
-  noteText: { flex: 1, fontSize: 11 },
   empty: { alignItems: 'center', paddingHorizontal: 22, paddingVertical: 32, gap: 16 },
   emptyIcon: { width: 84, height: 84, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.panel, backgroundColor: theme.colors.primarySoft },
   emptyTitle: { fontFamily: theme.fonts.bold, fontSize: 20, lineHeight: 27, textAlign: 'center' },
