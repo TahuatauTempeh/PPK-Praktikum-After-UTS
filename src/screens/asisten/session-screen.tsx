@@ -20,7 +20,7 @@ export default function SessionScreen({ id, onBack, onRecap }: Props) {
 
   const header = (
     <View style={styles.header}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Kembali ke jadwal" onPress={onBack}
+      <Pressable accessibilityRole="button" accessibilityLabel="Kembali" onPress={onBack}
         style={({ pressed }) => [styles.back, pressed && styles.pressed]}>
         <ScheduleIcon name="back" size={20} />
       </Pressable>

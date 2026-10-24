@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { AssistantNavigation } from './components/assistant-navigation';
 import { AssistantHeader } from './components/assistant-header';
 import { AssistantScreen } from './components/assistant-screen';
 import { AssistantText } from './components/assistant-text';
@@ -41,20 +42,7 @@ export default function ScheduleScreen({
   }).format(activeDate);
 
   return (
-    <AssistantScreen footer={
-      <View style={styles.navigation}>
-        <View accessibilityRole="tab" accessibilityState={{ selected: true }} style={[styles.tab, styles.activeTab]}>
-          <ScheduleIcon name="calendar" size={22} />
-          <AssistantText variant="caption" tone="accent" style={styles.tabLabel}>Jadwal</AssistantText>
-        </View>
-        <Pressable accessibilityRole="tab" accessibilityState={{ selected: false, disabled: !onRecap }}
-          accessibilityHint={!onRecap ? 'Rekap belum tersedia.' : undefined}
-          disabled={!onRecap} onPress={onRecap} style={[styles.tab, !onRecap && styles.disabled]}>
-          <ScheduleIcon name="chart" size={22} />
-          <AssistantText variant="caption" tone="secondary">Rekap</AssistantText>
-        </Pressable>
-      </View>
-    }>
+    <AssistantScreen footer={<AssistantNavigation active="schedule" onRecap={onRecap} />}>
       <AssistantHeader greeting="Selamat pagi, Nadia" title="Jadwal asisten" initials="NA" identityLabel="Nadia, asisten (identitas contoh)" />
       <View style={styles.dayBanner}>
         <View style={styles.dateBlock}>
@@ -143,10 +131,6 @@ const styles = StyleSheet.create({
   list: { gap: 14 },
   note: { flexDirection: 'row', gap: 7, alignItems: 'center' },
   noteText: { flex: 1, fontSize: 11 },
-  navigation: { flexDirection: 'row', gap: 52, paddingHorizontal: 42, paddingTop: 8, paddingBottom: 10, backgroundColor: theme.colors.surface, borderTopWidth: 1, borderTopColor: theme.colors.border, width: '100%', maxWidth: 600, alignSelf: 'center' },
-  tab: { flex: 1, minHeight: 54, alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 6, borderRadius: theme.radius.control },
-  activeTab: { backgroundColor: theme.colors.primarySoft },
-  tabLabel: { fontFamily: theme.fonts.bold },
   empty: { alignItems: 'center', paddingHorizontal: 22, paddingVertical: 32, gap: 16 },
   emptyIcon: { width: 84, height: 84, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.panel, backgroundColor: theme.colors.primarySoft },
   emptyTitle: { fontFamily: theme.fonts.bold, fontSize: 20, lineHeight: 27, textAlign: 'center' },

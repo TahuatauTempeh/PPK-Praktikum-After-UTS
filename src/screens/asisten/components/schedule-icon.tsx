@@ -1,6 +1,14 @@
 import { Image } from 'expo-image';
 
 const assets = {
+  filterCalendar: require('../../../../assets/asisten/filter-calendar.svg'),
+  chevron: require('../../../../assets/asisten/chevron.svg'),
+  detailArrow: require('../../../../assets/asisten/detail-arrow.svg'),
+  check: require('../../../../assets/asisten/check.svg'),
+  calendarInactive: require('../../../../assets/asisten/calendar-inactive.svg'),
+  chartActive: require('../../../../assets/asisten/chart-active.svg'),
+  chartEmpty: require('../../../../assets/asisten/chart-empty.svg'),
+  calendarButton: require('../../../../assets/asisten/calendar-button.svg'),
   back: require('../../../../assets/asisten/back.svg'),
   calendarSmall: require('../../../../assets/asisten/calendar-small.svg'),
   liveDot: require('../../../../assets/asisten/live-dot.svg'),
