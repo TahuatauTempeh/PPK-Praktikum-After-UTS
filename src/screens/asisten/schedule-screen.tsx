@@ -94,11 +94,11 @@ export default function ScheduleScreen({
             <AssistantText style={styles.emptyTitle} accessibilityRole="header">
               {daySessions.length === 0 ? 'Jadwal masih kosong' : 'Tidak ada sesi untuk filter ini'}
             </AssistantText>
-            <AssistantText tone="secondary" style={styles.center}>
-              {daySessions.length === 0
-                ? 'Belum ada sesi praktikum yang dijadwalkan. Tambahkan sesi pertama untuk mulai mencatat presensi.'
-                : `Belum ada sesi berstatus ${filter === 'all' ? 'apa pun' : statusLabels[filter].toLowerCase()} pada tanggal ini.`}
-            </AssistantText>
+            {daySessions.length === 0 && (
+              <AssistantText tone="secondary" style={styles.center}>
+                Belum ada sesi praktikum yang dijadwalkan. Tambahkan sesi pertama untuk mulai mencatat presensi.
+              </AssistantText>
+            )}
             {daySessions.length > 0 ? (
               <Pressable accessibilityRole="button" onPress={() => setFilter('all')} style={styles.reset}>
                 <AssistantText variant="label" style={styles.white}>Tampilkan semua sesi</AssistantText>
