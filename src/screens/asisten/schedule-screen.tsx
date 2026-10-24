@@ -1,0 +1,155 @@
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+
+import { AssistantHeader } from './components/assistant-header';
+import { AssistantScreen } from './components/assistant-screen';
+import { AssistantText } from './components/assistant-text';
+import { ScheduleCard } from './components/schedule-card';
+import { ScheduleIcon } from './components/schedule-icon';
+import {
+  type AssistantSession, type AssistantAttendance, type SessionStatus,
+  previewAttendance, previewDate, previewSessions, statusLabels,
+} from './schedule-data';
+import { assistantTheme as theme } from './theme';
+
+type Filter = 'all' | SessionStatus;
+const filters: readonly Filter[] = ['all', 'pending', 'open', 'closed'];
+
+type Props = {
+  sessions?: readonly AssistantSession[];
+  attendance?: readonly AssistantAttendance[];
+  date?: string;
+  onAdd?: () => void;
+  onManage?: (id: string) => void;
+  onRecap?: () => void;
+};
+
+export default function ScheduleScreen({
+  sessions = previewSessions, attendance = previewAttendance, date = previewDate,
+  onAdd, onManage, onRecap,
+}: Props) {
+  const [filter, setFilter] = useState<Filter>('all');
+  const daySessions = sessions.filter(session => session.date === date)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  const visible = daySessions.filter(session => filter === 'all' || session.status === filter);
+  const openCount = daySessions.filter(session => session.status === 'open').length;
+  // A date-only value is interpreted at midnight WIB, never in the device timezone.
+  const activeDate = new Date(`${date}T00:00:00+07:00`);
+  const dateOptions = { timeZone: 'Asia/Jakarta' };
+  const fullDate = new Intl.DateTimeFormat('id-ID', {
+    ...dateOptions, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  }).format(activeDate);
+
+  return (
+    <AssistantScreen footer={
+      <View style={styles.navigation}>
+        <View accessibilityRole="tab" accessibilityState={{ selected: true }} style={[styles.tab, styles.activeTab]}>
+          <ScheduleIcon name="calendar" size={22} />
+          <AssistantText variant="caption" tone="accent" style={styles.tabLabel}>Jadwal</AssistantText>
+        </View>
+        <Pressable accessibilityRole="tab" accessibilityState={{ selected: false, disabled: !onRecap }}
+          accessibilityHint={!onRecap ? 'Rekap belum tersedia.' : undefined}
+          disabled={!onRecap} onPress={onRecap} style={[styles.tab, !onRecap && styles.disabled]}>
+          <ScheduleIcon name="chart" size={22} />
+          <AssistantText variant="caption" tone="secondary">Rekap</AssistantText>
+        </Pressable>
+      </View>
+    }>
+      <AssistantHeader greeting="Selamat pagi, Nadia" title="Jadwal asisten" initials="NA" identityLabel="Nadia, asisten (identitas contoh)" />
+      <View style={styles.dayBanner}>
+        <View style={styles.dateBlock}>
+          <AssistantText style={styles.day}>{new Intl.DateTimeFormat('id-ID', { ...dateOptions, day: 'numeric' }).format(activeDate)}</AssistantText>
+          <AssistantText style={styles.month}>{new Intl.DateTimeFormat('id-ID', { ...dateOptions, month: 'short' }).format(activeDate).toUpperCase()}</AssistantText>
+        </View>
+        <View style={styles.agenda}>
+          <AssistantText style={styles.dateLabel}>{fullDate}</AssistantText>
+          <AssistantText variant="caption" style={styles.white}>{daySessions.length} sesi hari ini · {openCount} sedang dibuka</AssistantText>
+        </View>
+        <ScheduleIcon name="calendarWhite" size={21} />
+      </View>
+      <View style={styles.filters} accessibilityLabel="Filter status sesi">
+        {filters.map(value => (
+          <Pressable key={value} accessibilityRole="button"
+            accessibilityState={{ selected: value === filter }}
+            onPress={() => setFilter(value)}
+            style={({ pressed }) => [styles.filter, value === filter && styles.selectedFilter, pressed && styles.pressed]}>
+            <AssistantText variant="caption" style={[styles.filterLabel, value === filter && styles.white]} tone="secondary">
+              {value === 'all' ? 'Semua' : statusLabels[value]}
+            </AssistantText>
+          </Pressable>
+        ))}
+      </View>
+      <View style={styles.listHeading}>
+        <AssistantText variant="sectionTitle" accessibilityRole="header">Sesi hari ini</AssistantText>
+        <Pressable accessibilityRole="button" disabled={!onAdd} onPress={onAdd}
+          accessibilityState={{ disabled: !onAdd }} accessibilityHint={!onAdd ? 'Penambahan sesi belum tersedia.' : undefined}
+          style={[styles.add, !onAdd && styles.disabled]}>
+          <ScheduleIcon name="plus" size={16} />
+          <AssistantText tone="accent" style={styles.addText}>Tambah sesi</AssistantText>
+        </Pressable>
+      </View>
+      <View style={styles.list} accessibilityLiveRegion="polite">
+        {visible.map(session => <ScheduleCard key={session.id} session={session} attendance={attendance} onManage={onManage} />)}
+        {visible.length === 0 && (
+          <View style={styles.empty}>
+            <View style={styles.emptyIcon}><ScheduleIcon name="calendarPlus" size={34} /></View>
+            <AssistantText style={styles.emptyTitle} accessibilityRole="header">
+              {daySessions.length === 0 ? 'Jadwal masih kosong' : 'Tidak ada sesi untuk filter ini'}
+            </AssistantText>
+            <AssistantText tone="secondary" style={styles.center}>
+              {daySessions.length === 0
+                ? 'Belum ada sesi praktikum yang dijadwalkan. Tambahkan sesi pertama untuk mulai mencatat presensi.'
+                : `Belum ada sesi berstatus ${filter === 'all' ? 'apa pun' : statusLabels[filter].toLowerCase()} pada tanggal ini.`}
+            </AssistantText>
+            {daySessions.length > 0 ? (
+              <Pressable accessibilityRole="button" onPress={() => setFilter('all')} style={styles.reset}>
+                <AssistantText variant="label" style={styles.white}>Tampilkan semua sesi</AssistantText>
+              </Pressable>
+            ) : (
+              <Pressable accessibilityRole="button" disabled={!onAdd} onPress={onAdd}
+                accessibilityState={{ disabled: !onAdd }} style={[styles.reset, !onAdd && styles.disabled]}>
+                <AssistantText variant="label" style={styles.white}>Tambah sesi pertama</AssistantText>
+              </Pressable>
+            )}
+          </View>
+        )}
+      </View>
+      <View style={styles.note}>
+        <ScheduleIcon name="info" size={14} />
+        <AssistantText variant="caption" tone="secondary" style={styles.noteText}>Semua jadwal menggunakan Waktu Indonesia Barat.</AssistantText>
+      </View>
+      <AssistantText variant="caption" tone="secondary">Data contoh · identitas dan sesi mengikuti desain.</AssistantText>
+    </AssistantScreen>
+  );
+}
+
+const styles = StyleSheet.create({
+  dayBanner: { flexDirection: 'row', alignItems: 'center', padding: 18, gap: 16, minHeight: 88, backgroundColor: theme.colors.primary, borderRadius: theme.radius.card },
+  dateBlock: { alignItems: 'center', minWidth: 42 },
+  day: { fontSize: 32, lineHeight: 39, fontFamily: theme.fonts.bold, color: theme.colors.surface },
+  month: { fontSize: 10, lineHeight: 14, fontFamily: theme.fonts.semibold, color: theme.colors.surface },
+  agenda: { flex: 1, gap: 7 },
+  dateLabel: { fontFamily: theme.fonts.semibold, fontSize: 15, lineHeight: 21, color: theme.colors.surface },
+  white: { color: theme.colors.surface },
+  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  filter: { minHeight: 44, paddingHorizontal: 12, justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.pill, backgroundColor: theme.colors.surface },
+  selectedFilter: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+  filterLabel: { fontFamily: theme.fonts.semibold },
+  pressed: { opacity: 0.7 },
+  listHeading: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  add: { flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 44 },
+  addText: { fontSize: 13, fontFamily: theme.fonts.semibold },
+  disabled: { opacity: 0.5 },
+  list: { gap: 14 },
+  note: { flexDirection: 'row', gap: 7, alignItems: 'center' },
+  noteText: { flex: 1, fontSize: 11 },
+  navigation: { flexDirection: 'row', gap: 52, paddingHorizontal: 42, paddingTop: 8, paddingBottom: 10, backgroundColor: theme.colors.surface, borderTopWidth: 1, borderTopColor: theme.colors.border, width: '100%', maxWidth: 600, alignSelf: 'center' },
+  tab: { flex: 1, minHeight: 54, alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 6, borderRadius: theme.radius.control },
+  activeTab: { backgroundColor: theme.colors.primarySoft },
+  tabLabel: { fontFamily: theme.fonts.bold },
+  empty: { alignItems: 'center', paddingHorizontal: 22, paddingVertical: 32, gap: 16 },
+  emptyIcon: { width: 84, height: 84, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.panel, backgroundColor: theme.colors.primarySoft },
+  emptyTitle: { fontFamily: theme.fonts.bold, fontSize: 20, lineHeight: 27, textAlign: 'center' },
+  center: { textAlign: 'center' },
+  reset: { backgroundColor: theme.colors.primary, borderRadius: theme.radius.control, paddingHorizontal: 18, paddingVertical: 14, minHeight: 50, alignSelf: 'stretch', alignItems: 'center' },
+});

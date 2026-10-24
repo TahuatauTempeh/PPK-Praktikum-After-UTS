@@ -1,15 +1,16 @@
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren, ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { assistantTheme as theme } from '../theme';
 
-export function AssistantScreen({ children }: PropsWithChildren) {
+export function AssistantScreen({ children, footer }: PropsWithChildren<{ footer?: ReactNode }>) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>{children}</View>
       </ScrollView>
+      {footer}
     </SafeAreaView>
   );
 }

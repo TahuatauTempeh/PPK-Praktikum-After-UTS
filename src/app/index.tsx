@@ -1,1 +1,1 @@
-export { default } from '@/screens/asisten/baseline-screen';
+export { default } from '@/screens/asisten/schedule-screen';
