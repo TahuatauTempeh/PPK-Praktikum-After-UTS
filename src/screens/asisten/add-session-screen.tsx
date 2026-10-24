@@ -109,10 +109,6 @@ export default function AddSessionScreen({ onCancel, onSaved }: Props) {
             </View>
             <SessionFormField label="Lokasi / ruangan" value={form.room} placeholder="Contoh: Lab Komputer 2" error={errors.room}
               icon="formPin" onChangeText={value => change('room', value)} />
-            <View style={styles.info}>
-              <ScheduleIcon name="formInfo" size={16} />
-              <AssistantText variant="caption" tone="accent" style={styles.infoText}>Sesi baru akan berstatus Belum dibuka. Buka sesi melalui jadwal saat praktikum dimulai.</AssistantText>
-            </View>
             {saveError !== '' && <AssistantText accessibilityRole="alert" style={styles.errorText}>{saveError}</AssistantText>}
           </View>
         </AssistantScreen>
@@ -134,8 +130,6 @@ const styles = StyleSheet.create({
   title: { fontFamily: theme.fonts.bold, fontSize: 24, lineHeight: 31 },
   times: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   timeField: { flexGrow: 1, flexBasis: 140 },
-  info: { flexDirection: 'row', gap: 10, padding: 13, borderRadius: theme.radius.control, backgroundColor: theme.colors.primarySoft },
-  infoText: { flex: 1 },
   errorText: { color: theme.colors.error },
   footer: { width: '100%', maxWidth: 600, alignSelf: 'center', paddingHorizontal: 24, paddingVertical: 16, borderTopWidth: 1, borderTopColor: theme.colors.border, backgroundColor: theme.colors.surface },
   save: { minHeight: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 18, paddingVertical: 14, borderRadius: theme.radius.control, backgroundColor: theme.colors.primary },
