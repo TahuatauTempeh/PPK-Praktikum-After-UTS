@@ -1,6 +1,6 @@
 import { useRef, useState, type ComponentRef } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { AssistantSheet } from './assistant-sheet';
 
 import { previewDate } from '../schedule-data';
 import { type SessionChoices } from '../session-form';
@@ -33,91 +33,85 @@ export function SessionInputPicker({ kind, value, choices, onPick, onCancel }: P
   const [hour, minute] = draft.split(':');
 
   return (
-    <Modal visible transparent animationType="none" onRequestClose={onCancel} onShow={() => cancelRef.current?.focus()}>
-      <SafeAreaView style={styles.overlay}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <View role="dialog" accessibilityViewIsModal accessibilityLabel={titles[kind]} style={styles.dialog}>
-            <AssistantText style={styles.title} accessibilityRole="header">{titles[kind]}</AssistantText>
-            {kind === 'course' || kind === 'className' ? (
-              <View style={styles.options} accessibilityRole="radiogroup">
-                {options.map(option => <Pressable key={option.name} accessibilityRole="radio"
-                  accessibilityState={{ checked: option.name === value }} onPress={() => onPick(option.name)}
-                  style={({ pressed }) => [styles.option, option.name === value && styles.selected, pressed && styles.pressed]}>
-                  <AssistantText variant="label">{option.name}</AssistantText>
-                  {option.note !== '' && <AssistantText variant="caption" tone="secondary">{option.note}</AssistantText>}
-                </Pressable>)}
-                {options.length === 0 && <AssistantText tone="secondary">Belum ada pilihan tersedia.</AssistantText>}
+    <AssistantSheet onCancel={onCancel} onShow={() => cancelRef.current?.focus()}>
+      <View role="dialog" accessibilityViewIsModal accessibilityLabel={titles[kind]} style={styles.dialog}>
+        <AssistantText style={styles.title} accessibilityRole="header">{titles[kind]}</AssistantText>
+        {kind === 'course' || kind === 'className' ? (
+          <View style={styles.options} accessibilityRole="radiogroup">
+            {options.map(option => <Pressable key={option.name} accessibilityRole="radio"
+              accessibilityState={{ checked: option.name === value }} onPress={() => onPick(option.name)}
+              style={({ pressed }) => [styles.option, option.name === value && styles.selected, pressed && styles.pressed]}>
+              <AssistantText variant="label">{option.name}</AssistantText>
+              {option.note !== '' && <AssistantText variant="caption" tone="secondary">{option.note}</AssistantText>}
+            </Pressable>)}
+            {options.length === 0 && <AssistantText tone="secondary">Belum ada pilihan tersedia.</AssistantText>}
+          </View>
+        ) : kind === 'date' ? (
+          <>
+            <View style={styles.monthHeader}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Bulan sebelumnya" onPress={() => changeMonth(-1)} style={styles.monthButton}>
+                <AssistantText variant="label" tone="accent">‹</AssistantText>
+              </Pressable>
+              <AssistantText variant="label" style={styles.monthLabel}>{new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(month)}</AssistantText>
+              <Pressable accessibilityRole="button" accessibilityLabel="Bulan berikutnya" onPress={() => changeMonth(1)} style={styles.monthButton}>
+                <AssistantText variant="label" tone="accent">›</AssistantText>
+              </Pressable>
+            </View>
+            <ScrollView horizontal contentContainerStyle={styles.calendarScroll}>
+              <View style={styles.calendar}>
+                {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map(day => <View key={day} style={styles.day}>
+                  <AssistantText variant="caption" tone="secondary">{day}</AssistantText>
+                </View>)}
+                {Array.from({ length: offset }, (_, index) => <View key={`blank-${index}`} style={styles.day} />)}
+                {Array.from({ length: days }, (_, index) => {
+                  const date = `${month.getUTCFullYear()}-${pad(month.getUTCMonth() + 1)}-${pad(index + 1)}`;
+                  return <Pressable key={date} accessibilityRole="button" accessibilityLabel={new Intl.DateTimeFormat('id-ID', {
+                    timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                  }).format(new Date(`${date}T00:00:00Z`))} accessibilityState={{ selected: draft === date }}
+                    onPress={() => setDraft(date)} style={[styles.day, draft === date && styles.selected]}>
+                    <AssistantText tone={draft === date ? 'accent' : 'primary'}>{index + 1}</AssistantText>
+                  </Pressable>;
+                })}
               </View>
-            ) : kind === 'date' ? (
-              <>
-                <View style={styles.monthHeader}>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Bulan sebelumnya" onPress={() => changeMonth(-1)} style={styles.monthButton}>
-                    <AssistantText variant="label" tone="accent">‹</AssistantText>
-                  </Pressable>
-                  <AssistantText variant="label" style={styles.monthLabel}>{new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(month)}</AssistantText>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Bulan berikutnya" onPress={() => changeMonth(1)} style={styles.monthButton}>
-                    <AssistantText variant="label" tone="accent">›</AssistantText>
-                  </Pressable>
-                </View>
-                <ScrollView horizontal contentContainerStyle={styles.calendarScroll}>
-                  <View style={styles.calendar}>
-                    {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map(day => <View key={day} style={styles.day}>
-                      <AssistantText variant="caption" tone="secondary">{day}</AssistantText>
-                    </View>)}
-                    {Array.from({ length: offset }, (_, index) => <View key={`blank-${index}`} style={styles.day} />)}
-                    {Array.from({ length: days }, (_, index) => {
-                      const date = `${month.getUTCFullYear()}-${pad(month.getUTCMonth() + 1)}-${pad(index + 1)}`;
-                      return <Pressable key={date} accessibilityRole="button" accessibilityLabel={new Intl.DateTimeFormat('id-ID', {
-                        timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-                      }).format(new Date(`${date}T00:00:00Z`))} accessibilityState={{ selected: draft === date }}
-                        onPress={() => setDraft(date)} style={[styles.day, draft === date && styles.selected]}>
-                        <AssistantText tone={draft === date ? 'accent' : 'primary'}>{index + 1}</AssistantText>
+            </ScrollView>
+            <AssistantText variant="caption" tone="secondary">Pilihan: {new Intl.DateTimeFormat('id-ID', { timeZone: 'UTC', dateStyle: 'full' }).format(new Date(`${draft}T00:00:00Z`))}</AssistantText>
+          </>
+        ) : time ? (
+          <>
+            <AssistantText variant="detailTitle" tone="accent" style={styles.timePreview}>{hour}.{minute} WIB</AssistantText>
+            <View style={styles.timeColumns}>
+              {(['Jam', 'Menit'] as const).map((label, column) => (
+                <View key={label} style={styles.timeColumn}>
+                  <AssistantText variant="caption" tone="secondary" style={styles.timePreview}>{label}</AssistantText>
+                  <ScrollView style={styles.timeList} ref={node => { timeLists.current[column] = node; }}
+                    onContentSizeChange={() => timeLists.current[column]?.scrollTo({ y: Number(column === 0 ? hour : minute) * 44, animated: false })}>
+                    {Array.from({ length: column === 0 ? 24 : 60 }, (_, index) => {
+                      const part = pad(index);
+                      const selected = part === (column === 0 ? hour : minute);
+                      return <Pressable key={part} accessibilityRole="button" accessibilityLabel={`${label} ${part}`}
+                        accessibilityState={{ selected }} onPress={() => setDraft(column === 0 ? `${part}:${minute}` : `${hour}:${part}`)}
+                        style={[styles.timeOption, selected && styles.selected]}>
+                        <AssistantText tone={selected ? 'accent' : 'primary'}>{part}</AssistantText>
                       </Pressable>;
                     })}
-                  </View>
-                </ScrollView>
-                <AssistantText variant="caption" tone="secondary">Pilihan: {new Intl.DateTimeFormat('id-ID', { timeZone: 'UTC', dateStyle: 'full' }).format(new Date(`${draft}T00:00:00Z`))}</AssistantText>
-              </>
-            ) : time ? (
-              <>
-                <AssistantText variant="detailTitle" tone="accent" style={styles.timePreview}>{hour}.{minute} WIB</AssistantText>
-                <View style={styles.timeColumns}>
-                  {(['Jam', 'Menit'] as const).map((label, column) => (
-                    <View key={label} style={styles.timeColumn}>
-                      <AssistantText variant="caption" tone="secondary" style={styles.timePreview}>{label}</AssistantText>
-                      <ScrollView style={styles.timeList} ref={node => { timeLists.current[column] = node; }}
-                        onContentSizeChange={() => timeLists.current[column]?.scrollTo({ y: Number(column === 0 ? hour : minute) * 44, animated: false })}>
-                        {Array.from({ length: column === 0 ? 24 : 60 }, (_, index) => {
-                          const part = pad(index);
-                          const selected = part === (column === 0 ? hour : minute);
-                          return <Pressable key={part} accessibilityRole="button" accessibilityLabel={`${label} ${part}`}
-                            accessibilityState={{ selected }} onPress={() => setDraft(column === 0 ? `${part}:${minute}` : `${hour}:${part}`)}
-                            style={[styles.timeOption, selected && styles.selected]}>
-                            <AssistantText tone={selected ? 'accent' : 'primary'}>{part}</AssistantText>
-                          </Pressable>;
-                        })}
-                      </ScrollView>
-                    </View>
-                  ))}
+                  </ScrollView>
                 </View>
-              </>
-            ) : null}
-            {(kind === 'date' || time) && <Pressable accessibilityRole="button" onPress={() => onPick(draft)} style={[styles.button, styles.primary]}>
-              <AssistantText variant="label" style={styles.white}>Gunakan {kind === 'date' ? 'tanggal' : 'waktu'}</AssistantText>
-            </Pressable>}
-            <Pressable ref={cancelRef} accessibilityRole="button" onPress={onCancel} style={styles.button}>
-              <AssistantText variant="label" tone="accent">Batal</AssistantText>
-            </Pressable>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </Modal>
+              ))}
+            </View>
+          </>
+        ) : null}
+        {(kind === 'date' || time) && <Pressable accessibilityRole="button" onPress={() => onPick(draft)} style={[styles.button, styles.primary]}>
+          <AssistantText variant="label" style={styles.white}>Gunakan {kind === 'date' ? 'tanggal' : 'waktu'}</AssistantText>
+        </Pressable>}
+        <Pressable ref={cancelRef} accessibilityRole="button" onPress={onCancel} style={styles.button}>
+          <AssistantText variant="label" tone="accent">Batal</AssistantText>
+        </Pressable>
+      </View>
+    </AssistantSheet>
   );
 }
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: 'rgba(18,23,44,0.5)' },
-  scroll: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 16 },
-  dialog: { width: '100%', maxWidth: 440, padding: 16, gap: 16, borderRadius: 22, backgroundColor: theme.colors.surface },
+  dialog: { width: '100%', padding: 16, gap: 16, backgroundColor: theme.colors.surface },
   title: { fontSize: 23, lineHeight: 30, fontFamily: theme.fonts.bold },
   options: { gap: 10 },
   option: { padding: 12, gap: 5, minHeight: 48, justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.control },
