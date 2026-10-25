@@ -16,7 +16,7 @@
 - Tidak ada `Co-Authored-By` atau atribusi AI pada commit.
 - Shell sesi ini zsh: kutip setiap path yang mengandung `[id]` atau `(tabs)`.
 - Jalankan semua perintah dari akar repo.
-- Typed routes wajib diregenerasi sebelum `tsc` dijalankan setelah rute berubah.
+- Typed routes wajib diregenerasi sebelum `tsc` saat rute dipindah atau ditambah. Saat hanya menghapus satu rute, entri lama yang tak terpakai tidak menggagalkan `tsc`, jadi regenerasi tidak wajib.
 - Rute akhir yang benar: `/asisten`, `/asisten/rekap`, `/asisten/sesi/[id]`. Rute `/` dibiarkan kosong.
 - Verifikasi memakai perintah nyata dari spec §7, bukan asumsi.
 
@@ -39,6 +39,7 @@ Tidak ada tugas paralel. Semua tugas menyentuh berkas yang sama atau bergantung 
 | `src/screens/asisten/preview-session-provider.tsx` | Sumber data sementara; tanpa `addSession` |
 | `src/screens/asisten/schedule-screen.tsx` | Jadwal asisten; tanpa tombol tambah sesi dan tanpa banner feedback |
 | `src/components/app-tabs.tsx`, `app-tabs.web.tsx` | Dihapus; template mati yang memakai `href="/"` |
+| `src/app/asisten/_layout.tsx` | Sengaja belum dibuat. Isinya nanti `RoleGuard('asisten')` yang butuh `SessionContext` P1 (spec §3 keputusan 6). |
 
 ---
 
@@ -248,7 +249,7 @@ Expected: `tsc=0`, `lint=0`. Tidak perlu regenerasi typed routes karena tidak ad
 - [ ] **Step 9: Commit**
 
 ```bash
-git add -A
+git add -A -- src
 git commit -m "feat: revoke add session flow from assistant screens"
 ```
 
@@ -275,13 +276,13 @@ git commit -m "feat: revoke add session flow from assistant screens"
 Run:
 ```bash
 mkdir -p 'src/app/asisten/(tabs)' 'src/app/asisten/sesi'
-git mv 'src/app/(tabs)/index.tsx' 'src/app/asisten/(tabs)/index.tsx'
-git mv 'src/app/(tabs)/rekap.tsx' 'src/app/asisten/(tabs)/rekap.tsx'
-git mv 'src/app/(tabs)/_layout.tsx' 'src/app/asisten/(tabs)/_layout.tsx'
-git mv 'src/app/sesi/[id].tsx' 'src/app/asisten/sesi/[id].tsx'
+git mv -v 'src/app/(tabs)/index.tsx' 'src/app/asisten/(tabs)/index.tsx'
+git mv -v 'src/app/(tabs)/rekap.tsx' 'src/app/asisten/(tabs)/rekap.tsx'
+git mv -v 'src/app/(tabs)/_layout.tsx' 'src/app/asisten/(tabs)/_layout.tsx'
+git mv -v 'src/app/sesi/[id].tsx' 'src/app/asisten/sesi/[id].tsx'
 rmdir 'src/app/(tabs)' 'src/app/sesi'
 ```
-Expected: empat baris rename dari `git mv`, tanpa error glob.
+Expected: empat baris berawalan `renamed:` karena `-v`, tanpa error glob, exit 0.
 
 - [ ] **Step 2: Perbarui path di layout tab**
 
@@ -419,17 +420,38 @@ Run:
 ```bash
 npx expo start --web --port 8099 > /tmp/expo-web.log 2>&1 &
 sleep 20
-for path in /asisten /asisten/rekap /asisten/sesi/web-04 /; do
-  printf '%s ' "$path"
-  curl -s -o /dev/null -w '%{http_code}\n' "http://127.0.0.1:8099$path"
+for route in /asisten /asisten/rekap /asisten/sesi/web-04 /; do
+  printf '%s ' "$route"
+  curl -s -o /dev/null -w '%{http_code}\n' "http://127.0.0.1:8099$route"
 done
 ```
-Expected: tiga rute pertama menghasilkan `200`, `/` menghasilkan `404`. Status code adalah bukti yang dipakai: HTML dari dev server dirender di klien, jadi teks "Unmatched Route" tidak muncul lewat `curl` (sudah diuji pada 2026-10-25). Pemeriksaan tampilan dilakukan pada langkah browser dan native. Hentikan server setelah selesai.
+Jangan memakai `path` sebagai nama variabel loop. Di zsh `path` adalah array dari `PATH`, sehingga `curl` tidak ditemukan dan loop tampak lolos tanpa keluaran.
 
-- [ ] **Step 10: Commit**
+Expected: tiga rute pertama menghasilkan `200`, `/` menghasilkan `404`. Status code adalah bukti yang dipakai: HTML dari dev server dirender di klien, jadi teks "Unmatched Route" tidak muncul lewat `curl` (sudah diuji pada 2026-10-25). Pemeriksaan tampilan dilakukan di Step 10 (browser) dan Task 3 (native). Hentikan server setelah selesai.
+
+- [ ] **Step 10: Cek tampilan di browser (server dari Step 9 masih hidup)**
+
+Chrome headless dipakai karena sudah terbukti merender layar Expo web (diuji pada 2026-10-25).
 
 ```bash
-git add -A
+check_dom() {
+  local name=$(echo "$1" | tr '/' '_')
+  google-chrome --headless=new --disable-gpu --no-sandbox --virtual-time-budget=9000 --dump-dom "http://127.0.0.1:8099$1" > "/tmp/p3-dom-$name.html" 2>/dev/null
+  echo "$1 tabs=$(grep -c 'role="tablist"' "/tmp/p3-dom-$name.html")"
+}
+check_dom /asisten
+check_dom /asisten/rekap
+check_dom /asisten/sesi/web-04
+grep -c 'Jadwal asisten' /tmp/p3-dom-_asisten.html
+grep -c 'Rekap presensi' /tmp/p3-dom-_asisten_rekap.html
+grep -c 'Kelola sesi' /tmp/p3-dom-_asisten_sesi_web-04.html
+```
+Expected: `/asisten tabs=1` dan `grep -c 'Jadwal asisten'` menghasilkan `1`; `/asisten/rekap tabs=1` dan `grep -c 'Rekap presensi'` menghasilkan `1`; `/asisten/sesi/web-04 tabs=0` dan `grep -c 'Kelola sesi'` menghasilkan `1`. `tabs=0` membuktikan bar bawah tidak tampil di layar kelola sesi. Catat angka yang benar-benar keluar; jangan menyatakan lulus bila `tabs` tidak sesuai.
+
+- [ ] **Step 11: Commit**
+
+```bash
+git add -A -- src
 git commit -m "feat: move assistant routes under /asisten"
 ```
 
@@ -455,15 +477,20 @@ adb reverse tcp:8081 tcp:8081
 ```
 Expected: satu baris `emulator-5554` dengan status `device`. Dev build `com.ppk.presensipraktikum` sudah terpasang.
 
+Bila tidak ada emulator atau perangkat, hentikan Task 3. Laporkan langkah native belum dijalankan dan jangan nyatakan pekerjaan selesai (spec §7 langkah 9).
+
 - [ ] **Step 2: Jalankan Metro untuk dev client**
 
 Run:
 ```bash
+ss -ltnp | rg ':8081' || true
+lsof -ti tcp:8081 | xargs -r kill
+sleep 2
 npx expo start --dev-client --port 8081 > /tmp/expo-dev.log 2>&1 &
 sleep 15
 tail -5 /tmp/expo-dev.log
 ```
-Expected: Metro siap; tidak ada error bundling.
+Expected: `ss` boleh menampilkan proses `expo run:android` lama pada port 8081; perintah `lsof` menghentikannya supaya Metro baru melayani kode saat ini. Metro siap tanpa error bundling.
 
 - [ ] **Step 3: Buka jadwal asisten dan ambil bukti**
 
@@ -484,44 +511,64 @@ adb shell uiautomator dump /sdcard/ui.xml >/dev/null && adb shell cat /sdcard/ui
 ```
 Bila XML tidak memuat teks, baca `/tmp/p3-native/01-jadwal.png` dan tentukan koordinat tab Rekap secara visual. Lalu:
 ```bash
+before=$(adb shell pidof com.ppk.presensipraktikum)
 adb shell input tap <X> <Y>
 sleep 3
 adb exec-out screencap -p > /tmp/p3-native/02-rekap.png
-adb shell pidof com.ppk.presensipraktikum
+after=$(adb shell pidof com.ppk.presensipraktikum)
+echo "before=$before after=$after"
 ```
 Expected: layar rekap tampil, dan PID aplikasi sama dengan sebelum tap. Ini membuktikan `navigate('/asisten/rekap')` berjalan tanpa memuat ulang proses.
 
-Ulangi tap pada tab Jadwal, simpan `/tmp/p3-native/03-kembali-jadwal.png`.
-Expected: kembali ke jadwal dengan PID sama. Ini bukti `dismissTo('/asisten')` bekerja.
+Ulangi tap pada tab Jadwal dengan pola yang sama:
+```bash
+before2=$(adb shell pidof com.ppk.presensipraktikum)
+adb shell input tap <X2> <Y2>
+sleep 3
+adb exec-out screencap -p > /tmp/p3-native/03-kembali-jadwal.png
+after2=$(adb shell pidof com.ppk.presensipraktikum)
+echo "before2=$before2 after2=$after2"
+```
+Expected: kembali ke jadwal dan `before2` sama dengan `after2`. Ini bukti `dismissTo('/asisten')` bekerja tanpa memuat ulang proses.
 
-- [ ] **Step 5: Alur B — detail sesi tertutup lalu tombol Rekap**
+- [ ] **Step 5: Alur B — kartu jadwal membuka detail (onManage)**
 
-Sesi `closed` tidak tampil di jadwal hari ini (`previewDate = 2026-10-19`), jadi buka lewat deep link:
+Mulai dari layar jadwal pada Step 3. Ketuk aksi pada kartu sesi `web-04` yang berlabel "Pantau sesi" karena sesinya berstatus Dibuka. Tentukan koordinat dengan pola yang sama seperti Step 4, lalu:
+```bash
+adb shell input tap <X3> <Y3>
+sleep 3
+adb exec-out screencap -p > /tmp/p3-native/04-detail-dari-kartu.png
+```
+Expected: judul "Kelola sesi" dan status Dibuka. Ini bukti `onManage` memakai path `/asisten/sesi/[id]`.
+
+- [ ] **Step 6: Alur B2 — detail sesi tertutup lalu tombol Rekap (onRecap)**
+
+Tidak ada sesi `closed` pada `previewDate` 2026-10-19: `web-03` bertanggal 2026-10-12 dan `web-02` 2026-10-05 (`schedule-data.ts:29,33`). Jadi detail sesi tertutup dibuka lewat deep link:
 ```bash
 adb shell am start -W -a android.intent.action.VIEW -d 'presensipraktikum:///asisten/sesi/web-03' com.ppk.presensipraktikum
 sleep 5
-adb exec-out screencap -p > /tmp/p3-native/04-detail-tertutup.png
+adb exec-out screencap -p > /tmp/p3-native/05-detail-tertutup.png
 ```
-Expected: judul "Kelola sesi", status Ditutup, tombol footer "Lihat rekap sesi". Ketuk tombol itu, lalu simpan `/tmp/p3-native/05-rekap-dari-detail.png`.
+Expected: judul "Kelola sesi", status Ditutup, tombol footer "Lihat rekap sesi". Ketuk tombol itu, lalu simpan `/tmp/p3-native/06-rekap-dari-detail.png`.
 Expected: layar rekap menampilkan sesi `web-03` sebagai pilihan awal. Ini bukti `navigate('/asisten/rekap')` membawa parameter `sesi`.
 
-- [ ] **Step 6: Alur C — cold open detail lalu tombol kembali**
+- [ ] **Step 7: Alur C — cold open detail lalu tombol kembali**
 
 Run:
 ```bash
 adb shell am force-stop com.ppk.presensipraktikum
 adb shell am start -W -a android.intent.action.VIEW -d 'presensipraktikum:///asisten/sesi/web-04' com.ppk.presensipraktikum
 sleep 6
-adb exec-out screencap -p > /tmp/p3-native/06-detail-web04.png
+adb exec-out screencap -p > /tmp/p3-native/07-detail-web04.png
 ```
-Expected: detail sesi `web-04` tampil. Ketuk tombol kembali (label aksesibilitas "Kembali") lalu simpan `/tmp/p3-native/07-kembali-ke-jadwal.png`.
+Expected: detail sesi `web-04` tampil. Ketuk tombol kembali (label aksesibilitas "Kembali") lalu simpan `/tmp/p3-native/08-kembali-ke-jadwal.png`.
 Expected: mendarat di `/asisten`, bukan layar kosong. Ini bukti fallback `replace('/asisten')` bekerja saat tidak ada riwayat.
 
-- [ ] **Step 7: Baca dan laporkan bukti**
+- [ ] **Step 8: Baca dan laporkan bukti**
 
 Baca setiap berkas `/tmp/p3-native/*.png` dengan pembaca gambar. Laporkan per alur: lulus atau gagal, dengan nama berkas bukti. Jangan menyatakan lulus tanpa melihat gambarnya.
 
-- [ ] **Step 8: Ulangi penjaga dan typecheck terakhir**
+- [ ] **Step 9: Ulangi penjaga dan typecheck terakhir**
 
 Run:
 ```bash
@@ -532,6 +579,10 @@ git ls-files 'src/app/(tabs)' 'src/app/sesi' 'src/app/tambah-sesi.tsx' 'src/comp
 ```
 Expected: `tsc=0`, `lint=0`, `guard1=1`, `guard3` tanpa daftar berkas.
 
-- [ ] **Step 9: Hentikan proses latar**
+- [ ] **Step 10: Hentikan proses latar**
 
-Matikan Metro (`kill %1` atau job id terkait) dan server web bila masih berjalan. Emulator boleh tetap hidup.
+```bash
+pkill -f "expo start --dev-client --port 8081"
+pkill -f "expo start --web --port 8099"
+```
+Expected: kedua proses berhenti. `kill %1` tidak dipakai karena blok perintah baru tidak punya job table shell sebelumnya. Emulator boleh tetap hidup.
