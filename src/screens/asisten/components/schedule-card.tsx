@@ -15,7 +15,7 @@ export function ScheduleCard({ session, attendance, onManage }: {
   return (
     <View style={[styles.card, open && styles.openCard]}>
       <View style={styles.topRow}>
-        <AssistantText style={styles.className} tone="secondary">{session.className} · PRAKTIKUM</AssistantText>
+        <AssistantText style={styles.className} tone="secondary">{session.code}</AssistantText>
         <View style={[styles.badge, open && styles.openBadge]}>
           <ScheduleIcon name={open ? 'dotOpen' : 'dotNeutral'} size={5} />
           <AssistantText style={styles.badgeText} tone={open ? 'accent' : 'secondary'}>{statusLabels[session.status]}</AssistantText>

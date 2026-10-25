@@ -8,7 +8,7 @@ export type SessionForm = {
 export type SessionFormErrors = Partial<Record<keyof SessionForm, string>>;
 export type SessionChoices = {
   courses: readonly string[];
-  classes: readonly { name: string; participantIds: readonly string[] }[];
+  classes: readonly { name: string; code: string; participantIds: readonly string[] }[];
 };
 export const emptySessionForm: SessionForm = {
   course: '', topic: '', className: '', date: '', startTime: '', endTime: '', room: '',
@@ -18,7 +18,7 @@ export function sessionChoices(sessions: readonly AssistantSession[]): SessionCh
   const names = [...new Set(sessions.map(session => session.className))];
   return {
     courses: [...new Set(sessions.map(session => session.course))],
-    classes: names.map(name => ({ name, participantIds: [...new Set(sessions
+    classes: names.map(name => ({ name, code: sessions.find(session => session.className === name)!.code, participantIds: [...new Set(sessions
       .filter(session => session.className === name).flatMap(session => [...session.participantIds]))] })),
   };
 }
@@ -42,7 +42,7 @@ export function createSession(form: SessionForm, choices: SessionChoices, id: st
   if (Object.keys(validateSessionForm(form, choices)).length) throw new Error('Periksa kembali kolom yang ditandai.');
   const selectedClass = choices.classes.find(item => item.name === form.className)!;
   return {
-    id, course: form.course, topic: form.topic.trim(), className: form.className,
+    id, code: selectedClass.code, course: form.course, topic: form.topic.trim(), className: form.className,
     date: form.date, startTime: form.startTime, endTime: form.endTime, room: form.room.trim(),
     status: 'pending', participantIds: [...new Set(selectedClass.participantIds)],
   };
