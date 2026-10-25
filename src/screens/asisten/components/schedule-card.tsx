@@ -43,7 +43,7 @@ export function ScheduleCard({ session, attendance, onManage }: {
         </AssistantText>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${open ? 'Pantau' : 'Kelola'} sesi ${formatPraktikumName(session)}, ${session.className}`}
+          accessibilityLabel={`${open ? 'Pantau' : 'Kelola'} sesi ${formatPraktikumName(session)}`}
           accessibilityState={{ disabled: !onManage }}
           accessibilityHint={!onManage ? 'Pengelolaan sesi belum tersedia.' : undefined}
           disabled={!onManage}

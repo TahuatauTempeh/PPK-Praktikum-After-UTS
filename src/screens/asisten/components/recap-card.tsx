@@ -25,7 +25,7 @@ export function RecapCard({ row, attendance, participants, expanded, onExpand, o
       <View style={styles.compactIdentity}>
         <AssistantText style={styles.compactTitle}>{session.topic}</AssistantText>
         <AssistantText variant="caption" tone="secondary">{formatPraktikumName(session)}</AssistantText>
-        <AssistantText variant="caption" tone="secondary" style={styles.small}>{formatSessionDate(session.date)} · {session.className}</AssistantText>
+        <AssistantText variant="caption" tone="secondary" style={styles.small}>{formatSessionDate(session.date)}</AssistantText>
       </View>
       <View style={styles.compactNumbers}>
         <AssistantText variant="label" style={styles.bold}>{present}/{total}</AssistantText>
@@ -41,7 +41,7 @@ export function RecapCard({ row, attendance, participants, expanded, onExpand, o
   return (
     <View style={styles.card}>
       <View style={styles.topRow}>
-        <AssistantText variant="caption" tone="secondary" style={[styles.small, styles.bold]}>{session.className} · {formatSessionDate(session.date).toUpperCase()}</AssistantText>
+        <AssistantText variant="caption" tone="secondary" style={[styles.small, styles.bold]}>{formatSessionDate(session.date).toUpperCase()}</AssistantText>
         <View style={styles.badge}>
           <ScheduleIcon name="dotNeutral" size={5} />
           <AssistantText variant="caption" tone="secondary" style={styles.small}>Ditutup</AssistantText>

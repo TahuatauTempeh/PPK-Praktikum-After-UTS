@@ -35,7 +35,7 @@ export function SessionConfirmation({ session, mode, present, total, onCancel, o
               : 'Praktikan dapat mengisi presensi setelah sesi dibuka.'}</AssistantText>
           </View>
           <View style={styles.session}>
-            <AssistantText style={styles.sessionTitle}>{formatPraktikumName(session)} · {session.className}</AssistantText>
+            <AssistantText style={styles.sessionTitle}>{formatPraktikumName(session)}</AssistantText>
             <AssistantText variant="caption" tone="secondary">{session.topic}</AssistantText>
             <AssistantText variant="caption" tone="secondary">
               {formatSessionDate(session.date)} · {session.startTime.replace(':', '.')}–{session.endTime.replace(':', '.')} WIB

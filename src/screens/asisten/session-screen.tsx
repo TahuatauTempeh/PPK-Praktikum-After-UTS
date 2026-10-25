@@ -86,7 +86,6 @@ export default function SessionScreen({ id, onBack, onRecap }: Props) {
         {header}
         <View style={styles.identity}>
           <View style={styles.topRow}>
-            <AssistantText variant="caption" tone="secondary" style={styles.className}>PRAKTIKUM · {session.className}</AssistantText>
             <View style={[styles.badge, open && styles.activeBadge]}>
               <ScheduleIcon name={open ? 'dotOpen' : 'dotNeutral'} size={5} />
               <AssistantText style={styles.badgeText} tone={open ? 'accent' : 'secondary'}>{statusLabels[session.status]}</AssistantText>
@@ -144,7 +143,7 @@ export default function SessionScreen({ id, onBack, onRecap }: Props) {
               <View style={styles.emptyIcon}><ScheduleIcon name={pending ? 'doorClosed' : 'users'} size={34} /></View>
               <AssistantText style={styles.emptyTitle} accessibilityRole="header">{pending ? 'Sesi belum dibuka' : 'Menunggu praktikan'}</AssistantText>
               <AssistantText tone="secondary" style={styles.center}>{pending
-                ? `Buka sesi agar ${total} praktikan kelas ${session.className} dapat mulai mengisi presensi.`
+                ? `Buka sesi agar ${total} praktikan dapat mulai mengisi presensi.`
                 : 'Belum ada presensi masuk. Kehadiran akan muncul otomatis saat praktikan mengisi presensi.'}</AssistantText>
             </View>
           ) : (
@@ -197,8 +196,7 @@ const styles = StyleSheet.create({
   back: { minWidth: 44, minHeight: 44, justifyContent: 'center' },
   headerTitle: { fontSize: 18, lineHeight: 24, fontFamily: theme.fonts.bold },
   identity: { gap: 10 },
-  topRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  className: { fontSize: 11, fontFamily: theme.fonts.bold },
+  topRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: theme.colors.neutralSoft, borderRadius: theme.radius.pill },
   activeBadge: { backgroundColor: theme.colors.primarySoft },
   badgeText: { fontSize: 11, lineHeight: 14, fontFamily: theme.fonts.semibold },
