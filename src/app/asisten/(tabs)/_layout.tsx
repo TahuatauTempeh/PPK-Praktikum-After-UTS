@@ -7,8 +7,8 @@ import { AssistantNavigation, type AssistantTab } from '@/screens/asisten/compon
 import { assistantTheme as theme } from '@/screens/asisten/theme';
 
 const tabFromPath = (pathname: string): AssistantTab | null => {
-  if (pathname === '/rekap') return 'recap';
-  if (pathname === '/') return 'schedule';
+  if (pathname === '/asisten/rekap') return 'recap';
+  if (pathname === '/asisten') return 'schedule';
   return null;
 };
 
@@ -19,8 +19,8 @@ export default function TabsLayout() {
   if (current && current !== active) setActive(current);
 
   const goTo = (tab: AssistantTab) => {
-    if (tab === 'recap') router.navigate('/rekap');
-    else router.dismissTo('/');
+    if (tab === 'recap') router.navigate('/asisten/rekap');
+    else router.dismissTo('/asisten');
   };
 
   return (
