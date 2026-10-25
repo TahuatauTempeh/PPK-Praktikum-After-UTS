@@ -620,18 +620,26 @@ Expected: layar rekap menampilkan sesi `web-03` sebagai pilihan awal. Ini bukti 
 
 - [ ] **Step 8: Alur C — tombol Kembali dari detail**
 
+Step 7 meninggalkan aplikasi di `/asisten/rekap`. Jadi jadwal harus dituju lebih dulu, kalau tidak `router.back()` yang benar pun akan mendarat di rekap.
+
 Run:
 ```bash
-adb shell am start -W -a android.intent.action.VIEW -d 'presensipraktikum:///asisten/sesi/web-04' com.ppk.presensipraktikum
-sleep 4
+adb shell am start -W -a android.intent.action.VIEW -d 'presensipraktikum:///asisten' com.ppk.presensipraktikum
+sleep 5
+adb exec-out screencap -p > /tmp/p3-native/07-jadwal-lagi.png
+adb shell input tap <X3> <Y3>
+sleep 3
+adb exec-out screencap -p > /tmp/p3-native/08-detail-dari-kartu.png
 beforeBack=$(adb shell pidof com.ppk.presensipraktikum)
 adb shell input tap <XK> <YK>
 sleep 3
-adb exec-out screencap -p > /tmp/p3-native/07-kembali-dari-detail.png
+adb exec-out screencap -p > /tmp/p3-native/09-kembali-dari-detail.png
 afterBack=$(adb shell pidof com.ppk.presensipraktikum)
 echo "beforeBack=$beforeBack afterBack=$afterBack"
 ```
-Expected: mendarat di jadwal `/asisten` dan `beforeBack` sama dengan `afterBack`. Ini menguji cabang `router.back()`.
+`<X3> <Y3>` adalah koordinat yang sama dengan Step 6, yaitu aksi "Pantau sesi" pada kartu `web-04`. `<XK> <YK>` adalah tombol kembali di layar detail.
+
+Expected: `07-jadwal-lagi.png` menampilkan "Jadwal asisten"; `08-detail-dari-kartu.png` menampilkan "Kelola sesi"; `09-kembali-dari-detail.png` kembali ke "Jadwal asisten" dan `beforeBack` sama dengan `afterBack`. Ini menguji cabang `router.back()` dengan tujuan yang deterministik.
 
 Cabang `replace('/asisten')` tidak diuji di sini karena dev build tidak bisa cold start pada sebuah rute. Buktinya ada di Task 2 Step 11.
 
