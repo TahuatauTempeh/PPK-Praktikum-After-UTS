@@ -67,7 +67,7 @@ Ubah isi:
 | Berkas | Perubahan |
 |---|---|
 | `src/app/asisten/(tabs)/_layout.tsx` | `tabFromPath` memetakan `'/asisten'` dan `'/asisten/rekap'`; `goTo` memakai `'/asisten/rekap'` dan `dismissTo('/asisten')` |
-| `src/app/asisten/(tabs)/index.tsx` | Buang import `isValidDate` (`:4`), `useLocalSearchParams`, `tanggal`, `baru`, `feedback`, dan `key`; `date` memakai `scheduleDate` dari provider; `onManage` memakai `'/asisten/sesi/[id]'` |
+| `src/app/asisten/(tabs)/index.tsx` | Buang import `isValidDate` (`:4`), `useLocalSearchParams`, `tanggal`, `baru`, `feedback`, prop `onAdd`, dan `key`; `date` memakai `scheduleDate` dari provider; `onManage` memakai `'/asisten/sesi/[id]'` |
 | `src/app/asisten/(tabs)/rekap.tsx` | `onSchedule` memakai `dismissTo('/asisten')`; `onDetail` memakai `'/asisten/sesi/[id]'` |
 | `src/app/asisten/sesi/[id].tsx` | `onRecap` memakai `'/asisten/rekap'`; fallback `replace('/asisten')` |
 | `src/screens/asisten/preview-session-provider.tsx` | Buang `addSession`, `sequence`, import `useRef`, `createSession`, `sessionChoices`, dan `SessionForm`; `scheduleDate` menjadi `previewDate` tetap |
@@ -117,19 +117,22 @@ Detail sesi berada di luar grup `(tabs)` supaya bar bawah tidak tampil. Aturan i
 
 Urutan perintah, semuanya dari akar repo:
 
-1. `rg -n --pcre2 "tambah-sesi|addSession|add-session-screen|onAdd|session-form(?!-format)|app-tabs" src` harus kosong.
-2. `rg -n "'/rekap'|'/sesi/|'/tambah-sesi'" src` harus kosong.
-3. `npx expo lint` harus exit 0.
-4. `timeout 40 env CI=1 npx expo start --web --port 8099` untuk meregenerasi `.expo/types/router.d.ts`. Mekanisme ini sudah terbukti pada 2026-10-25 12.21: berkas itu berubah waktu dev server dijalankan.
-5. `npx tsc --noEmit` harus exit 0.
-6. Jalankan `npx expo start --web --port 8099` di latar, lalu cek `http://127.0.0.1:8099/asisten`, `/asisten/rekap`, dan `/asisten/sesi/web-04`. Ketiganya harus merespons tanpa "Unmatched Route".
-7. Cek manual di browser: tab Jadwal dan tab Rekap berpindah, tombol detail membuka kelola sesi, dan bar bawah tetap tampil hanya di dua tab.
+1. Penjaga isi: `rg -n --pcre2 "tambah-sesi|addSession|add-session-screen|session-form\\b|session-input-picker|onAdd|SessionForm|emptySessionForm|validateSessionForm|createSession|sessionChoices" src` harus kosong.
+2. Penjaga literal rute: `rg -n "'/rekap'|'/sesi/|'/tambah-sesi'" src` harus kosong.
+3. Penjaga berkas: `git ls-files 'src/app/(tabs)' 'src/app/sesi' 'src/app/tambah-sesi.tsx' 'src/screens/asisten/add-session-screen.tsx' 'src/screens/asisten/session-form.ts' 'src/screens/asisten/components/session-form-field.tsx' 'src/screens/asisten/components/session-input-picker.tsx' 'src/components/app-tabs.tsx' 'src/components/app-tabs.web.tsx'` harus kosong.
+4. `npx expo lint` harus exit 0.
+5. `timeout 45 env CI=1 npx expo start --web --port 8099` untuk meregenerasi `.expo/types/router.d.ts`. Mekanisme ini sudah terbukti pada 2026-10-25: berkas itu berubah waktu dev server dijalankan.
+6. `npx tsc --noEmit` harus exit 0. Tanpa langkah 5, `tsc` gagal karena union rute masih lama.
+7. Jalankan `npx expo start --web --port 8099` di latar, lalu cek `http://127.0.0.1:8099/asisten`, `/asisten/rekap`, dan `/asisten/sesi/web-04`. Ketiganya harus merespons tanpa "Unmatched Route".
+8. Cek manual di browser: tab Jadwal dan tab Rekap berpindah, tombol detail membuka kelola sesi, dan bar bawah tetap tampil hanya di dua tab.
+
+Catatan: `expo lint` hanya memberi peringatan untuk variabel atau prop yang tidak terpakai, jadi langkah 1 sampai 3 yang menjaga kebersihan kode, bukan langkah 4.
 
 Kegagalan yang diharapkan: membuka `/` menampilkan rute tidak ditemukan. Ini konsekuensi keputusan 5 dan hilang saat Programmer 1 membuat `src/app/index.tsx`.
 
 ## 8. Sisa risiko
 
-1. `router.dismissTo` dipakai bar bawah untuk kembali ke jadwal. Perilakunya tidak terbukti lewat cek HTTP, jadi butuh cek manual di browser pada langkah verifikasi 7.
+1. `router.dismissTo` dipakai bar bawah untuk kembali ke jadwal. Perilakunya tidak terbukti lewat cek HTTP, jadi butuh cek manual di browser pada langkah verifikasi 8.
 2. Aplikasi tidak dapat dibuka dari `/` sampai Programmer 1 mendarat. Selama itu, buka lewat `/asisten`.
 3. Penghapusan `src/components/app-tabs.tsx` dan `src/components/app-tabs.web.tsx` menyentuh folder Programmer 1. Keduanya tidak dipakai, dan riwayat git menyimpannya. Programmer 1 perlu tahu supaya tidak menambahkannya kembali.
 
@@ -147,6 +150,6 @@ Kegagalan yang diharapkan: membuka `/` menampilkan rute tidak ditemukan. Ini kon
 - Tidak ada berkas rute lama di `src/app/(tabs)/`, `src/app/sesi/`, dan `src/app/tambah-sesi.tsx`.
 - Tiga rute `/asisten*` merender layar yang sama seperti sebelum migrasi.
 - Tidak ada jejak tambah sesi di kode: rute, layar, form, tombol, dan aksi provider.
-- Tidak ada berkas template yang memakai rute `/`.
+- Berkas `src/components/app-tabs.tsx` dan `src/components/app-tabs.web.tsx` tidak ada lagi, dan tidak ada berkas template lain yang memakai rute `/`.
 - `npx expo lint` dan `npx tsc --noEmit` exit 0.
 - Bar bawah tetap tampil di tab Jadwal dan Rekap, dan tidak tampil di layar kelola sesi.
