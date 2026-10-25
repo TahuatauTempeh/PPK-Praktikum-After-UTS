@@ -37,7 +37,7 @@ Fakta yang diverifikasi pada 2026-10-25:
 4. Tambah sesi dicabut sekalian, bukan dipindah ke `/asisten/tambah-sesi`.
 5. Rute `/` dibiarkan kosong sampai Programmer 1 membuatnya. Tidak ada stub redirect di folder Programmer 1.
 6. `src/app/asisten/_layout.tsx` belum dibuat. Isinya nanti hanya `RoleGuard('asisten')`, dan guard itu butuh context.
-7. `src/components/app-tabs.web.tsx:24` diubah dari `href="/"` menjadi `href="/asisten"`. Berkas itu tidak diimpor layar mana pun, tetapi tetap diperiksa `tsc`. Tanpa perubahan ini kriteria `tsc` lulus tidak dapat dicapai setelah rute `/` hilang. Ini satu-satunya sentuhan ke folder Programmer 1, dan Programmer 1 perlu mengetahuinya.
+7. Dua berkas template mati dihapus: `src/components/app-tabs.tsx` dan `src/components/app-tabs.web.tsx`. Keduanya tidak diimpor kode mana pun, tetapi `app-tabs.web.tsx:24` memakai `href="/"` sehingga `tsc` gagal setelah rute `/` hilang. Menghapus lebih baik daripada mengedit isi folder Programmer 1. Bila Programmer 1 membutuhkannya, berkas dapat diambil lagi dari riwayat git.
 
 ## 4. Perubahan berkas
 
@@ -59,6 +59,8 @@ Hapus:
 | `src/screens/asisten/session-form.ts` | Hanya dipakai alur tambah sesi |
 | `src/screens/asisten/components/session-form-field.tsx` | Hanya dipakai `add-session-screen` |
 | `src/screens/asisten/components/session-input-picker.tsx` | Hanya dipakai `add-session-screen` |
+| `src/components/app-tabs.tsx` | Sisa template, tidak diimpor siapa pun |
+| `src/components/app-tabs.web.tsx` | Sisa template, tidak diimpor siapa pun, memuat `href="/"` |
 
 Ubah isi:
 
@@ -70,7 +72,6 @@ Ubah isi:
 | `src/app/asisten/sesi/[id].tsx` | `onRecap` memakai `'/asisten/rekap'`; fallback `replace('/asisten')` |
 | `src/screens/asisten/preview-session-provider.tsx` | Buang `addSession`, `sequence`, import `useRef`, `createSession`, `sessionChoices`, dan `SessionForm`; `scheduleDate` menjadi `previewDate` tetap |
 | `src/screens/asisten/schedule-screen.tsx` | Buang prop `onAdd` dan `feedback`, banner feedback, state `dismissed`, tombol Tambah sesi, tombol Tambah sesi pertama, dan style `add`, `addText`, `feedback`, `feedbackText`, `dismiss`, `disabled` |
-| `src/components/app-tabs.web.tsx` | `href="/"` pada baris 24 menjadi `href="/asisten"` |
 
 Tidak disentuh: `src/app/_layout.tsx`, `src/app/explore.tsx`, `src/app/asisten/_layout.tsx` (belum ada), `src/screens/asisten/schedule-data.ts`, `recap-data.ts`, `session-format.ts`, `src/constants/`, `src/hooks/`, dan `src/screens/asisten/theme.ts`.
 
@@ -116,7 +117,7 @@ Detail sesi berada di luar grup `(tabs)` supaya bar bawah tidak tampil. Aturan i
 
 Urutan perintah, semuanya dari akar repo:
 
-1. `rg -n --pcre2 "tambah-sesi|addSession|add-session-screen|onAdd|session-form(?!-format)" src` harus kosong.
+1. `rg -n --pcre2 "tambah-sesi|addSession|add-session-screen|onAdd|session-form(?!-format)|app-tabs" src` harus kosong.
 2. `rg -n "'/rekap'|'/sesi/|'/tambah-sesi'" src` harus kosong.
 3. `npx expo lint` harus exit 0.
 4. `timeout 40 env CI=1 npx expo start --web --port 8099` untuk meregenerasi `.expo/types/router.d.ts`. Mekanisme ini sudah terbukti pada 2026-10-25 12.21: berkas itu berubah waktu dev server dijalankan.
@@ -130,7 +131,7 @@ Kegagalan yang diharapkan: membuka `/` menampilkan rute tidak ditemukan. Ini kon
 
 1. `router.dismissTo` dipakai bar bawah untuk kembali ke jadwal. Perilakunya tidak terbukti lewat cek HTTP, jadi butuh cek manual di browser pada langkah verifikasi 7.
 2. Aplikasi tidak dapat dibuka dari `/` sampai Programmer 1 mendarat. Selama itu, buka lewat `/asisten`.
-3. Perubahan satu baris di `src/components/app-tabs.web.tsx` menyentuh folder Programmer 1. Bila Programmer 1 menghapus berkas itu, perubahan ini ikut hilang tanpa efek samping.
+3. Penghapusan `src/components/app-tabs.tsx` dan `src/components/app-tabs.web.tsx` menyentuh folder Programmer 1. Keduanya tidak dipakai, dan riwayat git menyimpannya. Programmer 1 perlu tahu supaya tidak menambahkannya kembali.
 
 ## 9. Di luar lingkup
 
@@ -138,7 +139,7 @@ Kegagalan yang diharapkan: membuka `/` menampilkan rute tidak ditemukan. Ini kon
 - NIM praktikan di daftar hadir.
 - Filter dan hitungan rekap.
 - Penyambungan data ke context bersama.
-- Penghapusan berkas sisa template di `src/app/explore.tsx` dan `src/components/`. Yang dikerjakan hanya satu baris `href` di `app-tabs.web.tsx`.
+- Penghapusan berkas sisa template lain: `src/app/explore.tsx`, `src/components/themed-*`, `animated-icon*`, `hint-row.tsx`, `web-badge.tsx`, `external-link.tsx`, dan `ui/collapsible.tsx`. Yang dihapus hanya dua berkas `app-tabs`.
 - Demo Android. Demo itu bagian kriteria akhir P3 dan menunggu fondasi Programmer 1.
 
 ## 10. Kriteria selesai
@@ -146,5 +147,6 @@ Kegagalan yang diharapkan: membuka `/` menampilkan rute tidak ditemukan. Ini kon
 - Tidak ada berkas rute lama di `src/app/(tabs)/`, `src/app/sesi/`, dan `src/app/tambah-sesi.tsx`.
 - Tiga rute `/asisten*` merender layar yang sama seperti sebelum migrasi.
 - Tidak ada jejak tambah sesi di kode: rute, layar, form, tombol, dan aksi provider.
+- Tidak ada berkas template yang memakai rute `/`.
 - `npx expo lint` dan `npx tsc --noEmit` exit 0.
 - Bar bawah tetap tampil di tab Jadwal dan Rekap, dan tidak tampil di layar kelola sesi.
