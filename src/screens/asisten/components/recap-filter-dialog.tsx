@@ -1,6 +1,6 @@
 import { type ComponentRef, useRef, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { AssistantSheet } from './assistant-sheet';
+import { AssistantSheet, type CloseSheet } from './assistant-sheet';
 
 import { type DateRange, isValidDate, monthRange } from '../recap-data';
 import { type AssistantSession, previewDate } from '../schedule-data';
@@ -25,63 +25,65 @@ export function RecapFilterDialog({ kind, range, selectedId, sessions, onRange, 
   const cancelRef = useRef<ComponentRef<typeof Pressable>>(null);
   const title = kind === 'date' ? 'Rentang tanggal' : 'Pilih sesi';
 
-  function applyRange() {
+  function applyRange(close: CloseSheet) {
     const next: typeof errors = {};
     if (!isValidDate(start)) next.start = 'Gunakan tanggal valid dengan format YYYY-MM-DD.';
     if (!isValidDate(end)) next.end = 'Gunakan tanggal valid dengan format YYYY-MM-DD.';
     else if (!next.start && end < start) next.end = 'Tanggal akhir harus sama atau setelah tanggal awal.';
     setErrors(next);
-    if (!next.start && !next.end) onRange({ start, end });
+    if (!next.start && !next.end) close(() => onRange({ start, end }));
   }
 
   return (
     <AssistantSheet onCancel={onCancel} onShow={() => cancelRef.current?.focus()}>
-      <View role="dialog" accessibilityViewIsModal accessibilityLabel={title} style={styles.dialog}>
-        <AssistantText style={styles.title} accessibilityRole="header">{title}</AssistantText>
-        {kind === 'date' ? (
-          <>
-            <AssistantText variant="caption" tone="secondary">Tanggal sesi menggunakan WIB. Format: tahun-bulan-hari.</AssistantText>
-            <View style={styles.field}>
-              <AssistantText variant="caption" style={styles.bold}>Tanggal awal</AssistantText>
-              <TextInput accessibilityLabel="Tanggal awal" placeholder="YYYY-MM-DD" value={start}
-                autoCorrect={false} autoCapitalize="none" onChangeText={setStart}
-                style={[styles.input, errors.start && styles.invalid]} aria-invalid={Boolean(errors.start)} />
-              {errors.start && <AssistantText style={styles.error} accessibilityRole="alert">{errors.start}</AssistantText>}
-            </View>
-            <View style={styles.field}>
-              <AssistantText variant="caption" style={styles.bold}>Tanggal akhir</AssistantText>
-              <TextInput accessibilityLabel="Tanggal akhir" placeholder="YYYY-MM-DD" value={end}
-                autoCorrect={false} autoCapitalize="none" onChangeText={setEnd}
-                style={[styles.input, errors.end && styles.invalid]} aria-invalid={Boolean(errors.end)} />
-              {errors.end && <AssistantText style={styles.error} accessibilityRole="alert">{errors.end}</AssistantText>}
-            </View>
-            <Pressable accessibilityRole="button" onPress={applyRange} style={({ pressed }) => [styles.button, styles.primary, pressed && styles.pressed]}>
-              <AssistantText variant="label" style={styles.white}>Terapkan tanggal</AssistantText>
-            </Pressable>
-            <Pressable accessibilityRole="button" onPress={() => onRange(null)} style={styles.button}>
-              <AssistantText variant="label" tone="accent">Semua tanggal</AssistantText>
-            </Pressable>
-          </>
-        ) : (
-          <View style={styles.options}>
-            <Pressable accessibilityRole="radio" accessibilityState={{ checked: selectedId === '' }}
-              onPress={() => onSelect('')} style={[styles.option, selectedId === '' && styles.selected]}>
-              <AssistantText variant="label">Semua sesi</AssistantText>
-            </Pressable>
-            {sessions.map(session => (
-              <Pressable key={session.id} accessibilityRole="radio" accessibilityState={{ checked: selectedId === session.id }}
-                onPress={() => onSelect(session.id)} style={[styles.option, selectedId === session.id && styles.selected]}>
-                <AssistantText style={styles.bold}>{session.course} · {session.className}</AssistantText>
-                <AssistantText variant="caption" tone="secondary">{session.topic}</AssistantText>
-                <AssistantText variant="caption" tone="secondary">{formatSessionDate(session.date)}</AssistantText>
+      {closeSheet => (
+        <View role="dialog" accessibilityViewIsModal accessibilityLabel={title} style={styles.dialog}>
+          <AssistantText style={styles.title} accessibilityRole="header">{title}</AssistantText>
+          {kind === 'date' ? (
+            <>
+              <AssistantText variant="caption" tone="secondary">Tanggal sesi menggunakan WIB. Format: tahun-bulan-hari.</AssistantText>
+              <View style={styles.field}>
+                <AssistantText variant="caption" style={styles.bold}>Tanggal awal</AssistantText>
+                <TextInput accessibilityLabel="Tanggal awal" placeholder="YYYY-MM-DD" value={start}
+                  autoCorrect={false} autoCapitalize="none" onChangeText={setStart}
+                  style={[styles.input, errors.start && styles.invalid]} aria-invalid={Boolean(errors.start)} />
+                {errors.start && <AssistantText style={styles.error} accessibilityRole="alert">{errors.start}</AssistantText>}
+              </View>
+              <View style={styles.field}>
+                <AssistantText variant="caption" style={styles.bold}>Tanggal akhir</AssistantText>
+                <TextInput accessibilityLabel="Tanggal akhir" placeholder="YYYY-MM-DD" value={end}
+                  autoCorrect={false} autoCapitalize="none" onChangeText={setEnd}
+                  style={[styles.input, errors.end && styles.invalid]} aria-invalid={Boolean(errors.end)} />
+                {errors.end && <AssistantText style={styles.error} accessibilityRole="alert">{errors.end}</AssistantText>}
+              </View>
+              <Pressable accessibilityRole="button" onPress={() => applyRange(closeSheet)} style={({ pressed }) => [styles.button, styles.primary, pressed && styles.pressed]}>
+                <AssistantText variant="label" style={styles.white}>Terapkan tanggal</AssistantText>
               </Pressable>
-            ))}
-          </View>
-        )}
-        <Pressable ref={cancelRef} accessibilityRole="button" onPress={onCancel} style={styles.button}>
-          <AssistantText variant="label" tone="accent">Batal</AssistantText>
-        </Pressable>
-      </View>
+              <Pressable accessibilityRole="button" onPress={() => closeSheet(() => onRange(null))} style={styles.button}>
+                <AssistantText variant="label" tone="accent">Semua tanggal</AssistantText>
+              </Pressable>
+            </>
+          ) : (
+            <View style={styles.options}>
+              <Pressable accessibilityRole="radio" accessibilityState={{ checked: selectedId === '' }}
+                onPress={() => closeSheet(() => onSelect(''))} style={[styles.option, selectedId === '' && styles.selected]}>
+                <AssistantText variant="label">Semua sesi</AssistantText>
+              </Pressable>
+              {sessions.map(session => (
+                <Pressable key={session.id} accessibilityRole="radio" accessibilityState={{ checked: selectedId === session.id }}
+                  onPress={() => closeSheet(() => onSelect(session.id))} style={[styles.option, selectedId === session.id && styles.selected]}>
+                  <AssistantText style={styles.bold}>{session.course} · {session.className}</AssistantText>
+                  <AssistantText variant="caption" tone="secondary">{session.topic}</AssistantText>
+                  <AssistantText variant="caption" tone="secondary">{formatSessionDate(session.date)}</AssistantText>
+                </Pressable>
+              ))}
+            </View>
+          )}
+          <Pressable ref={cancelRef} accessibilityRole="button" onPress={() => closeSheet(onCancel)} style={styles.button}>
+            <AssistantText variant="label" tone="accent">Batal</AssistantText>
+          </Pressable>
+        </View>
+      )}
     </AssistantSheet>
   );
 }
