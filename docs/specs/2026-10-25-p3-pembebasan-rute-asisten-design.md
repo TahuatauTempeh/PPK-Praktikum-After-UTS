@@ -123,14 +123,17 @@ Urutan perintah, semuanya dari akar repo:
 4. `npx expo lint` harus exit 0.
 5. `timeout 45 env CI=1 npx expo start --web --port 8099` untuk meregenerasi `.expo/types/router.d.ts`. Mekanisme ini sudah terbukti pada 2026-10-25: berkas itu berubah waktu dev server dijalankan.
 6. `npx tsc --noEmit` harus exit 0. Tanpa langkah 5, `tsc` gagal karena union rute masih lama.
-7. Jalankan `npx expo start --web --port 8099` di latar, lalu cek `http://127.0.0.1:8099/asisten`, `/asisten/rekap`, dan `/asisten/sesi/web-04`. Ketiganya harus merespons tanpa "Unmatched Route".
-8. Cek manual di browser: tab Jadwal dan tab Rekap berpindah, tombol detail membuka kelola sesi, dan bar bawah tetap tampil hanya di dua tab.
-9. Smoke test native di emulator Android 15 (`emulator-5554`), memakai development build yang sudah terpasang (`com.ppk.presensipraktikum`, terpasang 2026-10-24 23.04). Perubahan hanya JavaScript, jadi build tidak perlu dibuat ulang selama dependensi native tidak berubah.
+7. Jalankan `npx expo start --web --port 8099` di latar, lalu cek `http://127.0.0.1:8099/asisten`, `/asisten/rekap`, dan `/asisten/sesi/web-04`. Ketiganya harus merespons `200`, dan `/` harus merespons `404`. Status code yang dipakai sebagai bukti karena HTML dev server dirender di klien.
+8. Cek tampilan web dengan Chrome headless `--dump-dom`: `/asisten` dan `/asisten/rekap` masing-masing memuat `role="tablist"` satu kali, `/asisten/sesi/web-04` tidak memuatnya. Judul "Jadwal asisten", "Rekap presensi", dan "Kelola sesi" masing-masing muncul satu kali.
+9. Uji cabang `replace` di web: buka `/asisten/sesi/web-04` di tab baru sehingga `history.length === 1`, klik tombol `Kembali` lewat CDP, lalu pastikan `location.pathname` menjadi `/asisten` dan `history.length` tetap `1`. Nilai yang tetap 1 membedakan `replace` dari `push`.
+10. Smoke test native di emulator Android 15 (`emulator-5554`) dengan development build terpasang (`com.ppk.presensipraktikum`, terpasang 2026-10-24 23.04). Build tidak perlu dibuat ulang karena perubahan hanya JavaScript.
    - `npx expo start --dev-client --port 8081` di latar.
-   - `adb shell am start -W -a android.intent.action.VIEW -d 'presensipraktikum:///asisten' com.ppk.presensipraktikum`.
-   - Tiga alur wajib: (a) tab Rekap lalu kembali ke tab Jadwal, menguji `dismissTo('/asisten')`; (b) jadwal, buka detail sesi, tekan tombol Rekap, menguji `navigate('/asisten/rekap')` dengan parameter; (c) cold open `presensipraktikum:///asisten/sesi/web-04` lalu tombol kembali, menguji fallback `replace('/asisten')`.
-   - Alur (c) wajib didahului `adb shell am force-stop com.ppk.presensipraktikum` dan memakai intent yang menyebut paket tujuan. Tanpa itu, riwayat dari alur (a) dan (b) masih hidup, `router.canGoBack()` bernilai benar, dan yang teruji adalah `router.back()`, bukan fallback `replace('/asisten')`.
-   - Lulus bila tidak ada layar kosong atau "Unmatched Route", tab Jadwal kembali tanpa menutup aplikasi, dan tombol kembali dari detail mendarat di `/asisten`.
+   - Buka proyek lewat dev-client launch URL: `adb shell am start -W -a android.intent.action.VIEW -d 'exp+presensi-praktikum://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081' com.ppk.presensipraktikum`.
+   - Kirim deep link aplikasi hanya setelah aplikasi berjalan: `adb shell am start -W -a android.intent.action.VIEW -d 'presensipraktikum:///asisten' com.ppk.presensipraktikum`.
+   - Tiga alur: (a) tab Rekap lalu kembali ke Jadwal, menguji `dismissTo('/asisten')`; (b) kartu "Pantau sesi" membuka detail, lalu tombol Kembali kembali ke jadwal, menguji `onManage` dan cabang `back()`; (c) detail sesi tertutup `web-03` lewat deep link, lalu tombol "Lihat rekap sesi", menguji `navigate('/asisten/rekap')` dengan parameter.
+   - Cold start pada sebuah rute tidak dapat diuji di dev build. Diuji 2026-10-25: setelah `force-stop`, `am start` dengan skema aplikasi membuka `expo.modules.devlauncher.launcher.DevLauncherActivity`, dan `-n com.ppk.presensipraktikum/.MainActivity` pun tetap dibelokkan ke sana. Cabang `canGoBack() === false` dibuktikan di langkah 9, bukan di native. Pada standalone build, uji cold start boleh ditambahkan.
+   - Setelah migrasi, rute `/` kosong. Layar pertama setelah launch karena itu menampilkan rute tidak ditemukan sampai deep link `presensipraktikum:///asisten` dikirim. Ini konsekuensi keputusan 5.
+   - Lulus bila tidak ada layar kosong di tiga alur, tab Jadwal kembali tanpa memuat ulang proses, dan Kembali dari detail mendarat di `/asisten`.
    - Bila emulator tidak tersedia, langkah ini dilaporkan belum dijalankan dan pekerjaan tidak dinyatakan selesai. Jika build terpasang gagal tersambung ke Metro, jalankan `npx expo run:android`.
 
 Catatan: `expo lint` hanya memberi peringatan untuk variabel atau prop yang tidak terpakai, jadi langkah 1 sampai 3 yang menjaga kebersihan kode, bukan langkah 4.
@@ -159,5 +162,6 @@ Kegagalan yang diharapkan: membuka `/` menampilkan rute tidak ditemukan. Ini kon
 - Tidak ada jejak tambah sesi di kode: rute, layar, form, tombol, dan aksi provider.
 - Berkas `src/components/app-tabs.tsx` dan `src/components/app-tabs.web.tsx` tidak ada lagi, dan tidak ada berkas template lain yang memakai rute `/`.
 - `npx expo lint` dan `npx tsc --noEmit` exit 0.
-- Smoke test native tiga alur navigasi di emulator Android lulus sesuai §7 langkah 9.
+- Smoke test native tiga alur navigasi di emulator Android lulus sesuai §7 langkah 10.
+- Cabang fallback `canGoBack() === false` lulus di web sesuai §7 langkah 9.
 - Bar bawah tetap tampil di tab Jadwal dan Rekap, dan tidak tampil di layar kelola sesi.

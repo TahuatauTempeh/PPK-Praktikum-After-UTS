@@ -448,7 +448,59 @@ grep -c 'Kelola sesi' /tmp/p3-dom-_asisten_sesi_web-04.html
 ```
 Expected: `/asisten tabs=1` dan `grep -c 'Jadwal asisten'` menghasilkan `1`; `/asisten/rekap tabs=1` dan `grep -c 'Rekap presensi'` menghasilkan `1`; `/asisten/sesi/web-04 tabs=0` dan `grep -c 'Kelola sesi'` menghasilkan `1`. `tabs=0` membuktikan bar bawah tidak tampil di layar kelola sesi. Catat angka yang benar-benar keluar; jangan menyatakan lulus bila `tabs` tidak sesuai.
 
-- [ ] **Step 11: Commit**
+- [ ] **Step 11: Uji cabang fallback `canGoBack() === false` di web (server dari Step 9 masih hidup)**
+
+Uji ini deterministik karena tab baru punya `history.length === 1`. Dev build tidak bisa dipakai untuk cabang ini: cold start lewat skema aplikasi mendarat di `DevLauncherActivity` (diuji 2026-10-25).
+
+```bash
+cat > /tmp/p3-back-test.cjs <<'EOF'
+const { setTimeout: sleep } = require('node:timers/promises');
+
+const url = process.argv[2];
+const expected = process.argv[3];
+
+async function main() {
+  const created = await fetch('http://127.0.0.1:9222/json/new?' + encodeURIComponent(url), { method: 'PUT' });
+  const page = await created.json();
+  const ws = new WebSocket(page.webSocketDebuggerUrl);
+  let id = 0;
+  const pending = new Map();
+  ws.onmessage = event => {
+    const message = JSON.parse(event.data);
+    if (message.id && pending.has(message.id)) { pending.get(message.id)(message); pending.delete(message.id); }
+  };
+  await new Promise(resolve => { ws.onopen = resolve; });
+  const send = (method, params = {}) => new Promise(resolve => {
+    const mid = ++id;
+    pending.set(mid, resolve);
+    ws.send(JSON.stringify({ id: mid, method, params }));
+  });
+  await send('Page.enable');
+  await send('Runtime.enable');
+  await send('Page.navigate', { url });
+  await sleep(9000);
+  const evaluate = async expression => {
+    const result = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
+    return result.result.result.value;
+  };
+  const before = JSON.parse(await evaluate('JSON.stringify({ path: location.pathname, historyLength: history.length, hasBack: document.querySelector("[aria-label=\'Kembali\']") !== null })'));
+  await evaluate('document.querySelector("[aria-label=\'Kembali\']").click()');
+  await sleep(2500);
+  const after = JSON.parse(await evaluate('JSON.stringify({ path: location.pathname, historyLength: history.length })'));
+  const ok = before.historyLength === 1 && before.hasBack === true && after.path === expected && after.historyLength === 1;
+  console.log(JSON.stringify({ ok, expected, before, after }, null, 2));
+  ws.close();
+  process.exit(ok ? 0 : 1);
+}
+main().catch(error => { console.error('ERR', error.message); process.exit(1); });
+EOF
+google-chrome --headless=new --disable-gpu --no-sandbox --remote-debugging-port=9222 --user-data-dir=/tmp/p3-chrome about:blank > /tmp/chrome-cdp.log 2>&1 &
+sleep 4
+node /tmp/p3-back-test.cjs 'http://127.0.0.1:8099/asisten/sesi/web-04' '/asisten'; echo "fallback=$?"
+```
+Expected: `"ok": true`, `before.historyLength: 1`, `after.path: "/asisten"`, `after.historyLength: 1`, dan `fallback=0`. Nilai 1 yang tetap membuktikan `replace`, bukan `push`.
+
+- [ ] **Step 12: Commit**
 
 ```bash
 git add -A -- src
@@ -477,7 +529,7 @@ adb reverse tcp:8081 tcp:8081
 ```
 Expected: satu baris `emulator-5554` dengan status `device`. Dev build `com.ppk.presensipraktikum` sudah terpasang.
 
-Bila tidak ada emulator atau perangkat, hentikan Task 3. Laporkan langkah native belum dijalankan dan jangan nyatakan pekerjaan selesai (spec §7 langkah 9).
+Bila tidak ada emulator atau perangkat, hentikan Task 3. Laporkan langkah native belum dijalankan dan jangan nyatakan pekerjaan selesai (spec §7 langkah 10).
 
 - [ ] **Step 2: Jalankan Metro untuk dev client**
 
@@ -492,18 +544,32 @@ tail -5 /tmp/expo-dev.log
 ```
 Expected: `ss` boleh menampilkan proses `expo run:android` lama pada port 8081; perintah `lsof` menghentikannya supaya Metro baru melayani kode saat ini. Metro siap tanpa error bundling.
 
-- [ ] **Step 3: Buka jadwal asisten dan ambil bukti**
+- [ ] **Step 3: Buka proyek di dev build lewat dev-client launch URL**
 
 Run:
 ```bash
 mkdir -p /tmp/p3-native
+adb shell am force-stop com.ppk.presensipraktikum
+adb shell am start -W -a android.intent.action.VIEW -d 'exp+presensi-praktikum://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081' com.ppk.presensipraktikum
+sleep 15
+adb shell dumpsys window | rg -m1 'mCurrentFocus'
+adb exec-out screencap -p > /tmp/p3-native/00-launch.png
+```
+Expected: `mCurrentFocus` menunjuk `com.ppk.presensipraktikum/com.ppk.presensipraktikum.MainActivity`, bukan `DevLauncherActivity`. Skema yang benar adalah `exp+presensi-praktikum` (dari slug proyek); `exp+presensipraktikum` tidak terdaftar dan gagal resolve (diuji 2026-10-25).
+
+Karena rute `/` tidak ada setelah migrasi, layar ini boleh menampilkan rute tidak ditemukan. Itu bukan kegagalan.
+
+- [ ] **Step 4: Kirim deep link ke jadwal setelah aplikasi berjalan**
+
+Run:
+```bash
 adb shell am start -W -a android.intent.action.VIEW -d 'presensipraktikum:///asisten' com.ppk.presensipraktikum
 sleep 6
 adb exec-out screencap -p > /tmp/p3-native/01-jadwal.png
 ```
-Expected: layar judul "Jadwal asisten", bar bawah dengan tab Jadwal dan Rekap. Bila dev client membuka launcher, ketuk entri proyek di launcher lalu ulangi deep link.
+Expected: layar judul "Jadwal asisten" dengan bar bawah tab Jadwal dan Rekap. Deep link aplikasi hanya sah saat aplikasi sudah berjalan; cold start tidak didukung dev build.
 
-- [ ] **Step 4: Alur A — tab Rekap lalu kembali ke Jadwal**
+- [ ] **Step 5: Alur A — tab Rekap lalu kembali ke Jadwal**
 
 Ambil koordinat tab Rekap dengan salah satu cara:
 ```bash
@@ -531,7 +597,7 @@ echo "before2=$before2 after2=$after2"
 ```
 Expected: kembali ke jadwal dan `before2` sama dengan `after2`. Ini bukti `dismissTo('/asisten')` bekerja tanpa memuat ulang proses.
 
-- [ ] **Step 5: Alur B — kartu jadwal membuka detail (onManage)**
+- [ ] **Step 6: Alur B — kartu jadwal membuka detail (onManage)**
 
 Mulai dari layar jadwal pada Step 3. Ketuk aksi pada kartu sesi `web-04` yang berlabel "Pantau sesi" karena sesinya berstatus Dibuka. Tentukan koordinat dengan pola yang sama seperti Step 4, lalu:
 ```bash
@@ -541,7 +607,7 @@ adb exec-out screencap -p > /tmp/p3-native/04-detail-dari-kartu.png
 ```
 Expected: judul "Kelola sesi" dan status Dibuka. Ini bukti `onManage` memakai path `/asisten/sesi/[id]`.
 
-- [ ] **Step 6: Alur B2 — detail sesi tertutup lalu tombol Rekap (onRecap)**
+- [ ] **Step 7: Alur B2 — detail sesi tertutup lalu tombol Rekap (onRecap)**
 
 Tidak ada sesi `closed` pada `previewDate` 2026-10-19: `web-03` bertanggal 2026-10-12 dan `web-02` 2026-10-05 (`schedule-data.ts:29,33`). Jadi detail sesi tertutup dibuka lewat deep link:
 ```bash
@@ -552,23 +618,28 @@ adb exec-out screencap -p > /tmp/p3-native/05-detail-tertutup.png
 Expected: judul "Kelola sesi", status Ditutup, tombol footer "Lihat rekap sesi". Ketuk tombol itu, lalu simpan `/tmp/p3-native/06-rekap-dari-detail.png`.
 Expected: layar rekap menampilkan sesi `web-03` sebagai pilihan awal. Ini bukti `navigate('/asisten/rekap')` membawa parameter `sesi`.
 
-- [ ] **Step 7: Alur C — cold open detail lalu tombol kembali**
+- [ ] **Step 8: Alur C — tombol Kembali dari detail**
 
 Run:
 ```bash
-adb shell am force-stop com.ppk.presensipraktikum
 adb shell am start -W -a android.intent.action.VIEW -d 'presensipraktikum:///asisten/sesi/web-04' com.ppk.presensipraktikum
-sleep 6
-adb exec-out screencap -p > /tmp/p3-native/07-detail-web04.png
+sleep 4
+beforeBack=$(adb shell pidof com.ppk.presensipraktikum)
+adb shell input tap <XK> <YK>
+sleep 3
+adb exec-out screencap -p > /tmp/p3-native/07-kembali-dari-detail.png
+afterBack=$(adb shell pidof com.ppk.presensipraktikum)
+echo "beforeBack=$beforeBack afterBack=$afterBack"
 ```
-Expected: detail sesi `web-04` tampil. Ketuk tombol kembali (label aksesibilitas "Kembali") lalu simpan `/tmp/p3-native/08-kembali-ke-jadwal.png`.
-Expected: mendarat di `/asisten`, bukan layar kosong. Ini bukti fallback `replace('/asisten')` bekerja saat tidak ada riwayat.
+Expected: mendarat di jadwal `/asisten` dan `beforeBack` sama dengan `afterBack`. Ini menguji cabang `router.back()`.
 
-- [ ] **Step 8: Baca dan laporkan bukti**
+Cabang `replace('/asisten')` tidak diuji di sini karena dev build tidak bisa cold start pada sebuah rute. Buktinya ada di Task 2 Step 11.
+
+- [ ] **Step 9: Baca dan laporkan bukti**
 
 Baca setiap berkas `/tmp/p3-native/*.png` dengan pembaca gambar. Laporkan per alur: lulus atau gagal, dengan nama berkas bukti. Jangan menyatakan lulus tanpa melihat gambarnya.
 
-- [ ] **Step 9: Ulangi penjaga dan typecheck terakhir**
+- [ ] **Step 10: Ulangi penjaga dan typecheck terakhir**
 
 Run:
 ```bash
@@ -579,7 +650,7 @@ git ls-files 'src/app/(tabs)' 'src/app/sesi' 'src/app/tambah-sesi.tsx' 'src/comp
 ```
 Expected: `tsc=0`, `lint=0`, `guard1=1`, `guard3` tanpa daftar berkas.
 
-- [ ] **Step 10: Hentikan proses latar**
+- [ ] **Step 11: Hentikan proses latar**
 
 ```bash
 pkill -f "expo start --dev-client --port 8081"
