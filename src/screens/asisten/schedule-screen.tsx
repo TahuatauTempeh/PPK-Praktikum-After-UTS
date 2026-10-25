@@ -19,16 +19,13 @@ type Props = {
   sessions?: readonly AssistantSession[];
   attendance?: readonly AssistantAttendance[];
   date?: string;
-  feedback?: string;
-  onAdd?: () => void;
   onManage?: (id: string) => void;
 };
 
 export default function ScheduleScreen({
   sessions = previewSessions, attendance = previewAttendance, date = previewDate,
-  onAdd, onManage, feedback,
+  onManage,
 }: Props) {
-  const [dismissed, setDismissed] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
   const daySessions = sessions.filter(session => session.date === date)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -46,12 +43,6 @@ export default function ScheduleScreen({
   return (
     <AssistantScreen edges={['top', 'left', 'right']}>
       <AssistantHeader greeting="Selamat pagi, Nadia" title="Jadwal asisten" initials="NA" identityLabel="Nadia, asisten (identitas contoh)" />
-      {feedback && !dismissed && <View style={styles.feedback}>
-        <AssistantText tone="accent" accessibilityLiveRegion="polite" style={styles.feedbackText}>{feedback}</AssistantText>
-        <Pressable accessibilityRole="button" accessibilityLabel="Tutup pesan" onPress={() => setDismissed(true)} style={styles.dismiss}>
-          <AssistantText tone="accent">Tutup</AssistantText>
-        </Pressable>
-      </View>}
       <View style={styles.dayBanner}>
         <View style={styles.dateBlock}>
           <AssistantText style={styles.day}>{new Intl.DateTimeFormat('id-ID', { ...dateOptions, day: 'numeric' }).format(activeDate)}</AssistantText>
@@ -77,12 +68,6 @@ export default function ScheduleScreen({
       </View>
       <View style={styles.listHeading}>
         <AssistantText variant="sectionTitle" accessibilityRole="header">{today ? 'Sesi hari ini' : 'Sesi pada tanggal ini'}</AssistantText>
-        <Pressable accessibilityRole="button" disabled={!onAdd} onPress={onAdd}
-          accessibilityState={{ disabled: !onAdd }} accessibilityHint={!onAdd ? 'Penambahan sesi belum tersedia.' : undefined}
-          style={[styles.add, !onAdd && styles.disabled]}>
-          <ScheduleIcon name="plus" size={16} />
-          <AssistantText tone="accent" style={styles.addText}>Tambah sesi</AssistantText>
-        </Pressable>
       </View>
       <View style={styles.list} accessibilityLiveRegion="polite">
         {visible.map(session => <ScheduleCard key={session.id} session={session} attendance={attendance} onManage={onManage} />)}
@@ -94,17 +79,12 @@ export default function ScheduleScreen({
             </AssistantText>
             {daySessions.length === 0 && (
               <AssistantText tone="secondary" style={styles.center}>
-                Belum ada sesi praktikum yang dijadwalkan. Tambahkan sesi pertama untuk mulai mencatat presensi.
+                Belum ada sesi praktikum yang dijadwalkan.
               </AssistantText>
             )}
-            {daySessions.length > 0 ? (
+            {daySessions.length > 0 && (
               <Pressable accessibilityRole="button" onPress={() => setFilter('all')} style={styles.reset}>
                 <AssistantText variant="label" style={styles.white}>Tampilkan semua sesi</AssistantText>
-              </Pressable>
-            ) : (
-              <Pressable accessibilityRole="button" disabled={!onAdd} onPress={onAdd}
-                accessibilityState={{ disabled: !onAdd }} style={[styles.reset, !onAdd && styles.disabled]}>
-                <AssistantText variant="label" style={styles.white}>Tambah sesi pertama</AssistantText>
               </Pressable>
             )}
           </View>
@@ -115,9 +95,6 @@ export default function ScheduleScreen({
 }
 
 const styles = StyleSheet.create({
-  feedback: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, backgroundColor: theme.colors.primarySoft, borderRadius: theme.radius.control },
-  feedbackText: { flex: 1 },
-  dismiss: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'center' },
   dayBanner: { flexDirection: 'row', alignItems: 'center', padding: 18, gap: 16, minHeight: 88, backgroundColor: theme.colors.primary, borderRadius: theme.radius.card },
   dateBlock: { alignItems: 'center', minWidth: 42 },
   day: { fontSize: 32, lineHeight: 39, fontFamily: theme.fonts.bold, color: theme.colors.surface },
@@ -131,9 +108,6 @@ const styles = StyleSheet.create({
   filterLabel: { fontFamily: theme.fonts.semibold },
   pressed: { opacity: 0.7 },
   listHeading: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  add: { flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 44 },
-  addText: { fontSize: 13, fontFamily: theme.fonts.semibold },
-  disabled: { opacity: 0.5 },
   list: { gap: 14 },
   empty: { alignItems: 'center', paddingHorizontal: 22, paddingVertical: 32, gap: 16 },
   emptyIcon: { width: 84, height: 84, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.panel, backgroundColor: theme.colors.primarySoft },
