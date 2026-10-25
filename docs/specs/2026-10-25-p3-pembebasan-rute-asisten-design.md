@@ -127,8 +127,9 @@ Urutan perintah, semuanya dari akar repo:
 8. Cek manual di browser: tab Jadwal dan tab Rekap berpindah, tombol detail membuka kelola sesi, dan bar bawah tetap tampil hanya di dua tab.
 9. Smoke test native di emulator Android 15 (`emulator-5554`), memakai development build yang sudah terpasang (`com.ppk.presensipraktikum`, terpasang 2026-10-24 23.04). Perubahan hanya JavaScript, jadi build tidak perlu dibuat ulang selama dependensi native tidak berubah.
    - `npx expo start --dev-client --port 8081` di latar.
-   - `adb shell am start -a android.intent.action.VIEW -d 'presensipraktikum:///asisten'`.
+   - `adb shell am start -W -a android.intent.action.VIEW -d 'presensipraktikum:///asisten' com.ppk.presensipraktikum`.
    - Tiga alur wajib: (a) tab Rekap lalu kembali ke tab Jadwal, menguji `dismissTo('/asisten')`; (b) jadwal, buka detail sesi, tekan tombol Rekap, menguji `navigate('/asisten/rekap')` dengan parameter; (c) cold open `presensipraktikum:///asisten/sesi/web-04` lalu tombol kembali, menguji fallback `replace('/asisten')`.
+   - Alur (c) wajib didahului `adb shell am force-stop com.ppk.presensipraktikum` dan memakai intent yang menyebut paket tujuan. Tanpa itu, riwayat dari alur (a) dan (b) masih hidup, `router.canGoBack()` bernilai benar, dan yang teruji adalah `router.back()`, bukan fallback `replace('/asisten')`.
    - Lulus bila tidak ada layar kosong atau "Unmatched Route", tab Jadwal kembali tanpa menutup aplikasi, dan tombol kembali dari detail mendarat di `/asisten`.
    - Bila emulator tidak tersedia, langkah ini dilaporkan belum dijalankan dan pekerjaan tidak dinyatakan selesai. Jika build terpasang gagal tersambung ke Metro, jalankan `npx expo run:android`.
 
