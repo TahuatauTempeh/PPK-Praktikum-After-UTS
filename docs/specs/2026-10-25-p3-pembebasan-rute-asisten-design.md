@@ -125,6 +125,12 @@ Urutan perintah, semuanya dari akar repo:
 6. `npx tsc --noEmit` harus exit 0. Tanpa langkah 5, `tsc` gagal karena union rute masih lama.
 7. Jalankan `npx expo start --web --port 8099` di latar, lalu cek `http://127.0.0.1:8099/asisten`, `/asisten/rekap`, dan `/asisten/sesi/web-04`. Ketiganya harus merespons tanpa "Unmatched Route".
 8. Cek manual di browser: tab Jadwal dan tab Rekap berpindah, tombol detail membuka kelola sesi, dan bar bawah tetap tampil hanya di dua tab.
+9. Smoke test native di emulator Android 15 (`emulator-5554`), memakai development build yang sudah terpasang (`com.ppk.presensipraktikum`, terpasang 2026-10-24 23.04). Perubahan hanya JavaScript, jadi build tidak perlu dibuat ulang selama dependensi native tidak berubah.
+   - `npx expo start --dev-client --port 8081` di latar.
+   - `adb shell am start -a android.intent.action.VIEW -d 'presensipraktikum:///asisten'`.
+   - Tiga alur wajib: (a) tab Rekap lalu kembali ke tab Jadwal, menguji `dismissTo('/asisten')`; (b) jadwal, buka detail sesi, tekan tombol Rekap, menguji `navigate('/asisten/rekap')` dengan parameter; (c) cold open `presensipraktikum:///asisten/sesi/web-04` lalu tombol kembali, menguji fallback `replace('/asisten')`.
+   - Lulus bila tidak ada layar kosong atau "Unmatched Route", tab Jadwal kembali tanpa menutup aplikasi, dan tombol kembali dari detail mendarat di `/asisten`.
+   - Bila emulator tidak tersedia, langkah ini dilaporkan belum dijalankan dan pekerjaan tidak dinyatakan selesai. Jika build terpasang gagal tersambung ke Metro, jalankan `npx expo run:android`.
 
 Catatan: `expo lint` hanya memberi peringatan untuk variabel atau prop yang tidak terpakai, jadi langkah 1 sampai 3 yang menjaga kebersihan kode, bukan langkah 4.
 
@@ -132,7 +138,7 @@ Kegagalan yang diharapkan: membuka `/` menampilkan rute tidak ditemukan. Ini kon
 
 ## 8. Sisa risiko
 
-1. `router.dismissTo` dipakai bar bawah untuk kembali ke jadwal. Perilakunya tidak terbukti lewat cek HTTP, jadi butuh cek manual di browser pada langkah verifikasi 8.
+1. `router.dismissTo` dipakai bar bawah untuk kembali ke jadwal. Perilakunya bergantung pada state navigator, bukan kecocokan URL. Bukti lulusnya hanya dari langkah verifikasi 8 (browser) dan 9 (native).
 2. Aplikasi tidak dapat dibuka dari `/` sampai Programmer 1 mendarat. Selama itu, buka lewat `/asisten`.
 3. Penghapusan `src/components/app-tabs.tsx` dan `src/components/app-tabs.web.tsx` menyentuh folder Programmer 1. Keduanya tidak dipakai, dan riwayat git menyimpannya. Programmer 1 perlu tahu supaya tidak menambahkannya kembali.
 
@@ -143,7 +149,7 @@ Kegagalan yang diharapkan: membuka `/` menampilkan rute tidak ditemukan. Ini kon
 - Filter dan hitungan rekap.
 - Penyambungan data ke context bersama.
 - Penghapusan berkas sisa template lain: `src/app/explore.tsx`, `src/components/themed-*`, `animated-icon*`, `hint-row.tsx`, `web-badge.tsx`, `external-link.tsx`, dan `ui/collapsible.tsx`. Yang dihapus hanya dua berkas `app-tabs`.
-- Demo Android. Demo itu bagian kriteria akhir P3 dan menunggu fondasi Programmer 1.
+- Demo penuh di Android. Satu smoke test native tetap masuk lingkup lewat §7 langkah 9. Demo penuh adalah kriteria akhir P3 dan menunggu fondasi Programmer 1.
 
 ## 10. Kriteria selesai
 
@@ -152,4 +158,5 @@ Kegagalan yang diharapkan: membuka `/` menampilkan rute tidak ditemukan. Ini kon
 - Tidak ada jejak tambah sesi di kode: rute, layar, form, tombol, dan aksi provider.
 - Berkas `src/components/app-tabs.tsx` dan `src/components/app-tabs.web.tsx` tidak ada lagi, dan tidak ada berkas template lain yang memakai rute `/`.
 - `npx expo lint` dan `npx tsc --noEmit` exit 0.
+- Smoke test native tiga alur navigasi di emulator Android lulus sesuai §7 langkah 9.
 - Bar bawah tetap tampil di tab Jadwal dan Rekap, dan tidak tampil di layar kelola sesi.
