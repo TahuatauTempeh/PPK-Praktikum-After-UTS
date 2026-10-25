@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { type buildRecap } from '../recap-data';
 import { type AssistantAttendance, type AssistantParticipant } from '../schedule-data';
-import { formatSessionDate } from '../session-format';
+import { formatPraktikumName, formatSessionDate } from '../session-format';
 import { assistantTheme as theme } from '../theme';
 import { AssistantText } from './assistant-text';
 import { ScheduleIcon } from './schedule-icon';
@@ -18,13 +18,13 @@ type Props = {
 export function RecapCard({ row, attendance, participants, expanded, onExpand, onDetail }: Props) {
   const { session, present, total, absent, percent } = row;
   if (!expanded) return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`Ringkasan ${session.course}, ${session.topic}, ${formatSessionDate(session.date)}`}
+    <Pressable accessibilityRole="button" accessibilityLabel={`Ringkasan ${formatPraktikumName(session)}, ${session.topic}, ${formatSessionDate(session.date)}`}
       accessibilityState={{ expanded: false }} onPress={onExpand}
       style={({ pressed }) => [styles.compact, pressed && styles.pressed]}>
       <View style={styles.check}><ScheduleIcon name="check" size={18} /></View>
       <View style={styles.compactIdentity}>
         <AssistantText style={styles.compactTitle}>{session.topic}</AssistantText>
-        <AssistantText variant="caption" tone="secondary">{session.course}</AssistantText>
+        <AssistantText variant="caption" tone="secondary">{formatPraktikumName(session)}</AssistantText>
         <AssistantText variant="caption" tone="secondary" style={styles.small}>{formatSessionDate(session.date)} · {session.className}</AssistantText>
       </View>
       <View style={styles.compactNumbers}>
@@ -48,7 +48,7 @@ export function RecapCard({ row, attendance, participants, expanded, onExpand, o
         </View>
       </View>
       <View style={styles.material}>
-        <AssistantText style={styles.course} accessibilityRole="header">{session.course}</AssistantText>
+        <AssistantText style={styles.course} accessibilityRole="header">{formatPraktikumName(session)}</AssistantText>
         <AssistantText variant="greeting" tone="secondary" style={styles.topic}>{session.topic}</AssistantText>
         <AssistantText variant="caption" tone="secondary" style={styles.small}>
           {session.startTime.replace(':', '.')}–{session.endTime.replace(':', '.')} WIB · {session.room}
@@ -72,7 +72,7 @@ export function RecapCard({ row, attendance, participants, expanded, onExpand, o
         <AssistantText variant="caption" tone="secondary" style={[styles.small, styles.bold]}>Tidak hadir</AssistantText>
         <AssistantText variant="caption">{absentNames.join(', ') || 'Tidak ada'}</AssistantText>
       </View>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Lihat detail presensi ${session.course}, ${session.topic}`}
+      <Pressable accessibilityRole="button" accessibilityLabel={`Lihat detail presensi ${formatPraktikumName(session)}, ${session.topic}`}
         onPress={onDetail} style={({ pressed }) => [styles.detail, pressed && styles.pressed]}>
         <AssistantText tone="accent" style={styles.compactTitle}>Lihat detail presensi</AssistantText>
         <ScheduleIcon name="detailArrow" size={17} />

@@ -4,7 +4,7 @@ import { AssistantSheet, type CloseSheet } from './assistant-sheet';
 
 import { type DateRange, isValidDate, monthRange } from '../recap-data';
 import { type AssistantSession, previewDate } from '../schedule-data';
-import { formatSessionDate } from '../session-format';
+import { formatPraktikumName, formatSessionDate } from '../session-format';
 import { assistantTheme as theme } from '../theme';
 import { AssistantText } from './assistant-text';
 
@@ -72,7 +72,7 @@ export function RecapFilterDialog({ kind, range, selectedId, sessions, onRange, 
               {sessions.map(session => (
                 <Pressable key={session.id} accessibilityRole="radio" accessibilityState={{ checked: selectedId === session.id }}
                   onPress={() => closeSheet(() => onSelect(session.id))} style={[styles.option, selectedId === session.id && styles.selected]}>
-                  <AssistantText style={styles.bold}>{session.course} · {session.className}</AssistantText>
+                  <AssistantText style={styles.bold}>{formatPraktikumName(session)} · {session.className}</AssistantText>
                   <AssistantText variant="caption" tone="secondary">{session.topic}</AssistantText>
                   <AssistantText variant="caption" tone="secondary">{formatSessionDate(session.date)}</AssistantText>
                 </Pressable>

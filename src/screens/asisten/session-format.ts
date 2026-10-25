@@ -1,3 +1,5 @@
+import { type AssistantSession } from './schedule-data';
+
 export function formatSessionDate(date: string) {
   return new Intl.DateTimeFormat('id-ID', {
     timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short', year: 'numeric',
@@ -8,4 +10,9 @@ export function formatAttendanceTime(instant: string) {
   return new Intl.DateTimeFormat('id-ID', {
     timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
   }).format(new Date(instant));
+}
+
+/** Nama praktikum: mata kuliah + kode praktikum, mis. "Basis Data C2". */
+export function formatPraktikumName(session: Pick<AssistantSession, 'course' | 'code'>) {
+  return `${session.course} ${session.code}`;
 }

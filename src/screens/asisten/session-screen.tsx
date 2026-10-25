@@ -7,7 +7,7 @@ import { ScheduleIcon } from './components/schedule-icon';
 import { SessionConfirmation } from './components/session-confirmation';
 import { useAssistantSessions } from './preview-session-provider';
 import { countAttendance, statusLabels } from './schedule-data';
-import { formatAttendanceTime, formatSessionDate } from './session-format';
+import { formatAttendanceTime, formatPraktikumName, formatSessionDate } from './session-format';
 import { assistantTheme as theme } from './theme';
 
 type Props = { id: string; onBack: () => void; onRecap?: (id: string) => void };
@@ -93,7 +93,7 @@ export default function SessionScreen({ id, onBack, onRecap }: Props) {
             </View>
           </View>
           <View style={styles.material}>
-            <AssistantText variant="detailTitle" accessibilityRole="header">{session.course}</AssistantText>
+            <AssistantText variant="detailTitle" accessibilityRole="header">{formatPraktikumName(session)}</AssistantText>
             <AssistantText tone="secondary">{session.topic}</AssistantText>
           </View>
           <View style={styles.metadata}>

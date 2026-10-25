@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { type AssistantSession, type AssistantAttendance, countAttendance, statusLabels } from '../schedule-data';
+import { formatPraktikumName } from '../session-format';
 import { assistantTheme as theme } from '../theme';
 import { AssistantText } from './assistant-text';
 import { ScheduleIcon } from './schedule-icon';
@@ -15,14 +16,13 @@ export function ScheduleCard({ session, attendance, onManage }: {
   return (
     <View style={[styles.card, open && styles.openCard]}>
       <View style={styles.topRow}>
-        <AssistantText style={styles.className} tone="secondary">{session.code}</AssistantText>
         <View style={[styles.badge, open && styles.openBadge]}>
           <ScheduleIcon name={open ? 'dotOpen' : 'dotNeutral'} size={5} />
           <AssistantText style={styles.badgeText} tone={open ? 'accent' : 'secondary'}>{statusLabels[session.status]}</AssistantText>
         </View>
       </View>
       <View style={styles.material}>
-        <AssistantText accessibilityRole="header" style={styles.course}>{session.course}</AssistantText>
+        <AssistantText accessibilityRole="header" style={styles.course}>{formatPraktikumName(session)}</AssistantText>
         <AssistantText variant="greeting" tone="secondary" style={styles.topic}>{session.topic}</AssistantText>
       </View>
       <View style={styles.metadata}>
@@ -43,7 +43,7 @@ export function ScheduleCard({ session, attendance, onManage }: {
         </AssistantText>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${open ? 'Pantau' : 'Kelola'} sesi ${session.course}, ${session.className}`}
+          accessibilityLabel={`${open ? 'Pantau' : 'Kelola'} sesi ${formatPraktikumName(session)}, ${session.className}`}
           accessibilityState={{ disabled: !onManage }}
           accessibilityHint={!onManage ? 'Pengelolaan sesi belum tersedia.' : undefined}
           disabled={!onManage}
@@ -60,8 +60,7 @@ export function ScheduleCard({ session, attendance, onManage }: {
 const styles = StyleSheet.create({
   card: { padding: 18, gap: 13, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.card },
   openCard: { borderColor: theme.colors.primary },
-  topRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  className: { fontSize: 11, lineHeight: 16, fontFamily: theme.fonts.bold },
+  topRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 6, borderRadius: theme.radius.pill, backgroundColor: theme.colors.neutralSoft },
   openBadge: { backgroundColor: theme.colors.primarySoft },
   badgeText: { fontSize: 11, lineHeight: 14, fontFamily: theme.fonts.semibold },
