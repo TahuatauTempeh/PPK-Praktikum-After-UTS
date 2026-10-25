@@ -117,7 +117,7 @@ Detail sesi berada di luar grup `(tabs)` supaya bar bawah tidak tampil. Aturan i
 
 Urutan perintah, semuanya dari akar repo:
 
-1. Penjaga isi: `rg -n --pcre2 "tambah-sesi|addSession|add-session-screen|session-form\\b|session-input-picker|onAdd|SessionForm|emptySessionForm|validateSessionForm|createSession|sessionChoices" src` harus kosong.
+1. Penjaga isi: `rg -n --pcre2 "tambah-sesi|addSession|add-session-screen|session-form\b|session-input-picker|onAdd|SessionForm|emptySessionForm|validateSessionForm|createSession|sessionChoices" src` harus kosong.
 2. Penjaga literal rute: `rg -n "'/rekap'|'/sesi/|'/tambah-sesi'" src` harus kosong.
 3. Penjaga berkas: `git ls-files 'src/app/(tabs)' 'src/app/sesi' 'src/app/tambah-sesi.tsx' 'src/screens/asisten/add-session-screen.tsx' 'src/screens/asisten/session-form.ts' 'src/screens/asisten/components/session-form-field.tsx' 'src/screens/asisten/components/session-input-picker.tsx' 'src/components/app-tabs.tsx' 'src/components/app-tabs.web.tsx'` harus kosong.
 4. `npx expo lint` harus exit 0.
