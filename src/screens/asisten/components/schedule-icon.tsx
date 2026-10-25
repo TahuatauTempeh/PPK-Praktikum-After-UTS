@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 
 const assets = {
+  arrowWhite: require('../../../../assets/asisten/arrow-white.svg'),
   formChevron: require('../../../../assets/asisten/form-chevron.svg'),
   formCalendar: require('../../../../assets/asisten/form-calendar.svg'),
   formClock: require('../../../../assets/asisten/form-clock.svg'),

@@ -12,6 +12,14 @@ export function formatAttendanceTime(instant: string) {
   }).format(new Date(instant));
 }
 
+export function splitSessionTopic(topic: string) {
+  const match = /^Sesi\s+(\d+)\s*\|\s*(.*)$/.exec(topic);
+  return {
+    number: match?.[1] ?? null,
+    topic: match ? match[2].trim() : topic,
+  };
+}
+
 /** Nama praktikum: mata kuliah + kode praktikum, mis. "Basis Data C2". */
 export function formatPraktikumName(session: Pick<AssistantSession, 'course' | 'code'>) {
   return `${session.course} ${session.code}`;

@@ -12,6 +12,8 @@ type Box = { x: number; y: number; width: number; height: number };
 
 const tabs = ['schedule', 'recap'] as const;
 const tabGap = 52;
+const navigationRadius = theme.radius.panel;
+const tabRadius = navigationRadius - theme.spacing.sm;
 const indicatorSlide = { duration: 240, easing: Easing.out(Easing.cubic) };
 
 export function AssistantNavigation({ active, onSchedule, onRecap }: Props) {
@@ -64,9 +66,9 @@ export function AssistantNavigation({ active, onSchedule, onRecap }: Props) {
   );
 }
 const styles = StyleSheet.create({
-  navigation: { flexDirection: 'row', gap: 52, paddingHorizontal: 42, paddingTop: 8, paddingBottom: 10, backgroundColor: theme.colors.surface, borderTopWidth: 1, borderTopColor: theme.colors.border, width: '100%', maxWidth: 600, alignSelf: 'center' },
-  indicator: { position: 'absolute', backgroundColor: theme.colors.primarySoft, borderRadius: theme.radius.control },
-  tab: { flex: 1, minHeight: 54, alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 6, borderRadius: theme.radius.control },
+  navigation: { flexDirection: 'row', gap: 52, paddingHorizontal: theme.spacing.sm, paddingVertical: theme.spacing.sm, marginVertical: 10, backgroundColor: 'rgba(255,255,255,0.85)', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: navigationRadius, width: '90%', maxWidth: 552, alignSelf: 'center', boxShadow: '0 4px 24px rgba(30,65,125,0.08)' },
+  indicator: { position: 'absolute', backgroundColor: '#DFE9FA', borderRadius: tabRadius },
+  tab: { flex: 1, minHeight: 54, alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 6, borderRadius: tabRadius },
   bold: { fontFamily: theme.fonts.bold },
   pressed: { opacity: 0.7 },
 });

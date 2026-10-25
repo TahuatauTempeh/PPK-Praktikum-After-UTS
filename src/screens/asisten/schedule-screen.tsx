@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { AssistantHeader } from './components/assistant-header';
 import { AssistantScreen } from './components/assistant-screen';
 import { AssistantText } from './components/assistant-text';
 import { ScheduleCard } from './components/schedule-card';
@@ -42,32 +41,52 @@ export default function ScheduleScreen({
 
   return (
     <AssistantScreen edges={['top', 'left', 'right']}>
-      <AssistantHeader greeting="Selamat pagi, Nadia" title="Jadwal asisten" initials="NA" identityLabel="Nadia, asisten (identitas contoh)" />
       <View style={styles.dayBanner}>
-        <View style={styles.dateBlock}>
-          <AssistantText style={styles.day}>{new Intl.DateTimeFormat('id-ID', { ...dateOptions, day: 'numeric' }).format(activeDate)}</AssistantText>
-          <AssistantText style={styles.month}>{new Intl.DateTimeFormat('id-ID', { ...dateOptions, month: 'short' }).format(activeDate).toUpperCase()}</AssistantText>
+        <View pointerEvents="none" accessible={false} style={styles.calendarWatermark}>
+          <ScheduleIcon name="calendarWhite" size={126} />
         </View>
-        <View style={styles.agenda}>
-          <AssistantText style={styles.dateLabel}>{fullDate}</AssistantText>
-          <AssistantText variant="caption" style={styles.white}>{daySessions.length} sesi{today ? ' hari ini' : ''} · {openCount} sedang dibuka</AssistantText>
+        <View style={styles.bannerHeading}>
+          <AssistantText style={styles.bannerEyebrow}>AGENDA PRAKTIKUM</AssistantText>
         </View>
-        <ScheduleIcon name="calendarWhite" size={21} />
+        <View style={styles.dateRow} accessibilityLabel={fullDate}>
+          <AssistantText style={styles.day}>{new Intl.DateTimeFormat('id-ID', { ...dateOptions, day: '2-digit' }).format(activeDate)}</AssistantText>
+          <View style={styles.dateDetails}>
+            <AssistantText style={styles.weekday}>{new Intl.DateTimeFormat('id-ID', { ...dateOptions, weekday: 'long' }).format(activeDate)}</AssistantText>
+            <AssistantText style={styles.month}>{new Intl.DateTimeFormat('id-ID', { ...dateOptions, month: 'long', year: 'numeric' }).format(activeDate)}</AssistantText>
+          </View>
+          {today && <View style={styles.todayBadge}><AssistantText style={styles.todayLabel}>Hari ini</AssistantText></View>}
+        </View>
+        <View style={styles.bannerFooter}>
+          <AssistantText style={styles.sessionSummary}>{daySessions.length} sesi terjadwal</AssistantText>
+          <View style={styles.openSummary}>
+            <View style={styles.liveDot} />
+            <AssistantText style={styles.openLabel}>{openCount} dibuka</AssistantText>
+          </View>
+        </View>
       </View>
-      <View style={styles.filters} accessibilityLabel="Filter status sesi">
-        {filters.map(value => (
-          <Pressable key={value} accessibilityRole="button"
-            accessibilityState={{ selected: value === filter }}
-            onPress={() => setFilter(value)}
-            style={({ pressed }) => [styles.filter, value === filter && styles.selectedFilter, pressed && styles.pressed]}>
-            <AssistantText variant="caption" style={[styles.filterLabel, value === filter && styles.white]} tone="secondary">
-              {value === 'all' ? 'Semua' : statusLabels[value]}
-            </AssistantText>
-          </Pressable>
-        ))}
-      </View>
-      <View style={styles.listHeading}>
-        <AssistantText variant="sectionTitle" accessibilityRole="header">{today ? 'Sesi hari ini' : 'Sesi pada tanggal ini'}</AssistantText>
+      <View style={styles.scheduleSection}>
+        <View style={styles.listHeading}>
+          <AssistantText style={styles.sectionTitle} accessibilityRole="header">{today ? 'Sesi hari ini' : 'Daftar sesi'}</AssistantText>
+          <AssistantText variant="caption" tone="secondary">{visible.length} sesi</AssistantText>
+        </View>
+        <ScrollView horizontal style={styles.filterViewport} showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters} accessibilityLabel="Filter status sesi">
+          {filters.map(value => {
+            const count = value === 'all' ? daySessions.length : daySessions.filter(session => session.status === value).length;
+            const selected = value === filter;
+            return (
+              <Pressable key={value} accessibilityRole="button"
+                accessibilityLabel={`${value === 'all' ? 'Semua' : statusLabels[value]}, ${count} sesi`}
+                accessibilityState={{ selected }}
+                onPress={() => setFilter(value)}
+                style={({ pressed }) => [styles.filter, selected && styles.selectedFilter, pressed && styles.pressed]}>
+                <AssistantText style={[styles.filterLabel, selected && styles.white]} tone="secondary">
+                  {value === 'all' ? 'Semua' : statusLabels[value]}
+                </AssistantText>
+                <AssistantText style={[styles.filterCount, selected && styles.selectedCount]}>{count}</AssistantText>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
       <View style={styles.list} accessibilityLiveRegion="polite">
         {visible.map(session => <ScheduleCard key={session.id} session={session} attendance={attendance} onManage={onManage} />)}
@@ -95,23 +114,38 @@ export default function ScheduleScreen({
 }
 
 const styles = StyleSheet.create({
-  dayBanner: { flexDirection: 'row', alignItems: 'center', padding: 18, gap: 16, minHeight: 88, backgroundColor: theme.colors.primary, borderRadius: theme.radius.card },
-  dateBlock: { alignItems: 'center', minWidth: 42 },
-  day: { fontSize: 32, lineHeight: 39, fontFamily: theme.fonts.bold, color: theme.colors.surface },
-  month: { fontSize: 10, lineHeight: 14, fontFamily: theme.fonts.semibold, color: theme.colors.surface },
-  agenda: { flex: 1, gap: 7 },
-  dateLabel: { fontFamily: theme.fonts.semibold, fontSize: 15, lineHeight: 21, color: theme.colors.surface },
+  dayBanner: { overflow: 'hidden', padding: 22, gap: 18, backgroundColor: theme.colors.glassHero, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', borderRadius: 30 },
+  bannerHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  bannerEyebrow: { fontSize: 10, lineHeight: 16, letterSpacing: 1.8, fontFamily: theme.fonts.semibold, color: '#EDF3FF' },
+  calendarWatermark: { position: 'absolute', top: -12, right: -16, opacity: 0.12 },
+  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 14, flexWrap: 'wrap' },
+  day: { fontSize: 58, lineHeight: 64, letterSpacing: -3, fontFamily: theme.fonts.bold, color: theme.colors.surface, fontVariant: ['tabular-nums'] },
+  dateDetails: { gap: 3, flex: 1, minWidth: 100 },
+  weekday: { fontSize: 21, lineHeight: 28, fontFamily: theme.fonts.semibold, color: theme.colors.surface },
+  month: { fontSize: 13, lineHeight: 20, color: '#EDF3FF' },
+  todayBadge: { paddingHorizontal: 10, paddingVertical: 5, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: theme.radius.pill },
+  todayLabel: { color: theme.colors.surface, fontSize: 11, lineHeight: 16, fontFamily: theme.fonts.semibold },
+  bannerFooter: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.16)' },
+  sessionSummary: { fontSize: 12, lineHeight: 18, fontFamily: theme.fonts.medium, color: theme.colors.surface },
+  openSummary: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#DDF59A' },
+  openLabel: { fontSize: 12, lineHeight: 18, color: '#FFFFFF' },
   white: { color: theme.colors.surface },
-  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  filter: { minHeight: 44, paddingHorizontal: 12, justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.pill, backgroundColor: theme.colors.surface },
-  selectedFilter: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
-  filterLabel: { fontFamily: theme.fonts.semibold },
+  scheduleSection: { gap: 14, marginTop: 8 },
+  filterViewport: { marginHorizontal: -theme.spacing.page },
+  filters: { flexDirection: 'row', gap: 8, paddingHorizontal: theme.spacing.page, paddingBottom: 2 },
+  filter: { minHeight: 44, paddingHorizontal: 13, gap: 8, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.9)', borderRadius: theme.radius.pill, backgroundColor: 'rgba(255,255,255,0.6)' },
+  selectedFilter: { backgroundColor: '#204CAC', borderColor: '#204CAC' },
+  filterLabel: { fontSize: 12, lineHeight: 18, fontFamily: theme.fonts.semibold },
+  filterCount: { fontSize: 10, lineHeight: 16, fontFamily: theme.fonts.semibold, color: theme.colors.textSecondary },
+  selectedCount: { color: '#D5E3FF' },
   pressed: { opacity: 0.7 },
-  listHeading: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  listHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  sectionTitle: { fontSize: 20, lineHeight: 27, fontFamily: theme.fonts.bold, letterSpacing: -0.4 },
   list: { gap: 14 },
   empty: { alignItems: 'center', paddingHorizontal: 22, paddingVertical: 32, gap: 16 },
-  emptyIcon: { width: 84, height: 84, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.panel, backgroundColor: theme.colors.primarySoft },
+  emptyIcon: { width: 84, height: 84, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.panel, backgroundColor: 'rgba(255,255,255,0.65)' },
   emptyTitle: { fontFamily: theme.fonts.bold, fontSize: 20, lineHeight: 27, textAlign: 'center' },
   center: { textAlign: 'center' },
-  reset: { backgroundColor: theme.colors.primary, borderRadius: theme.radius.control, paddingHorizontal: 18, paddingVertical: 14, minHeight: 50, alignSelf: 'stretch', alignItems: 'center' },
+  reset: { backgroundColor: '#204CAC', borderRadius: theme.radius.control, paddingHorizontal: 18, paddingVertical: 14, minHeight: 50, alignSelf: 'stretch', alignItems: 'center' },
 });

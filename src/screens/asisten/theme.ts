@@ -1,20 +1,24 @@
-/** Baseline sisi Asisten dari DESIGN.md; dapat dipetakan ke theme bersama P1. */
+/** Palet kaca dan biru kobalt bersama untuk seluruh sisi Asisten. */
 export const assistantTheme = {
   colors: {
-    background: '#F6F7FB',
+    background: '#E8EFF9',
     surface: '#FFFFFF',
-    primary: '#4B4ACF',
-    primarySoft: '#ECECFC',
+    primary: '#204CAC',
+    primarySoft: '#DFE9FA',
     textPrimary: '#192138',
-    textSecondary: '#6D7588',
-    neutralSoft: '#EFF1F6',
-    border: '#DDE0EB',
+    textSecondary: '#5C6D86',
+    neutralSoft: '#E5EDF8',
+    border: '#CBD8EA',
     success: '#23765B',
     error: '#B83E4D',
     errorSoft: '#FFF0F1',
+    glassSurface: 'rgba(255,255,255,0.8)',
+    glassBorder: 'rgba(255,255,255,0.95)',
+    glassHero: 'rgba(20,55,128,0.6)',
+    lime: '#DEF1B4',
   },
   spacing: { xs: 4, sm: 8, md: 12, section: 18, page: 24, lg: 32 },
-  radius: { control: 12, card: 18, panel: 26, pill: 999 },
+  radius: { control: 20, card: 28, panel: 32, pill: 999 },
   fonts: {
     regular: 'Inter_400Regular',
     medium: 'Inter_500Medium',

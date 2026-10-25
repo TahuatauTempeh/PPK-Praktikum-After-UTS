@@ -41,7 +41,6 @@ export function RecapFilterDialog({ kind, range, selectedId, sessions, onRange, 
           <AssistantText style={styles.title} accessibilityRole="header">{title}</AssistantText>
           {kind === 'date' ? (
             <>
-              <AssistantText variant="caption" tone="secondary">Tanggal sesi menggunakan WIB. Format: tahun-bulan-hari.</AssistantText>
               <View style={styles.field}>
                 <AssistantText variant="caption" style={styles.bold}>Tanggal awal</AssistantText>
                 <TextInput accessibilityLabel="Tanggal awal" placeholder="YYYY-MM-DD" value={start}
@@ -88,18 +87,18 @@ export function RecapFilterDialog({ kind, range, selectedId, sessions, onRange, 
   );
 }
 const styles = StyleSheet.create({
-  dialog: { width: '100%', backgroundColor: theme.colors.surface, padding: 24, gap: 16 },
+  dialog: { width: '100%', backgroundColor: 'transparent', padding: 24, gap: 16 },
   title: { fontFamily: theme.fonts.bold, fontSize: 23, lineHeight: 30 },
   field: { gap: 7 },
   bold: { fontFamily: theme.fonts.semibold },
-  input: { borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.control, minHeight: 48, padding: 12, fontSize: 16, color: theme.colors.textPrimary, fontFamily: theme.fonts.regular },
+  input: { backgroundColor: theme.colors.glassSurface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.control, minHeight: 48, padding: 12, fontSize: 16, color: theme.colors.textPrimary, fontFamily: theme.fonts.regular },
   invalid: { borderColor: theme.colors.error },
   error: { fontSize: 12, lineHeight: 18, color: theme.colors.error },
-  button: { alignItems: 'center', justifyContent: 'center', minHeight: 48, padding: 12, borderRadius: theme.radius.control, borderWidth: 1, borderColor: theme.colors.border },
+  button: { backgroundColor: theme.colors.glassSurface, alignItems: 'center', justifyContent: 'center', minHeight: 48, padding: 12, borderRadius: theme.radius.control, borderWidth: 1, borderColor: theme.colors.border },
   primary: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
   white: { color: theme.colors.surface },
   options: { gap: 10 },
-  option: { minHeight: 48, padding: 12, gap: 5, justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.control },
+  option: { minHeight: 48, padding: 16, backgroundColor: theme.colors.glassSurface, gap: 5, justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.control },
   selected: { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.primary },
   pressed: { opacity: 0.7 },
 });

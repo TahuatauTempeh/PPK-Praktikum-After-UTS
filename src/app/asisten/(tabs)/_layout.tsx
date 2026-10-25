@@ -37,5 +37,5 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
-  bar: { backgroundColor: theme.colors.background },
+  bar: { backgroundColor: '#E8EFF9' },
 });

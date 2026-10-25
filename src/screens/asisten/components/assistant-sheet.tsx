@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { assistantTheme as theme } from '../theme';
+import { AssistantGlassHighlight } from './assistant-atmosphere';
 
 export type CloseSheet = (action?: () => void) => void;
 
@@ -77,6 +78,7 @@ export function AssistantSheet({ children, onCancel, onShow }: Props) {
             onAccessibilityEscape={() => close()}
             onLayout={event => setSheetHeight(event.nativeEvent.layout.height)}
             style={[styles.sheet, { transform: [{ translateY }] }]}>
+            <AssistantGlassHighlight />
             <View style={styles.grabArea} hitSlop={{ top: 8, bottom: 10, left: 60, right: 60 }} {...pan.panHandlers}>
               <View style={styles.handle} accessible={false} />
             </View>
@@ -92,9 +94,9 @@ export function AssistantSheet({ children, onCancel, onShow }: Props) {
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(18,23,44,0.5)' },
+  backdrop: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(12,32,70,0.42)' },
   frame: { maxHeight: '92%', width: '100%', maxWidth: 600, alignSelf: 'center' },
-  sheet: { flexShrink: 1, backgroundColor: theme.colors.surface, borderTopLeftRadius: 26, borderTopRightRadius: 26, overflow: 'hidden' },
+  sheet: { flexShrink: 1, backgroundColor: '#F1F6FE', borderWidth: 1, borderColor: theme.colors.glassBorder, borderTopLeftRadius: theme.radius.panel, borderTopRightRadius: theme.radius.panel, overflow: 'hidden' },
   grabArea: { alignSelf: 'stretch', alignItems: 'center', paddingTop: 12, paddingBottom: 4 },
   handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: theme.colors.border },
   content: { paddingBottom: 8 },

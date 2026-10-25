@@ -3,12 +3,14 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { assistantTheme as theme } from '../theme';
+import { AssistantAtmosphere } from './assistant-atmosphere';
 
 export function AssistantScreen({ children, footer, scrollRef, edges }: PropsWithChildren<{
   footer?: ReactNode; scrollRef?: Ref<ComponentRef<typeof ScrollView>>; edges?: readonly Edge[];
 }>) {
   return (
     <SafeAreaView style={styles.safeArea} edges={edges}>
+      <AssistantAtmosphere />
       <ScrollView ref={scrollRef} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>{children}</View>
       </ScrollView>

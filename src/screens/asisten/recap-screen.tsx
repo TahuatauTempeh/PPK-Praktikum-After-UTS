@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { AssistantScreen } from './components/assistant-screen';
 import { AssistantText } from './components/assistant-text';
@@ -14,6 +14,7 @@ import { assistantTheme as theme } from './theme';
 
 type Props = { initialSessionId?: string; onSchedule: () => void; onDetail: (id: string) => void };
 export default function RecapScreen({ initialSessionId = '', onSchedule, onDetail }: Props) {
+  const { width } = useWindowDimensions();
   const { sessions, attendance, participants } = useAssistantSessions();
   const initialSession = sessions.find(session => session.id === initialSessionId);
   const [range, setRange] = useState<DateRange | null>(() => monthRange(initialSession?.date ?? previewDate));
@@ -33,8 +34,22 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
       <View style={styles.screen} aria-hidden={dialog !== null} importantForAccessibility={dialog ? 'no-hide-descendants' : 'auto'}>
         <AssistantScreen edges={['top', 'left', 'right']}>
           <View style={styles.heading}>
+            <View pointerEvents="none" accessible={false} style={styles.chartWatermark}>
+              <ScheduleIcon name="chartWhite" size={126} />
+            </View>
+            <View style={styles.heroTop}>
+              <AssistantText style={styles.eyebrow}>HASIL PRAKTIKUM</AssistantText>
+            </View>
             <AssistantText variant="pageTitle" accessibilityRole="header" style={styles.title}>Rekap presensi</AssistantText>
-            <AssistantText variant="greeting" tone="secondary" style={styles.description}>Ringkasan kehadiran sesi yang telah ditutup.</AssistantText>
+            <View style={styles.metrics} accessibilityLiveRegion="polite">
+              {[{ label: 'Sesi ditutup', value: rows.length }, { label: 'Total hadir', value: present },
+                { label: 'Kehadiran', value: percent === null ? '—' : `${percent}%` }].map((metric, index) => (
+                  <View style={[styles.metric, index < 2 && styles.metricDivider]} key={metric.label}>
+                    <AssistantText tone="accent" style={[styles.metricNumber, width < 360 && styles.metricNumberCompact]} numberOfLines={1}>{metric.value}</AssistantText>
+                    <AssistantText variant="caption" tone="secondary" style={styles.metricLabel}>{metric.label}</AssistantText>
+                  </View>
+                ))}
+            </View>
           </View>
           <View style={styles.filters}>
             <Pressable accessibilityRole="button" accessibilityLabel={`Filter tanggal: ${dateLabel}`}
@@ -52,19 +67,10 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
               <ScheduleIcon name="chevron" size={14} />
             </Pressable>
           </View>
-          <View style={styles.metrics} accessibilityLiveRegion="polite">
-            {[{ label: 'Sesi ditutup', value: rows.length }, { label: 'Total hadir', value: present },
-              { label: 'Kehadiran', value: percent === null ? '—' : `${percent}%` }].map(metric => (
-                <View style={styles.metric} key={metric.label}>
-                  <AssistantText tone="accent" style={styles.metricNumber}>{metric.value}</AssistantText>
-                  <AssistantText variant="caption" tone="secondary" style={styles.small}>{metric.label}</AssistantText>
-                </View>
-              ))}
-          </View>
           {rows.length ? (
             <View style={styles.list}>
               <View style={styles.listHeading}>
-                <AssistantText variant="sectionTitle" accessibilityRole="header">Hasil per sesi</AssistantText>
+                <AssistantText style={styles.sectionTitle} accessibilityRole="header">Hasil per sesi</AssistantText>
                 <AssistantText variant="caption" tone="secondary" style={styles.small}>Terbaru lebih dulu</AssistantText>
               </View>
               {rows.map(row => <RecapCard key={row.session.id} row={row} attendance={attendance} participants={participants}
@@ -86,7 +92,7 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
               </Pressable>
             </View>
           )}
-          <AssistantText variant="caption" tone="secondary">Data contoh · perubahan sementara akan direset saat aplikasi dimuat ulang.</AssistantText>
+          <AssistantText variant="caption" tone="secondary">Data contoh | perubahan sementara akan direset saat aplikasi dimuat ulang.</AssistantText>
         </AssistantScreen>
       </View>
       {dialog && <RecapFilterDialog kind={dialog} range={range} selectedId={selectedId} sessions={closedSessions}
@@ -97,17 +103,23 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
 }
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  heading: { gap: 8 },
-  title: { fontSize: 28, lineHeight: 35 },
-  description: { lineHeight: 20 },
+  heading: { overflow: 'hidden', gap: 12, padding: 20, backgroundColor: theme.colors.glassHero, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', borderRadius: 30 },
+  heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  eyebrow: { fontSize: 10, lineHeight: 16, letterSpacing: 1.6, fontFamily: theme.fonts.semibold, color: '#EDF3FF' },
+  chartWatermark: { position: 'absolute', top: -12, right: -16, opacity: 0.12 },
+  title: { fontSize: 28, lineHeight: 35, letterSpacing: -0.8, color: theme.colors.surface },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  filter: { flexGrow: 1, flexBasis: 140, flexDirection: 'row', alignItems: 'center', gap: 7, minHeight: 44, paddingHorizontal: 11, paddingVertical: 10, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.control, backgroundColor: theme.colors.surface },
+  filter: { flexGrow: 1, flexBasis: 140, flexDirection: 'row', alignItems: 'center', gap: 7, minHeight: 44, paddingHorizontal: 11, paddingVertical: 10, borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: theme.radius.control, backgroundColor: theme.colors.glassSurface },
   dateFilter: { flexBasis: 185 },
   filterText: { flex: 1 },
-  metrics: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
-  metric: { flex: 1, minWidth: 78, gap: 7, padding: 13, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.card, backgroundColor: theme.colors.surface },
-  metricNumber: { fontSize: 25, lineHeight: 32, fontFamily: theme.fonts.bold },
+  metrics: { marginTop: 4, paddingTop: 14, flexDirection: 'row', flexWrap: 'wrap', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)' },
+  metric: { flex: 1, minWidth: 60, gap: 5, paddingHorizontal: 8, paddingVertical: 4 },
+  metricDivider: { marginRight: 8, borderRightWidth: 1, borderRightColor: 'rgba(255,255,255,0.2)' },
+  metricNumber: { fontSize: 20, lineHeight: 28, fontFamily: theme.fonts.bold, color: theme.colors.surface, letterSpacing: -0.7 },
+  metricNumberCompact: { fontSize: 16, lineHeight: 22, letterSpacing: -0.4 },
+  metricLabel: { fontSize: 10, lineHeight: 16, color: '#EDF3FF' },
   small: { fontSize: 11, lineHeight: 16 },
+  sectionTitle: { fontSize: 20, lineHeight: 27, fontFamily: theme.fonts.bold, letterSpacing: -0.4 },
   list: { gap: 13 },
   listHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   empty: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', gap: 16, paddingVertical: 32 },

@@ -38,7 +38,7 @@ export function SessionConfirmation({ session, mode, present, total, onCancel, o
             <AssistantText style={styles.sessionTitle}>{formatPraktikumName(session)}</AssistantText>
             <AssistantText variant="caption" tone="secondary">{session.topic}</AssistantText>
             <AssistantText variant="caption" tone="secondary">
-              {formatSessionDate(session.date)} · {session.startTime.replace(':', '.')}–{session.endTime.replace(':', '.')} WIB
+              {formatSessionDate(session.date)} | {session.startTime.replace(':', '.')}–{session.endTime.replace(':', '.')} WIB
             </AssistantText>
             {closing && <View style={styles.totals}>
               <AssistantText variant="caption" tone="accent" style={styles.bold}>{present} dari {total} hadir</AssistantText>
@@ -62,12 +62,12 @@ export function SessionConfirmation({ session, mode, present, total, onCancel, o
 }
 
 const styles = StyleSheet.create({
-  dialog: { width: '100%', backgroundColor: theme.colors.surface, padding: 24, gap: 20 },
-  icon: { width: 48, height: 48, borderRadius: 16, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  dialog: { width: '100%', backgroundColor: 'transparent', padding: 24, gap: 20 },
+  icon: { width: 48, height: 48, borderRadius: 16, backgroundColor: theme.colors.lime, alignItems: 'center', justifyContent: 'center' },
   dangerIcon: { backgroundColor: theme.colors.errorSoft },
   message: { gap: 9 },
   title: { fontSize: 23, lineHeight: 30, fontFamily: theme.fonts.bold },
-  session: { padding: 14, gap: 7, backgroundColor: theme.colors.background, borderRadius: theme.radius.control },
+  session: { padding: 14, gap: 7, backgroundColor: theme.colors.glassSurface, borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: theme.radius.control },
   sessionTitle: { fontFamily: theme.fonts.semibold },
   totals: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8, paddingTop: 7 },
   bold: { fontFamily: theme.fonts.semibold },
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   button: { minHeight: 50, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.control, borderWidth: 1, paddingHorizontal: 18, paddingVertical: 14 },
   primary: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
   danger: { backgroundColor: theme.colors.error, borderColor: theme.colors.error },
-  cancel: { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+  cancel: { backgroundColor: theme.colors.glassSurface, borderColor: theme.colors.glassBorder },
   white: { color: theme.colors.surface },
   pressed: { opacity: 0.7 },
 });
