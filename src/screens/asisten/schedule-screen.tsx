@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AssistantNavigation } from './components/assistant-navigation';
 import { AssistantHeader } from './components/assistant-header';
 import { AssistantScreen } from './components/assistant-screen';
 import { AssistantText } from './components/assistant-text';
@@ -23,12 +22,11 @@ type Props = {
   feedback?: string;
   onAdd?: () => void;
   onManage?: (id: string) => void;
-  onRecap?: () => void;
 };
 
 export default function ScheduleScreen({
   sessions = previewSessions, attendance = previewAttendance, date = previewDate,
-  onAdd, onManage, onRecap, feedback,
+  onAdd, onManage, feedback,
 }: Props) {
   const [dismissed, setDismissed] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
@@ -46,7 +44,7 @@ export default function ScheduleScreen({
   const today = fullDate === dateFormatter.format(new Date());
 
   return (
-    <AssistantScreen footer={<AssistantNavigation active="schedule" onRecap={onRecap} />}>
+    <AssistantScreen edges={['top', 'left', 'right']}>
       <AssistantHeader greeting="Selamat pagi, Nadia" title="Jadwal asisten" initials="NA" identityLabel="Nadia, asisten (identitas contoh)" />
       {feedback && !dismissed && <View style={styles.feedback}>
         <AssistantText tone="accent" accessibilityLiveRegion="polite" style={styles.feedbackText}>{feedback}</AssistantText>

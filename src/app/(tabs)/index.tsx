@@ -12,6 +12,5 @@ export default function ScheduleRoute() {
   return <ScheduleScreen key={baru ?? date} sessions={sessions} attendance={attendance} date={date}
     feedback={added ? 'Sesi berhasil ditambahkan.' : undefined}
     onAdd={() => router.push('/tambah-sesi')}
-    onRecap={() => router.navigate('/rekap')}
     onManage={id => router.push({ pathname: '/sesi/[id]', params: { id } })} />;
 }

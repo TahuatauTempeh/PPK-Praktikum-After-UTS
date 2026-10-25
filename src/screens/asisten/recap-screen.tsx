@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AssistantNavigation } from './components/assistant-navigation';
 import { AssistantScreen } from './components/assistant-screen';
 import { AssistantText } from './components/assistant-text';
 import { RecapCard } from './components/recap-card';
@@ -32,7 +31,7 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
   return (
     <>
       <View style={styles.screen} aria-hidden={dialog !== null} importantForAccessibility={dialog ? 'no-hide-descendants' : 'auto'}>
-        <AssistantScreen footer={<AssistantNavigation active="recap" onSchedule={onSchedule} />}>
+        <AssistantScreen edges={['top', 'left', 'right']}>
           <View style={styles.heading}>
             <AssistantText variant="pageTitle" accessibilityRole="header" style={styles.title}>Rekap presensi</AssistantText>
             <AssistantText variant="greeting" tone="secondary" style={styles.description}>Ringkasan kehadiran sesi yang telah ditutup.</AssistantText>
