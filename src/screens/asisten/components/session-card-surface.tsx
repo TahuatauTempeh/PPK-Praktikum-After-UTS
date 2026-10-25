@@ -1,5 +1,5 @@
 import { useState, type PropsWithChildren } from 'react';
-import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { ClipPath, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { assistantTheme as theme } from '../theme';
@@ -10,6 +10,9 @@ export const summaryDock = { width: 172, height: 58, radius: 22, gap: 12 } as co
 const NOTCH_GAP = summaryDock.gap;
 const NOTCH_FILLET = summaryDock.radius + NOTCH_GAP;
 const RETURN_FILLET = summaryDock.radius;
+const decorativeSvgAccessibility = Platform.OS === 'web'
+  ? { 'aria-hidden': true }
+  : { accessible: false };
 
 /** Siluet kartu: persegi membulat dengan cekungan inverse radius di sudut kanan bawah. */
 function surfacePath(width: number, height: number) {
@@ -49,7 +52,7 @@ export function SessionCardSurface({ style, children }: PropsWithChildren<Props>
   return (
     <View style={[styles.surface, style, path ? null : styles.fallback]} onLayout={measure}>
       {size && path && (
-        <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" pointerEvents="none" accessible={false}>
+        <Svg {...decorativeSvgAccessibility} style={StyleSheet.absoluteFill} width="100%" height="100%" pointerEvents="none">
           <Defs>
             <LinearGradient id="sessionGlass" x1="0" y1="0" x2="1" y2="1">
               <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.94} />
