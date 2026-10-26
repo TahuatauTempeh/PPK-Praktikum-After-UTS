@@ -32,7 +32,7 @@ export default function SelectUserScreen() {
     if (user.role === 'praktikan') {
       router.replace('/(praktikan)');
     } else {
-      router.replace('/(asisten)');
+      router.replace('/asisten');
     }
   };
 

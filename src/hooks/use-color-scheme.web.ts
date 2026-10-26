@@ -1,23 +1,13 @@
 import { useSyncExternalStore } from 'react';
 import { useColorScheme as useRNColorScheme } from 'react-native';
 
-const emptySubscribe = () => () => {};
+const subscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
 
-/**
- * To support static rendering, this value needs to be re-calculated on the client side for web
- */
+/** Keep static HTML and the first hydration render on the same color scheme. */
 export function useColorScheme() {
-  const isServer = useSyncExternalStore(
-    emptySubscribe,
-    () => false,
-    () => true
-  );
-
+  const hasHydrated = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
   const colorScheme = useRNColorScheme();
-
-  if (isServer) {
-    return 'light';
-  }
-
-  return colorScheme;
+  return hasHydrated ? colorScheme : 'light';
 }

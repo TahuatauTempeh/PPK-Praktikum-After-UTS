@@ -1,16 +1,18 @@
 {
   "expo": {
-    "name": "absensi",
-    "slug": "absensi",
+    "name": "Presensi Praktikum",
+    "slug": "presensi-praktikum",
+    "owner": "kemal-faza",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "absensi",
+    "scheme": "presensipraktikum",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.ppk.presensipraktikum",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -37,6 +39,16 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "973698af-d649-4bb7-a583-4fbf399f00a2"
+      }
     }
   }
 }
