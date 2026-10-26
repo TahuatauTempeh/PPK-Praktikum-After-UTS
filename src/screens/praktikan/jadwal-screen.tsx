@@ -144,8 +144,9 @@ export default function JadwalScreen() {
 
 const styles = StyleSheet.create({
   judulBaris: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 8 },
-  saringan: { marginHorizontal: -24 },
-  chip: { flexDirection: 'row', gap: 8, paddingHorizontal: 24, paddingBottom: 2 },
+  // flexGrow 0: tanpa ini baris chip ikut meninggi saat daftar di bawahnya pendek, dan chip berubah jadi lingkaran
+  saringan: { marginHorizontal: -24, flexGrow: 0 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 24, paddingRight: 24, paddingBottom: 2 },
   chipTombol: {
     minHeight: 44,
     paddingHorizontal: 14,
