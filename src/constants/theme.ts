@@ -14,6 +14,18 @@ export const Colors = {
     backgroundElement: '#F0F0F3',
     backgroundSelected: '#E0E1E6',
     textSecondary: '#60646C',
+    // Warna aplikasi presensi
+    primary: '#3B82F6',
+    primaryLight: '#DBEAFE',
+    success: '#10B981',
+    successLight: '#D1FAE5',
+    danger: '#EF4444',
+    dangerLight: '#FEE2E2',
+    warning: '#F59E0B',
+    warningLight: '#FEF3C7',
+    border: '#E5E7EB',
+    card: '#FFFFFF',
+    cardShadow: 'rgba(0, 0, 0, 0.08)',
   },
   dark: {
     text: '#ffffff',
@@ -21,6 +33,18 @@ export const Colors = {
     backgroundElement: '#212225',
     backgroundSelected: '#2E3135',
     textSecondary: '#B0B4BA',
+    // Warna aplikasi presensi
+    primary: '#60A5FA',
+    primaryLight: '#1E3A5F',
+    success: '#34D399',
+    successLight: '#064E3B',
+    danger: '#F87171',
+    dangerLight: '#7F1D1D',
+    warning: '#FBBF24',
+    warningLight: '#78350F',
+    border: '#374151',
+    card: '#1F2937',
+    cardShadow: 'rgba(0, 0, 0, 0.3)',
   },
 } as const;
 
