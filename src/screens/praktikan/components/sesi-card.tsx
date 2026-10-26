@@ -1,83 +1,100 @@
 /**
  * SesiCard: kartu sesi di jadwal praktikan.
- * Kartu sesi yang sedang dibuka diberi garis aksen dan ajakan presensi sebagai titik fokus layar.
+ * Kartu sesi yang sedang dibuka diberi kilau kaca dan tombol terisi sebagai titik fokus layar.
  */
 
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { formatJamWIB, formatTanggal } from '@/screens/praktikan/format';
-import { STATUS_LABEL, StatusLabel } from '@/screens/praktikan/components/status-label';
+import { Ikon } from '@/screens/praktikan/components/ikon';
+import { KilauKaca } from '@/screens/praktikan/components/latar';
+import { StatusLabel } from '@/screens/praktikan/components/status-label';
+import { Tombol } from '@/screens/praktikan/components/tombol';
+import { formatJamWIB, formatRentangWIB, formatTanggal } from '@/screens/praktikan/format';
 import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
 import { AttendanceRecord, Session } from '@/types';
 
 interface SesiCardProps {
   session: Session;
   record?: AttendanceRecord;
-  sorot?: boolean;
   onPress: () => void;
 }
 
-export function SesiCard({ session, record, sorot = false, onPress }: SesiCardProps) {
+const KETERANGAN_BELUM_HADIR = {
+  scheduled: 'Presensi belum dibuka',
+  open: 'Kamu belum presensi',
+  closed: 'Tidak ada catatan kehadiran',
+} as const;
+
+export function SesiCard({ session, record, onPress }: SesiCardProps) {
   const theme = usePraktikanTheme();
+  const dibuka = session.status === 'open';
+  const perluPresensi = dibuka && !record;
 
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${session.title}, ${STATUS_LABEL[session.status]}`}
-      style={({ pressed }) => [
+    <View
+      style={[
         styles.kartu,
         {
-          backgroundColor: theme.surface,
-          borderColor: sorot ? theme.primary : theme.border,
-          borderWidth: sorot ? 1.5 : 1,
-          opacity: pressed ? 0.85 : 1,
+          backgroundColor: dibuka ? theme.kartuSorot : theme.kartu,
+          borderColor: theme.garisKartu,
+          boxShadow: theme.bayang,
         },
       ]}
     >
-      <View style={styles.baris}>
-        <StatusLabel status={session.status} />
-        {record ? (
-          <Text style={[Tipe.caption, styles.hadir, { color: theme.success }]}>
-            Hadir pukul {formatJamWIB(record.timestamp)} WIB
+      {dibuka ? <KilauKaca /> : null}
+      <View style={styles.isi}>
+        <View style={styles.baris}>
+          <View style={styles.jam}>
+            <Ikon nama="jam" ukuran={15} warna={theme.teksSekunder} />
+            <Text style={[Tipe.caption, styles.tebal, { color: theme.teks }]}>
+              {formatRentangWIB(session.time)}
+            </Text>
+          </View>
+          <StatusLabel status={session.status} />
+        </View>
+
+        <View style={styles.materi}>
+          <Text accessibilityRole="header" style={[Tipe.judulKartu, { color: theme.teks }]}>
+            {session.title}
           </Text>
-        ) : null}
+          <Text style={[Tipe.body, { color: theme.teksSekunder }]}>{formatTanggal(session.date)}</Text>
+        </View>
+
+        <View style={styles.jam}>
+          <Ikon nama="lokasi" ukuran={14} warna={theme.teksSekunder} />
+          <Text style={[Tipe.kecil, { color: theme.teksSekunder }]}>{session.room}</Text>
+        </View>
+
+        <View style={[styles.kehadiran, { borderTopColor: theme.pemisah }]}>
+          {record ? (
+            <Text style={[Tipe.caption, styles.tebal, { color: theme.sukses }]}>
+              Hadir pukul {formatJamWIB(record.timestamp)} WIB
+            </Text>
+          ) : (
+            <Text style={[Tipe.caption, { color: theme.teksSekunder }]}>
+              {KETERANGAN_BELUM_HADIR[session.status]}
+            </Text>
+          )}
+        </View>
       </View>
 
-      <Text style={[Tipe.cardTitle, { color: theme.text }]}>{session.title}</Text>
-
-      <View style={styles.meta}>
-        <Text style={[Tipe.body, { color: theme.textSecondary }]}>{formatTanggal(session.date)}</Text>
-        <Text style={[Tipe.body, { color: theme.textSecondary }]}>
-          {session.time} WIB, {session.room}
-        </Text>
-      </View>
-
-      {sorot && !record ? (
-        <Text style={[Tipe.label, { color: theme.primary }]}>Ketuk untuk mencatat kehadiran</Text>
-      ) : null}
-    </Pressable>
+      <Tombol
+        label={perluPresensi ? 'Presensi sekarang' : 'Lihat detail sesi'}
+        varian={perluPresensi ? 'utama' : 'lembut'}
+        panah
+        onPress={onPress}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  kartu: {
-    borderRadius: 18,
-    padding: 16,
-    gap: 10,
-  },
-  baris: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  hadir: {
-    fontWeight: '600',
-  },
-  meta: {
-    gap: 2,
-  },
+  kartu: { padding: 7, borderRadius: 28, borderWidth: 1, overflow: 'hidden' },
+  isi: { padding: 14, gap: 16 },
+  baris: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  jam: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
+  tebal: { fontWeight: '600' },
+  materi: { gap: 4 },
+  kehadiran: { paddingTop: 14, borderTopWidth: 1 },
 });

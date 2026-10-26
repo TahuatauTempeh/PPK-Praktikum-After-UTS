@@ -8,11 +8,19 @@ import { useEffect } from 'react';
 
 import { useSession } from '@/context/session-context';
 
+// Jadwal dan Riwayat sama-sama ter-mount, jadi tanpa penanda ini dismissAll terpanggil dua kali
+let sedangKeluar = false;
+
 export function useUserPraktikan() {
   const user = useSession().state.currentUser;
 
   useEffect(() => {
-    if (!user && router.canDismiss()) router.dismissAll();
+    if (user || sedangKeluar || !router.canDismiss()) return;
+    sedangKeluar = true;
+    router.dismissAll();
+    setTimeout(() => {
+      sedangKeluar = false;
+    }, 500);
   }, [user]);
 
   return user;

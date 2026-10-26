@@ -35,3 +35,14 @@ export function formatJamWIB(iso: string): string {
   const menit = String(wib.getUTCMinutes()).padStart(2, '0');
   return `${jam}.${menit}`;
 }
+
+/** "2026-10-27" menjadi "27 Okt 2026" */
+export function formatTanggalPendek(date: string): string {
+  const [tahun, bulan, hari] = date.split('-').map(Number);
+  return `${hari} ${BULAN[bulan - 1].slice(0, 3)} ${tahun}`;
+}
+
+/** "08:00 - 10:00" menjadi "08.00–10.00 WIB" */
+export function formatRentangWIB(time: string): string {
+  return `${time.replace(/:/g, '.').replace(' - ', '–')} WIB`;
+}

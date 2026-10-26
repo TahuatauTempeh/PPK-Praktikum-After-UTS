@@ -1,95 +1,135 @@
 /**
  * Jadwal Praktikan: daftar sesi dari SessionContext (UC-02).
- * Sesi yang sedang dibuka ditaruh paling atas karena itu yang perlu ditindak praktikan.
+ * Banner meringkas jadwal, chip memfilter berdasarkan status, sesi dibuka selalu paling atas.
  */
 
-import React, { useMemo } from 'react';
-import { SectionList, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { EmptyState } from '@/components/EmptyState';
-import { Spacing } from '@/constants/theme';
 import { useSession } from '@/context/session-context';
-import { useUserPraktikan } from '@/screens/praktikan/guard';
+import { Hero } from '@/screens/praktikan/components/hero';
+import { Kosong } from '@/screens/praktikan/components/kosong';
+import { Layar } from '@/screens/praktikan/components/layar';
 import { SesiCard } from '@/screens/praktikan/components/sesi-card';
+import { STATUS_LABEL } from '@/screens/praktikan/components/status-label';
+import { useUserPraktikan } from '@/screens/praktikan/guard';
 import { bukaDetailSesi } from '@/screens/praktikan/navigasi';
-import { findOwnAttendance, groupSessions } from '@/screens/praktikan/selectors';
-import { LebarKonten, Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { findOwnAttendance, ownHistory, urutkanSesi } from '@/screens/praktikan/selectors';
+import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { SessionStatus } from '@/types';
+
+type Saring = 'semua' | SessionStatus;
+const DAFTAR_SARING: Saring[] = ['semua', 'scheduled', 'open', 'closed'];
 
 export default function JadwalScreen() {
   const theme = usePraktikanTheme();
   const currentUser = useUserPraktikan();
   const { sessions, attendance } = useSession().state;
+  const [saring, setSaring] = useState<Saring>('semua');
 
-  const sections = useMemo(() => {
-    const grup = groupSessions(sessions);
-    return [
-      { key: 'open', title: 'Sedang dibuka', data: grup.open },
-      { key: 'upcoming', title: 'Akan datang', data: grup.upcoming },
-      { key: 'done', title: 'Selesai', data: grup.done },
-    ].filter((section) => section.data.length > 0);
-  }, [sessions]);
+  const urut = useMemo(() => urutkanSesi(sessions), [sessions]);
 
   if (!currentUser) return null;
 
+  const jumlah = (nilai: Saring) =>
+    nilai === 'semua' ? urut.length : urut.filter((s) => s.status === nilai).length;
+  const tampil = urut.filter((s) => saring === 'semua' || s.status === saring);
+  const namaDepan = currentUser.name.split(' ')[0];
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <SectionList
-        sections={sections}
-        keyExtractor={(session) => session.id}
-        contentContainerStyle={styles.isi}
-        stickySectionHeadersEnabled={false}
-        ListHeaderComponent={
-          <Text style={[Tipe.body, { color: theme.textSecondary }]}>
-            Masuk sebagai {currentUser.name}
-          </Text>
-        }
-        ListEmptyComponent={
-          <EmptyState
-            icon=""
-            title="Belum ada jadwal praktikum"
-            subtitle="Sesi akan tampil di sini setelah dijadwalkan."
-          />
-        }
-        renderSectionHeader={({ section }) => (
-          <Text
-            accessibilityRole="header"
-            style={[Tipe.sectionTitle, styles.judulBagian, { color: theme.text }]}
-          >
-            {section.title}
-          </Text>
-        )}
-        renderItem={({ item, section }) => (
-          <View style={styles.item}>
-            <SesiCard
-              session={item}
-              record={findOwnAttendance(attendance, item.id, currentUser.id)}
-              sorot={section.key === 'open'}
-              onPress={() => bukaDetailSesi(item.id)}
-            />
-          </View>
-        )}
+    <Layar>
+      <Hero
+        eyebrow="JADWAL PRAKTIKUM"
+        judul={`Halo, ${namaDepan}`}
+        watermark="jadwal"
+        statistik={[
+          { nilai: String(jumlah('open')), label: 'Sedang dibuka' },
+          { nilai: String(urut.length), label: 'Total sesi' },
+          { nilai: String(ownHistory(sessions, attendance, currentUser.id).length), label: 'Sudah hadir' },
+        ]}
       />
-    </View>
+
+      <View style={styles.judulBaris}>
+        <Text accessibilityRole="header" style={[Tipe.judulBagian, { color: theme.teks }]}>
+          Daftar sesi
+        </Text>
+        <Text style={[Tipe.caption, { color: theme.teksSekunder }]}>{tampil.length} sesi</Text>
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.saringan}
+        contentContainerStyle={styles.chip}
+        accessibilityLabel="Filter status sesi"
+      >
+        {DAFTAR_SARING.map((nilai) => {
+          const terpilih = nilai === saring;
+          const label = nilai === 'semua' ? 'Semua' : STATUS_LABEL[nilai];
+          return (
+            <Pressable
+              key={nilai}
+              accessibilityRole="button"
+              accessibilityLabel={`${label}, ${jumlah(nilai)} sesi`}
+              accessibilityState={{ selected: terpilih }}
+              onPress={() => setSaring(nilai)}
+              style={({ pressed }) => [
+                styles.chipTombol,
+                {
+                  backgroundColor: terpilih ? theme.isiAksen : theme.kartu,
+                  borderColor: terpilih ? theme.isiAksen : theme.garisKartu,
+                  opacity: pressed ? 0.7 : 1,
+                },
+              ]}
+            >
+              <Text
+                style={[Tipe.caption, styles.tebal, { color: terpilih ? theme.diAtasAksen : theme.teksSekunder }]}
+              >
+                {label}
+              </Text>
+              <Text style={[Tipe.kecil, styles.tebal, { color: terpilih ? theme.diAtasAksen : theme.teksSekunder }]}>
+                {jumlah(nilai)}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      <View style={styles.daftar} accessibilityLiveRegion="polite">
+        {tampil.map((session) => (
+          <SesiCard
+            key={session.id}
+            session={session}
+            record={findOwnAttendance(attendance, session.id, currentUser.id)}
+            onPress={() => bukaDetailSesi(session.id)}
+          />
+        ))}
+        {tampil.length === 0 ? (
+          <Kosong
+            ikon="jadwal"
+            judul={urut.length === 0 ? 'Belum ada jadwal praktikum' : 'Tidak ada sesi untuk filter ini'}
+            keterangan={urut.length === 0 ? 'Sesi akan tampil di sini setelah dijadwalkan.' : undefined}
+            aksi={urut.length === 0 ? undefined : { label: 'Tampilkan semua sesi', onPress: () => setSaring('semua') }}
+          />
+        ) : null}
+      </View>
+    </Layar>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  judulBaris: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 8 },
+  saringan: { marginHorizontal: -24 },
+  chip: { flexDirection: 'row', gap: 8, paddingHorizontal: 24, paddingBottom: 2 },
+  chipTombol: {
+    minHeight: 44,
+    paddingHorizontal: 14,
+    gap: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 999,
   },
-  isi: {
-    flexGrow: 1,
-    width: '100%',
-    maxWidth: LebarKonten,
-    alignSelf: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.three,
-  },
-  judulBagian: {
-    marginTop: 18,
-    marginBottom: 8,
-  },
-  item: {
-    marginBottom: 12,
-  },
+  tebal: { fontWeight: '600' },
+  daftar: { gap: 14 },
 });

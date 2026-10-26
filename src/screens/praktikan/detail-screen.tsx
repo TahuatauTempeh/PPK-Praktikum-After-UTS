@@ -5,20 +5,28 @@
 
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BottomSheet } from '@/components/BottomSheet';
-import { EmptyState } from '@/components/EmptyState';
-import { Spacing } from '@/constants/theme';
 import { useSession } from '@/context/session-context';
-import { useUserPraktikan } from '@/screens/praktikan/guard';
 import { allUsers } from '@/data/dummy';
+import { Ikon, IkonNama } from '@/screens/praktikan/components/ikon';
+import { Kosong } from '@/screens/praktikan/components/kosong';
+import { KilauKaca } from '@/screens/praktikan/components/latar';
+import { Layar } from '@/screens/praktikan/components/layar';
 import { StatusLabel } from '@/screens/praktikan/components/status-label';
 import { Tombol } from '@/screens/praktikan/components/tombol';
-import { formatJamWIB, formatTanggal } from '@/screens/praktikan/format';
+import {
+  formatJamWIB,
+  formatRentangWIB,
+  formatTanggal,
+  formatTanggalPendek,
+} from '@/screens/praktikan/format';
+import { useUserPraktikan } from '@/screens/praktikan/guard';
 import { describePresensi, findOwnAttendance, presensiStatus } from '@/screens/praktikan/selectors';
-import { LebarKonten, Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+
+const SEMUA_TEPI = ['top', 'left', 'right', 'bottom'] as const;
 
 export default function DetailSesiScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -42,31 +50,33 @@ export default function DetailSesiScreen() {
   };
 
   const header = (
-    <Pressable
-      onPress={kembali}
-      accessibilityRole="button"
-      accessibilityLabel="Kembali"
-      style={styles.kembali}
-    >
-      <Text style={[Tipe.label, { color: theme.primary }]}>Kembali</Text>
-    </Pressable>
+    <View style={styles.header}>
+      <Pressable
+        onPress={kembali}
+        accessibilityRole="button"
+        accessibilityLabel="Kembali"
+        style={({ pressed }) => [styles.kembali, { opacity: pressed ? 0.7 : 1 }]}
+      >
+        <Ikon nama="kembali" ukuran={20} warna="#FFFFFF" />
+      </Pressable>
+      <Text accessibilityRole="header" style={[Tipe.sectionTitle, styles.judulHeader]}>
+        Detail sesi
+      </Text>
+      <View style={styles.penyeimbang} />
+    </View>
   );
 
   if (!session) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={styles.badan}>
-          {header}
-          <EmptyState
-            icon=""
-            title="Sesi tidak ditemukan"
-            subtitle="Sesi yang kamu buka tidak ada di jadwal."
-          />
-          <View style={styles.footer}>
-            <Tombol label="Lihat jadwal" onPress={() => router.navigate('/(praktikan)')} />
-          </View>
-        </View>
-      </SafeAreaView>
+      <Layar edges={SEMUA_TEPI}>
+        {header}
+        <Kosong
+          ikon="jadwal"
+          judul="Sesi tidak ditemukan"
+          keterangan="Sesi yang kamu buka tidak ada di jadwal."
+          aksi={{ label: 'Lihat jadwal', onPress: () => router.navigate('/(praktikan)') }}
+        />
+      </Layar>
     );
   }
 
@@ -93,57 +103,77 @@ export default function DetailSesiScreen() {
     }
   };
 
-  const rincian = [
-    ['Mata kuliah', session.course],
-    ['Tanggal', formatTanggal(session.date)],
-    ['Waktu', `${session.time} WIB`],
-    ['Ruang', session.room],
-    ['Asisten', asisten],
+  const rincian: { ikon: IkonNama; label: string; nilai: string }[] = [
+    { ikon: 'jadwal', label: 'Tanggal', nilai: formatTanggal(session.date) },
+    { ikon: 'jam', label: 'Waktu', nilai: formatRentangWIB(session.time) },
+    { ikon: 'lokasi', label: 'Ruang', nilai: session.room },
+    { ikon: 'profil', label: 'Asisten', nilai: asisten },
   ];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.badan}>
-        {header}
-
-        <ScrollView contentContainerStyle={styles.isi}>
-          <View style={styles.judul}>
-            <Text accessibilityRole="header" style={[Tipe.detailTitle, { color: theme.text }]}>
-              {session.title}
-            </Text>
-            <StatusLabel status={session.status} />
-          </View>
-
-          <View style={[styles.kotak, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            {rincian.map(([label, nilai], index) => (
-              <View
-                key={label}
-                style={[styles.rincian, index > 0 && { borderTopWidth: 1, borderTopColor: theme.border }]}
-              >
-                <Text style={[Tipe.body, { color: theme.textSecondary }]}>{label}</Text>
-                <Text style={[Tipe.label, styles.nilai, { color: theme.text }]}>{nilai}</Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={[styles.kotak, styles.presensi, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            <Text accessibilityRole="header" style={[Tipe.sectionTitle, { color: theme.text }]}>
-              Presensi kamu
-            </Text>
-            <Text style={[Tipe.body, { color: status === 'sudah-hadir' || status === 'ditutup-hadir' ? theme.success : theme.textSecondary }]}>
-              {info.note}
-            </Text>
-            {notice ? (
-              <View accessibilityRole="alert" style={[styles.notice, { backgroundColor: theme.errorSoft }]}>
-                <Text style={[Tipe.body, { color: theme.error }]}>{notice}</Text>
-              </View>
-            ) : null}
-          </View>
-        </ScrollView>
-
+    <Layar
+      edges={SEMUA_TEPI}
+      footer={
         <View style={styles.footer}>
           <Tombol label={info.buttonLabel} disabled={!info.enabled} onPress={bukaSheet} />
         </View>
+      }
+    >
+      {header}
+
+      <View
+        style={[
+          styles.kartuUtama,
+          { backgroundColor: theme.kartuSorot, borderColor: theme.garisKartu, boxShadow: theme.bayang },
+        ]}
+      >
+        <KilauKaca />
+        <View style={styles.baris}>
+          <Text style={[Tipe.kecil, styles.tanggal, { color: theme.teksSekunder }]}>
+            {formatTanggalPendek(session.date).toUpperCase()}
+          </Text>
+          <StatusLabel status={session.status} />
+        </View>
+        <View style={styles.materi}>
+          <Text accessibilityRole="header" style={[Tipe.detailTitle, { color: theme.teks }]}>
+            {session.title}
+          </Text>
+          <Text style={[Tipe.body, { color: theme.teksSekunder }]}>{session.course}</Text>
+        </View>
+      </View>
+
+      <View style={[styles.kapsul, { backgroundColor: theme.isiAksen }]}>
+        <Text style={[Tipe.caption, { color: theme.diAtasAksen }]}>Presensi kamu</Text>
+        <Text accessibilityRole="header" style={[Tipe.angka, { color: theme.diAtasAksen }]}>
+          {info.ringkas}
+        </Text>
+        <Text style={[Tipe.body, { color: theme.diAtasAksen }]}>{info.note}</Text>
+      </View>
+
+      {notice ? (
+        <View accessibilityRole="alert" style={[styles.notice, { backgroundColor: theme.galatLembut }]}>
+          <Text style={[Tipe.body, { color: theme.galat }]}>{notice}</Text>
+        </View>
+      ) : null}
+
+      <Text accessibilityRole="header" style={[Tipe.judulBagian, { color: theme.teks }]}>
+        Informasi sesi
+      </Text>
+      <View style={[styles.daftar, { backgroundColor: theme.kartu, borderColor: theme.garisKartu }]}>
+        {rincian.map((item, index) => (
+          <View
+            key={item.label}
+            style={[styles.rincian, index > 0 && { borderTopWidth: 1, borderTopColor: theme.pemisah }]}
+          >
+            <View style={[styles.ikonBulat, { backgroundColor: theme.isiLembut }]}>
+              <Ikon nama={item.ikon} ukuran={18} warna={theme.aksen} />
+            </View>
+            <View style={styles.teksRincian}>
+              <Text style={[Tipe.kecil, { color: theme.teksSekunder }]}>{item.label}</Text>
+              <Text style={[Tipe.label, { color: theme.teks }]}>{item.nilai}</Text>
+            </View>
+          </View>
+        ))}
       </View>
 
       <BottomSheet
@@ -153,16 +183,16 @@ export default function DetailSesiScreen() {
       >
         {fase === 'konfirmasi' ? (
           <View style={styles.sheet}>
-            <Text style={[Tipe.label, styles.tengah, { color: theme.text }]}>{session.title}</Text>
-            <Text style={[Tipe.body, styles.tengah, { color: theme.textSecondary }]}>
-              {formatTanggal(session.date)}, {session.time} WIB
+            <Text style={[Tipe.label, styles.tengah, { color: theme.teks }]}>{session.title}</Text>
+            <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>
+              {formatTanggal(session.date)}, {formatRentangWIB(session.time)}
             </Text>
-            <Text style={[Tipe.body, styles.tengah, { color: theme.textSecondary }]}>
+            <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>
               Kehadiran dicatat sesuai waktu saat kamu menekan tombol konfirmasi dan tidak bisa dibatalkan.
             </Text>
             <View style={styles.aksi}>
               <View style={styles.aksiItem}>
-                <Tombol label="Batal" variant="secondary" onPress={() => setSheetTampil(false)} />
+                <Tombol label="Batal" varian="lembut" onPress={() => setSheetTampil(false)} />
               </View>
               <View style={styles.aksiItem}>
                 <Tombol label="Ya, catat kehadiran" onPress={konfirmasi} />
@@ -171,83 +201,47 @@ export default function DetailSesiScreen() {
           </View>
         ) : (
           <View style={styles.sheet}>
-            <Text style={[Tipe.body, styles.tengah, { color: theme.textSecondary }]}>
+            <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>
               Kehadiranmu tercatat pukul
             </Text>
-            <Text style={[Tipe.detailTitle, styles.tengah, { color: theme.success }]}>
+            <Text style={[Tipe.detailTitle, styles.tengah, { color: theme.sukses }]}>
               {record ? formatJamWIB(record.timestamp) : '-'} WIB
             </Text>
             <Tombol label="Selesai" onPress={() => setSheetTampil(false)} />
           </View>
         )}
       </BottomSheet>
-    </SafeAreaView>
+    </Layar>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  badan: {
-    flex: 1,
-    width: '100%',
-    maxWidth: LebarKonten,
-    alignSelf: 'center',
-  },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   kembali: {
-    minHeight: 44,
-    minWidth: 44,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.four,
-    alignSelf: 'flex-start',
-  },
-  isi: {
-    paddingHorizontal: Spacing.four,
-    paddingBottom: Spacing.three,
-    gap: 18,
-  },
-  judul: {
-    gap: 8,
-  },
-  kotak: {
-    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.18)',
     borderWidth: 1,
-    paddingHorizontal: 16,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
-  rincian: {
-    paddingVertical: 12,
-    gap: 2,
-  },
-  nilai: {
-    fontWeight: '600',
-  },
-  presensi: {
-    paddingVertical: 16,
-    gap: 6,
-  },
-  notice: {
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 6,
-  },
-  footer: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
-    paddingBottom: Spacing.three,
-  },
-  sheet: {
-    gap: 8,
-  },
-  tengah: {
-    textAlign: 'center',
-  },
-  aksi: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
-  },
-  aksiItem: {
-    flex: 1,
-  },
+  judulHeader: { flex: 1, textAlign: 'center', color: '#FFFFFF' },
+  penyeimbang: { width: 44 },
+  kartuUtama: { overflow: 'hidden', padding: 20, gap: 14, borderRadius: 28, borderWidth: 1 },
+  baris: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  tanggal: { fontWeight: '600', letterSpacing: 0.6 },
+  materi: { gap: 6 },
+  kapsul: { borderRadius: 24, padding: 18, gap: 4 },
+  notice: { borderRadius: 16, padding: 14 },
+  daftar: { borderRadius: 24, borderWidth: 1, paddingHorizontal: 16 },
+  rincian: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14 },
+  ikonBulat: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  teksRincian: { flex: 1, gap: 2 },
+  footer: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12, width: '100%', maxWidth: 648, alignSelf: 'center' },
+  sheet: { gap: 8 },
+  tengah: { textAlign: 'center' },
+  aksi: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  aksiItem: { flex: 1 },
 });

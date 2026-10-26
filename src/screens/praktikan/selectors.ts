@@ -14,15 +14,14 @@ export function findOwnAttendance(
   return attendance.find((a) => a.sessionId === sessionId && a.userId === userId);
 }
 
-/** Sesi dibagi tiga kelompok: dibuka, akan datang (terdekat dulu), selesai (terbaru dulu) */
-export function groupSessions(sessions: Session[]) {
-  return {
-    open: sessions.filter((s) => s.status === 'open').sort((a, b) => a.date.localeCompare(b.date)),
-    upcoming: sessions
-      .filter((s) => s.status === 'scheduled')
-      .sort((a, b) => a.date.localeCompare(b.date)),
-    done: sessions.filter((s) => s.status === 'closed').sort((a, b) => b.date.localeCompare(a.date)),
-  };
+/** Sesi dibuka paling atas, lalu yang akan datang (terdekat dulu), lalu yang selesai (terbaru dulu) */
+export function urutkanSesi(sessions: Session[]): Session[] {
+  const menurut = (status: Session['status']) => sessions.filter((s) => s.status === status);
+  return [
+    ...menurut('open').sort((a, b) => a.date.localeCompare(b.date)),
+    ...menurut('scheduled').sort((a, b) => a.date.localeCompare(b.date)),
+    ...menurut('closed').sort((a, b) => b.date.localeCompare(a.date)),
+  ];
 }
 
 export interface RiwayatItem {
@@ -68,30 +67,35 @@ export function describePresensi(status: PresensiStatus, record?: AttendanceReco
       return {
         enabled: false,
         buttonLabel: 'Presensi belum tersedia',
+        ringkas: 'Belum dibuka',
         note: 'Sesi belum dibuka oleh asisten.',
       };
     case 'bisa-presensi':
       return {
         enabled: true,
         buttonLabel: 'Presensi sekarang',
+        ringkas: 'Belum presensi',
         note: 'Sesi sedang dibuka. Kehadiranmu dicatat sesuai waktu saat kamu mengonfirmasi.',
       };
     case 'sudah-hadir':
       return {
         enabled: false,
         buttonLabel: 'Sudah presensi',
+        ringkas: 'Hadir',
         note: `Kamu sudah presensi pukul ${jam} WIB.`,
       };
     case 'ditutup-hadir':
       return {
         enabled: false,
         buttonLabel: 'Sudah presensi',
+        ringkas: 'Hadir',
         note: `Sesi sudah ditutup. Kamu hadir pukul ${jam} WIB.`,
       };
     case 'ditutup-tanpa-catatan':
       return {
         enabled: false,
         buttonLabel: 'Sesi sudah ditutup',
+        ringkas: 'Tidak ada catatan',
         note: 'Sesi sudah ditutup dan tidak ada catatan kehadiran untukmu.',
       };
   }
