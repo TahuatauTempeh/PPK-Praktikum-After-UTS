@@ -12,15 +12,27 @@ import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
 interface TombolProps {
   label: string;
   onPress: () => void;
-  varian?: 'utama' | 'lembut';
+  varian?: 'utama' | 'lembut' | 'terang';
   disabled?: boolean;
   panah?: boolean;
+  petunjuk?: string;
 }
 
-export function Tombol({ label, onPress, varian = 'utama', disabled = false, panah = false }: TombolProps) {
+// 'terang' dipakai di atas kartu biru, jadi warnanya tidak ikut tema
+const TERANG = { latar: '#FFFFFF', teks: '#204CAC' };
+
+export function Tombol({ label, onPress, varian = 'utama', disabled = false, panah = false, petunjuk }: TombolProps) {
   const theme = usePraktikanTheme();
   const utama = varian === 'utama' && !disabled;
-  const warnaTeks = utama ? theme.diAtasAksen : disabled ? theme.teksSekunder : theme.teksLembut;
+  const terang = varian === 'terang' && !disabled;
+  const warnaTeks = terang
+    ? TERANG.teks
+    : utama
+      ? theme.diAtasAksen
+      : disabled
+        ? theme.teksSekunder
+        : theme.teksLembut;
+  const latar = terang ? TERANG.latar : utama ? theme.isiAksen : disabled ? theme.kartu : theme.isiLembut;
 
   return (
     <Pressable
@@ -28,10 +40,11 @@ export function Tombol({ label, onPress, varian = 'utama', disabled = false, pan
       disabled={disabled}
       accessibilityRole="button"
       accessibilityState={{ disabled }}
+      accessibilityHint={petunjuk}
       style={({ pressed }) => [
         styles.tombol,
         {
-          backgroundColor: utama ? theme.isiAksen : disabled ? theme.kartu : theme.isiLembut,
+          backgroundColor: latar,
           borderColor: theme.garisKartu,
           borderWidth: disabled ? 1 : 0,
           opacity: pressed ? 0.75 : 1,

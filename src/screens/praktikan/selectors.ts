@@ -14,35 +14,28 @@ export function findOwnAttendance(
   return attendance.find((a) => a.sessionId === sessionId && a.userId === userId);
 }
 
-/** Sesi dibuka paling atas, lalu yang akan datang (terdekat dulu), lalu yang selesai (terbaru dulu) */
+/** Urut naik menurut tanggal lalu jam mulai */
 export function urutkanSesi(sessions: Session[]): Session[] {
-  const menurut = (status: Session['status']) => sessions.filter((s) => s.status === status);
-  return [
-    ...menurut('open').sort((a, b) => a.date.localeCompare(b.date)),
-    ...menurut('scheduled').sort((a, b) => a.date.localeCompare(b.date)),
-    ...menurut('closed').sort((a, b) => b.date.localeCompare(a.date)),
-  ];
+  return [...sessions].sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
 }
 
-export interface RiwayatItem {
-  session: Session;
-  record: AttendanceRecord;
+/** "Praktikum Basis Data - Pertemuan 2" menjadi mata kuliah dan nomor sesi */
+export function pecahJudul(session: Session) {
+  const [, sesi = ''] = session.title.split(' - ');
+  return { mataKuliah: session.course, sesi };
 }
 
-/** Catatan milik satu user beserta sesinya, sesi terbaru lebih dulu */
-export function ownHistory(
-  sessions: Session[],
-  attendance: AttendanceRecord[],
-  userId: string | undefined
-): RiwayatItem[] {
-  if (!userId) return [];
-  return attendance
-    .filter((a) => a.userId === userId)
-    .flatMap((record) => {
-      const session = sessions.find((s) => s.id === record.sessionId);
-      return session ? [{ session, record }] : [];
-    })
-    .sort((a, b) => b.session.date.localeCompare(a.session.date));
+/** Tanggal sesi yang sedang dibuka, atau tanggal sesi terdekat dengan hari ini bila tidak ada */
+export function tanggalAktif(sessions: Session[], hariIni: string): string {
+  const dibuka = urutkanSesi(sessions).find((s) => s.status === 'open');
+  if (dibuka) return dibuka.date;
+  const selisih = (tanggal: string) => Math.abs(Date.parse(tanggal) - Date.parse(hariIni));
+  return (
+    sessions.reduce<string | null>(
+      (terdekat, s) => (terdekat === null || selisih(s.date) < selisih(terdekat) ? s.date : terdekat),
+      null
+    ) ?? hariIni
+  );
 }
 
 export type PresensiStatus =
@@ -59,44 +52,65 @@ export function presensiStatus(session: Session, record?: AttendanceRecord): Pre
   return 'ditutup-tanpa-catatan';
 }
 
-/** Teks tombol dan alasan untuk tiap kondisi, supaya tombol nonaktif selalu punya penjelasan */
-export function describePresensi(status: PresensiStatus, record?: AttendanceRecord) {
-  const jam = record ? formatJamWIB(record.timestamp) : '';
+export interface BarisRiwayat {
+  session: Session;
+  record?: AttendanceRecord;
+  status: PresensiStatus;
+}
+
+/**
+ * Riwayat satu user: sesi dibuka dan ditutup, terbaru dulu, beserta angkanya.
+ * Pembagi persen = sesi ditutup + sesi dibuka yang sudah dihadiri, karena sesi dibuka
+ * yang belum dipresensi belum final.
+ */
+export function ringkasRiwayat(sessions: Session[], attendance: AttendanceRecord[], userId: string) {
+  const baris: BarisRiwayat[] = urutkanSesi(sessions)
+    .filter((s) => s.status !== 'scheduled')
+    .reverse()
+    .map((session) => {
+      const record = findOwnAttendance(attendance, session.id, userId);
+      return { session, record, status: presensiStatus(session, record) };
+    });
+  const hadir = baris.filter((b) => b.record).length;
+  const tidakHadir = baris.filter((b) => !b.record && b.session.status === 'closed').length;
+  const pembagi = hadir + tidakHadir;
+  const kehadiran = pembagi > 0 ? Math.round((hadir / pembagi) * 100) : null;
+  return { baris, hadir, tidakHadir, kehadiran };
+}
+
+/** Isi kartu status dan aksi footer untuk tiap kondisi presensi (DESIGN.md bagian 10) */
+export function describePresensi(status: PresensiStatus) {
   switch (status) {
     case 'belum-dibuka':
       return {
-        enabled: false,
-        buttonLabel: 'Presensi belum tersedia',
-        ringkas: 'Belum dibuka',
-        note: 'Sesi belum dibuka oleh asisten.',
-      };
+        aksi: 'nonaktif',
+        ringkas: 'Presensi belum dibuka',
+        note: 'Presensi dapat diisi setelah asisten membuka sesi.',
+      } as const;
     case 'bisa-presensi':
       return {
-        enabled: true,
-        buttonLabel: 'Presensi sekarang',
-        ringkas: 'Belum presensi',
-        note: 'Sesi sedang dibuka. Kehadiranmu dicatat sesuai waktu saat kamu mengonfirmasi.',
-      };
+        aksi: 'presensi',
+        ringkas: 'Presensi sedang dibuka',
+        note: 'Isi presensi sebelum asisten menutup sesi.',
+      } as const;
     case 'sudah-hadir':
-      return {
-        enabled: false,
-        buttonLabel: 'Sudah presensi',
-        ringkas: 'Hadir',
-        note: `Kamu sudah presensi pukul ${jam} WIB.`,
-      };
+      return { aksi: 'riwayat', ringkas: 'Kamu sudah hadir', note: '' } as const;
     case 'ditutup-hadir':
-      return {
-        enabled: false,
-        buttonLabel: 'Sudah presensi',
-        ringkas: 'Hadir',
-        note: `Sesi sudah ditutup. Kamu hadir pukul ${jam} WIB.`,
-      };
+      return { aksi: 'tidak-ada', ringkas: 'Hadir', note: 'Sesi ditutup · hasil akhir' } as const;
     case 'ditutup-tanpa-catatan':
       return {
-        enabled: false,
-        buttonLabel: 'Sesi sudah ditutup',
-        ringkas: 'Tidak ada catatan',
-        note: 'Sesi sudah ditutup dan tidak ada catatan kehadiran untukmu.',
-      };
+        aksi: 'tidak-ada',
+        ringkas: 'Tidak hadir',
+        note: 'Sesi ditutup sebelum presensi kamu tercatat.',
+      } as const;
   }
+}
+
+/** Pesan galat saat presensi ditolak, diturunkan dari state yang sama dengan yang dipakai reducer */
+export function alasanPenolakan(session: Session, record?: AttendanceRecord) {
+  if (record) {
+    return { pesan: `Presensi kamu sudah tercatat pukul ${formatJamWIB(record.timestamp)} WIB.`, tutup: true };
+  }
+  if (session.status !== 'open') return { pesan: 'Sesi tidak lagi menerima presensi.', tutup: true };
+  return { pesan: 'Presensi belum tercatat. Coba lagi.', tutup: false };
 }

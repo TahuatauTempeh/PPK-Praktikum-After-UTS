@@ -1,5 +1,7 @@
 /**
  * Layar: kerangka halaman praktikan. Latar gradien, konten digulir dengan lebar maksimum 600.
+ * `sembunyikan` menyembunyikan konten dari pembaca layar saat sheet terbuka; `overlay` (sheet)
+ * dirender di luar bagian yang disembunyikan.
  */
 
 import { useIsFocused } from 'expo-router';
@@ -13,10 +15,18 @@ import { LebarKonten, usePraktikanTheme } from '@/screens/praktikan/theme';
 
 interface LayarProps {
   footer?: ReactNode;
+  overlay?: ReactNode;
+  sembunyikan?: boolean;
   edges?: readonly Edge[];
 }
 
-export function Layar({ children, footer, edges = ['top', 'left', 'right'] }: PropsWithChildren<LayarProps>) {
+export function Layar({
+  children,
+  footer,
+  overlay,
+  sembunyikan = false,
+  edges = ['top', 'left', 'right'],
+}: PropsWithChildren<LayarProps>) {
   const theme = usePraktikanTheme();
   // bagian atas halaman selalu biru tua, jadi ikon status bar harus terang; hanya saat layar ini aktif
   const fokus = useIsFocused();
@@ -25,10 +35,17 @@ export function Layar({ children, footer, edges = ['top', 'left', 'right'] }: Pr
     <SafeAreaView style={[styles.area, { backgroundColor: theme.background }]} edges={edges}>
       {fokus ? <StatusBar style="light" /> : null}
       <Latar />
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.gulir}>
-        <View style={styles.isi}>{children}</View>
-      </ScrollView>
-      {footer}
+      <View
+        style={styles.area}
+        aria-hidden={sembunyikan}
+        importantForAccessibility={sembunyikan ? 'no-hide-descendants' : 'auto'}
+      >
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.gulir}>
+          <View style={styles.isi}>{children}</View>
+        </ScrollView>
+        {footer}
+      </View>
+      {overlay}
     </SafeAreaView>
   );
 }

@@ -1,6 +1,6 @@
 /**
- * Detail Sesi: info lengkap sesi dan aksi presensi (UC-03, UC-04).
- * Perubahan data hanya lewat submitAttendance dari context, tampilan tombol dibaca dari state.
+ * Detail Sesi: info lengkap sesi dan aksi presensi (UC-03, UC-04, DESIGN.md bagian 10 dan 11).
+ * Perubahan data hanya lewat submitAttendance dari context, tampilan dibaca dari state.
  */
 
 import { router, useLocalSearchParams } from 'expo-router';
@@ -23,7 +23,14 @@ import {
   formatTanggalPendek,
 } from '@/screens/praktikan/format';
 import { useUserPraktikan } from '@/screens/praktikan/guard';
-import { describePresensi, findOwnAttendance, presensiStatus } from '@/screens/praktikan/selectors';
+import { bukaJadwal, bukaRiwayat } from '@/screens/praktikan/navigasi';
+import {
+  alasanPenolakan,
+  describePresensi,
+  findOwnAttendance,
+  pecahJudul,
+  presensiStatus,
+} from '@/screens/praktikan/selectors';
 import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
 
 const SEMUA_TEPI = ['top', 'left', 'right', 'bottom'] as const;
@@ -33,8 +40,8 @@ export default function DetailSesiScreen() {
   const theme = usePraktikanTheme();
   const { state, submitAttendance } = useSession();
   const [sheetTampil, setSheetTampil] = useState(false);
-  const [fase, setFase] = useState<'konfirmasi' | 'berhasil'>('konfirmasi');
-  const [notice, setNotice] = useState<string | null>(null);
+  const [sedangProses, setSedangProses] = useState(false);
+  const [galat, setGalat] = useState<{ pesan: string; tutup: boolean } | null>(null);
   // state di callback bisa basi sampai render ulang, jadi ketukan ganda dicegah di sini
   const sedangKirim = useRef(false);
 
@@ -74,32 +81,39 @@ export default function DetailSesiScreen() {
           ikon="jadwal"
           judul="Sesi tidak ditemukan"
           keterangan="Sesi yang kamu buka tidak ada di jadwal."
-          aksi={{ label: 'Lihat jadwal', onPress: () => router.navigate('/(praktikan)') }}
+          aksi={{ label: 'Kembali ke jadwal', onPress: bukaJadwal }}
         />
       </Layar>
     );
   }
 
   const status = presensiStatus(session, record);
-  const info = describePresensi(status, record);
+  const info = describePresensi(status);
+  const { mataKuliah, sesi } = pecahJudul(session);
   const asisten = allUsers.find((u) => u.id === session.assistantId)?.name ?? 'Belum ditentukan';
+  const bentuk = record ? 'sukses' : status === 'ditutup-tanpa-catatan' ? 'galat' : 'aksen';
 
   const bukaSheet = () => {
     sedangKirim.current = false;
-    setFase('konfirmasi');
-    setNotice(null);
+    setSedangProses(false);
+    setGalat(null);
     setSheetTampil(true);
   };
 
   const konfirmasi = () => {
     if (sedangKirim.current) return;
     sedangKirim.current = true;
+    setSedangProses(true);
     const hasil = submitAttendance(session.id);
     if (hasil.success) {
-      setFase('berhasil');
-    } else {
-      setNotice(hasil.message);
       setSheetTampil(false);
+      return;
+    }
+    const alasan = alasanPenolakan(session, record);
+    setGalat(alasan);
+    if (!alasan.tutup) {
+      sedangKirim.current = false;
+      setSedangProses(false);
     }
   };
 
@@ -110,13 +124,66 @@ export default function DetailSesiScreen() {
     { ikon: 'profil', label: 'Asisten', nilai: asisten },
   ];
 
+  const footer =
+    info.aksi === 'tidak-ada' ? undefined : (
+      <View style={styles.footer}>
+        {info.aksi === 'presensi' ? <Tombol label="Presensi sekarang" onPress={bukaSheet} /> : null}
+        {info.aksi === 'nonaktif' ? (
+          <>
+            <Tombol
+              label="Presensi sekarang"
+              disabled
+              petunjuk="Menunggu sesi dibuka"
+              onPress={bukaSheet}
+            />
+            <Text style={[Tipe.caption, styles.tengah, { color: theme.teksSekunder }]}>
+              Menunggu sesi dibuka
+            </Text>
+          </>
+        ) : null}
+        {info.aksi === 'riwayat' ? (
+          <Tombol label="Lihat riwayat kehadiran" varian="lembut" panah onPress={bukaRiwayat} />
+        ) : null}
+      </View>
+    );
+
   return (
     <Layar
       edges={SEMUA_TEPI}
-      footer={
-        <View style={styles.footer}>
-          <Tombol label={info.buttonLabel} disabled={!info.enabled} onPress={bukaSheet} />
-        </View>
+      footer={footer}
+      sembunyikan={sheetTampil}
+      overlay={
+        <BottomSheet visible={sheetTampil} title="Konfirmasi presensi" onClose={() => setSheetTampil(false)}>
+          <View style={styles.sheet}>
+            <Text style={[Tipe.label, styles.tengah, { color: theme.teks }]}>{mataKuliah}</Text>
+            {sesi ? <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>{sesi}</Text> : null}
+            <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>
+              {formatTanggal(session.date)}, {formatRentangWIB(session.time)}
+            </Text>
+            <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>{session.room}</Text>
+            <Text style={[Tipe.label, styles.tengah, { color: theme.teks }]}>
+              Presensi sebagai {currentUser.name} · {currentUser.nim}
+            </Text>
+            <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>
+              Waktu presensi dicatat saat kamu menekan tombol di bawah.
+            </Text>
+            {galat ? (
+              <View accessibilityRole="alert" style={[styles.notice, { backgroundColor: theme.galatLembut }]}>
+                <Text style={[Tipe.body, { color: theme.galat }]}>{galat.pesan}</Text>
+              </View>
+            ) : null}
+            <View style={styles.aksi}>
+              {galat?.tutup ? null : (
+                <Tombol label="Ya, presensi sekarang" disabled={sedangProses} onPress={konfirmasi} />
+              )}
+              <Tombol
+                label={galat?.tutup ? 'Tutup' : 'Batal'}
+                varian="lembut"
+                onPress={() => setSheetTampil(false)}
+              />
+            </View>
+          </View>
+        </BottomSheet>
       }
     >
       {header}
@@ -136,25 +203,51 @@ export default function DetailSesiScreen() {
         </View>
         <View style={styles.materi}>
           <Text accessibilityRole="header" style={[Tipe.detailTitle, { color: theme.teks }]}>
-            {session.title}
+            {mataKuliah}
           </Text>
-          <Text style={[Tipe.body, { color: theme.teksSekunder }]}>{session.course}</Text>
+          {sesi ? <Text style={[Tipe.body, { color: theme.teksSekunder }]}>{sesi}</Text> : null}
         </View>
       </View>
 
-      <View style={[styles.kapsul, { backgroundColor: theme.isiAksen }]}>
-        <Text style={[Tipe.caption, { color: theme.diAtasAksen }]}>Presensi kamu</Text>
-        <Text accessibilityRole="header" style={[Tipe.angka, { color: theme.diAtasAksen }]}>
+      <View
+        style={[
+          styles.kapsul,
+          bentuk === 'aksen' && { backgroundColor: theme.isiAksen },
+          bentuk === 'sukses' && { backgroundColor: theme.suksesLembut },
+          bentuk === 'galat' && { backgroundColor: theme.kartu, borderWidth: 1, borderColor: theme.garisKartu },
+        ]}
+      >
+        <Text
+          style={[
+            Tipe.caption,
+            { color: bentuk === 'aksen' ? theme.diAtasAksen : theme.teksSekunder },
+          ]}
+        >
+          Presensi kamu
+        </Text>
+        <Text
+          accessibilityRole="header"
+          style={[
+            record ? Tipe.sectionTitle : Tipe.angka,
+            { color: bentuk === 'aksen' ? theme.diAtasAksen : bentuk === 'sukses' ? theme.sukses : theme.galat },
+          ]}
+        >
           {info.ringkas}
         </Text>
-        <Text style={[Tipe.body, { color: theme.diAtasAksen }]}>{info.note}</Text>
+        {record ? (
+          <>
+            <Text style={[Tipe.waktuHadir, { color: theme.sukses }]}>{formatJamWIB(record.timestamp)} WIB</Text>
+            <Text style={[Tipe.body, { color: theme.teksSekunder }]}>
+              {info.note ? `${info.note}. ` : ''}
+              {formatTanggal(session.date)}
+            </Text>
+          </>
+        ) : (
+          <Text style={[Tipe.body, { color: bentuk === 'aksen' ? theme.diAtasAksen : theme.teksSekunder }]}>
+            {info.note}
+          </Text>
+        )}
       </View>
-
-      {notice ? (
-        <View accessibilityRole="alert" style={[styles.notice, { backgroundColor: theme.galatLembut }]}>
-          <Text style={[Tipe.body, { color: theme.galat }]}>{notice}</Text>
-        </View>
-      ) : null}
 
       <Text accessibilityRole="header" style={[Tipe.judulBagian, { color: theme.teks }]}>
         Informasi sesi
@@ -175,42 +268,6 @@ export default function DetailSesiScreen() {
           </View>
         ))}
       </View>
-
-      <BottomSheet
-        visible={sheetTampil}
-        title={fase === 'berhasil' ? 'Presensi berhasil' : 'Konfirmasi presensi'}
-        onClose={() => setSheetTampil(false)}
-      >
-        {fase === 'konfirmasi' ? (
-          <View style={styles.sheet}>
-            <Text style={[Tipe.label, styles.tengah, { color: theme.teks }]}>{session.title}</Text>
-            <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>
-              {formatTanggal(session.date)}, {formatRentangWIB(session.time)}
-            </Text>
-            <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>
-              Kehadiran dicatat sesuai waktu saat kamu menekan tombol konfirmasi dan tidak bisa dibatalkan.
-            </Text>
-            <View style={styles.aksi}>
-              <View style={styles.aksiItem}>
-                <Tombol label="Batal" varian="lembut" onPress={() => setSheetTampil(false)} />
-              </View>
-              <View style={styles.aksiItem}>
-                <Tombol label="Ya, catat kehadiran" onPress={konfirmasi} />
-              </View>
-            </View>
-          </View>
-        ) : (
-          <View style={styles.sheet}>
-            <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>
-              Kehadiranmu tercatat pukul
-            </Text>
-            <Text style={[Tipe.detailTitle, styles.tengah, { color: theme.sukses }]}>
-              {record ? formatJamWIB(record.timestamp) : '-'} WIB
-            </Text>
-            <Tombol label="Selesai" onPress={() => setSheetTampil(false)} />
-          </View>
-        )}
-      </BottomSheet>
     </Layar>
   );
 }
@@ -239,9 +296,8 @@ const styles = StyleSheet.create({
   rincian: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14 },
   ikonBulat: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   teksRincian: { flex: 1, gap: 2 },
-  footer: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12, width: '100%', maxWidth: 648, alignSelf: 'center' },
+  footer: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12, width: '100%', maxWidth: 648, alignSelf: 'center', gap: 8 },
   sheet: { gap: 8 },
   tengah: { textAlign: 'center' },
-  aksi: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  aksiItem: { flex: 1 },
+  aksi: { gap: 10, marginTop: 8 },
 });

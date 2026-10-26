@@ -1,7 +1,7 @@
 /**
  * Token visual sisi praktikan: kobalt dan kaca, mengikuti sisi asisten (DESIGN.md P3).
- * textSecondary dibuat lebih gelap dari P3 (#5C6D86 hanya 4,31:1 di atas permukaan netral)
- * supaya lolos WCAG AA. Varian gelap dibuat sendiri karena P3 belum punya.
+ * textSecondary dan galat dibuat lebih gelap dari P3 (#5C6D86 dan #B83E4D di bawah 4,5:1 di atas
+ * permukaan netral) supaya lolos WCAG AA. suksesLembut diusulkan ke theme bersama P1 (DESIGN.md). Varian gelap dibuat sendiri karena P3 belum punya.
  */
 
 import { TextStyle } from 'react-native';
@@ -31,7 +31,8 @@ const terang = {
   teksLencanaBuka: '#35501A',
   pemisah: 'rgba(53,85,142,0.1)',
   sukses: '#23765B',
-  galat: '#B83E4D',
+  suksesLembut: '#E8F5EF',
+  galat: '#AE3645',
   galatLembut: '#FFF0F1',
   navLatar: 'rgba(255,255,255,0.85)',
   navAktif: '#DFE9FA',
@@ -61,6 +62,7 @@ const gelap: typeof terang = {
   teksLencanaBuka: '#DEF1B4',
   pemisah: 'rgba(255,255,255,0.1)',
   sukses: '#5FD0A8',
+  suksesLembut: '#12352B',
   galat: '#F28B96',
   galatLembut: '#3A1E24',
   navLatar: 'rgba(24,34,66,0.9)',
@@ -75,9 +77,11 @@ export function usePraktikanTheme(): PraktikanTheme {
 }
 
 export const Tipe = {
-  judulHalaman: { fontSize: 28, lineHeight: 35, fontWeight: '700', letterSpacing: -0.5 },
+  judulHalaman: { fontSize: 27, lineHeight: 34, fontWeight: '700', letterSpacing: -0.5 },
+  sapaan: { fontSize: 13, lineHeight: 16, fontWeight: '400' },
+  waktuHadir: { fontSize: 30, lineHeight: 38, fontWeight: '700' },
   detailTitle: { fontSize: 25, lineHeight: 32, fontWeight: '700', letterSpacing: -0.4 },
-  judulKartu: { fontSize: 20, lineHeight: 27, fontWeight: '700', letterSpacing: -0.5 },
+  judulKartu: { fontSize: 19, lineHeight: 25, fontWeight: '700', letterSpacing: -0.4 },
   judulBagian: { fontSize: 20, lineHeight: 27, fontWeight: '700', letterSpacing: -0.4 },
   sectionTitle: { fontSize: 16, lineHeight: 22, fontWeight: '700' },
   label: { fontSize: 15, lineHeight: 20, fontWeight: '600' },

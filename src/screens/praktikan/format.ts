@@ -46,3 +46,17 @@ export function formatTanggalPendek(date: string): string {
 export function formatRentangWIB(time: string): string {
   return `${time.replace(/:/g, '.').replace(' - ', '–')} WIB`;
 }
+
+/** Sapaan menurut jam WIB: pagi 04.00-10.59, siang 11.00-14.59, sore 15.00-17.59, selebihnya malam */
+export function sapaanWIB(now: Date = new Date()): string {
+  const jam = new Date(now.getTime() + OFFSET_WIB_MS).getUTCHours();
+  if (jam >= 4 && jam < 11) return 'Selamat pagi';
+  if (jam >= 11 && jam < 15) return 'Selamat siang';
+  if (jam >= 15 && jam < 18) return 'Selamat sore';
+  return 'Selamat malam';
+}
+
+/** Tanggal hari ini dalam WIB, format YYYY-MM-DD */
+export function tanggalHariIniWIB(now: Date = new Date()): string {
+  return new Date(now.getTime() + OFFSET_WIB_MS).toISOString().slice(0, 10);
+}
