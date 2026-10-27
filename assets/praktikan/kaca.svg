@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="420" viewBox="0 0 600 420" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFFFFF" stop-opacity="0.94"/><stop offset="1" stop-color="#F7FAFF" stop-opacity="0.65"/></linearGradient>
+    <radialGradient id="blue"><stop stop-color="#A7C7FF" stop-opacity="0.55"/><stop offset="1" stop-color="#A7C7FF" stop-opacity="0"/></radialGradient>
+    <radialGradient id="lime"><stop stop-color="#E3EFA8" stop-opacity="0.4"/><stop offset="1" stop-color="#E3EFA8" stop-opacity="0"/></radialGradient>
+  </defs>
+  <path fill="url(#glass)" d="M0 0h600v420H0z"/>
+  <ellipse fill="url(#blue)" cx="560" cy="10" rx="350" ry="230"/>
+  <ellipse fill="url(#lime)" cx="550" cy="380" rx="290" ry="220"/>
+</svg>

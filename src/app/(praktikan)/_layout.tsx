@@ -8,12 +8,14 @@ import React from 'react';
 import { Text } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
+import { NavigasiPraktikan } from '@/screens/praktikan/components/navigasi';
 
 export default function PraktikanLayout() {
   const theme = useTheme();
 
   return (
     <Tabs
+      tabBar={(props) => <NavigasiPraktikan {...props} />}
       screenOptions={{
         headerStyle: { backgroundColor: theme.background },
         headerTintColor: theme.text,
@@ -31,6 +33,7 @@ export default function PraktikanLayout() {
         name="index"
         options={{
           title: 'Jadwal',
+          headerShown: false,
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📅</Text>,
         }}
       />
@@ -38,6 +41,7 @@ export default function PraktikanLayout() {
         name="riwayat"
         options={{
           title: 'Riwayat',
+          headerShown: false,
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📋</Text>,
         }}
       />
