@@ -2,7 +2,7 @@
   "expo": {
     "name": "Presensi Praktikum",
     "slug": "presensi-praktikum",
-    "owner": "kemal-faza",
+    "owner": "kemal-fazas-team",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -33,6 +33,17 @@
           "backgroundColor": "#208AEF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser",
+      [
+        "./plugins/withFirebaseBom.js",
+        {
+          "bom": "34.19.0"
         }
       ]
     ],
