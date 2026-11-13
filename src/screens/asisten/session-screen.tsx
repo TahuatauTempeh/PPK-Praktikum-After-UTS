@@ -27,6 +27,7 @@ export default function SessionScreen({ id, onBack, onRecap }: Props) {
         <ScheduleIcon name="backPrimary" size={20} />
       </Pressable>
       <AssistantText style={styles.headerTitle} accessibilityRole="header">Kelola sesi</AssistantText>
+      <View style={styles.headerSpacer} />
     </View>
   );
 
@@ -192,9 +193,10 @@ export default function SessionScreen({ id, onBack, onRecap }: Props) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  header: { position: 'relative', flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 },
   back: { minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.72)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.95)', borderRadius: 16, boxShadow: '0 4px 16px rgba(30,65,125,0.08)' },
-  headerTitle: { position: 'absolute', left: 0, right: 0, textAlign: 'center', fontSize: 18, lineHeight: 24, fontFamily: theme.fonts.bold, color: theme.colors.textPrimary },
+  headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, lineHeight: 24, fontFamily: theme.fonts.bold, color: theme.colors.textPrimary },
+  headerSpacer: { width: 44 },
   identity: { gap: 14, padding: 20, paddingBottom: 52 },
   topRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   sessionNumberBadge: { marginLeft: -10, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: 'rgba(255,255,255,0.55)', borderRadius: theme.radius.pill },
