@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { AgendaBanner } from './components/agenda-banner';
 import { AssistantScreen } from './components/assistant-screen';
 import { AssistantText } from './components/assistant-text';
+import { AssistantTopBar } from './components/assistant-top-bar';
 import { ScheduleCard } from './components/schedule-card';
 import { ScheduleIcon } from './components/schedule-icon';
 import {
@@ -19,17 +21,17 @@ type Props = {
   attendance?: readonly AssistantAttendance[];
   date?: string;
   onManage?: (id: string) => void;
+  onBack?: () => void;
 };
 
 export default function ScheduleScreen({
   sessions = previewSessions, attendance = previewAttendance, date = previewDate,
-  onManage,
+  onManage, onBack,
 }: Props) {
   const [filter, setFilter] = useState<Filter>('all');
   const daySessions = sessions.filter(session => session.date === date)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
   const visible = daySessions.filter(session => filter === 'all' || session.status === filter);
-  const openCount = daySessions.filter(session => session.status === 'open').length;
   // A date-only value is interpreted at midnight WIB, never in the device timezone.
   const activeDate = new Date(`${date}T00:00:00+07:00`);
   const dateOptions = { timeZone: 'Asia/Jakarta' };
@@ -40,30 +42,11 @@ export default function ScheduleScreen({
   const today = fullDate === dateFormatter.format(new Date());
 
   return (
-    <AssistantScreen edges={['top', 'left', 'right']}>
-      <View style={styles.dayBanner}>
-        <View pointerEvents="none" accessible={false} style={styles.calendarWatermark}>
-          <ScheduleIcon name="calendarWhite" size={126} />
-        </View>
-        <View style={styles.bannerHeading}>
-          <AssistantText style={styles.bannerEyebrow}>AGENDA PRAKTIKUM</AssistantText>
-        </View>
-        <View style={styles.dateRow} accessibilityLabel={fullDate}>
-          <AssistantText style={styles.day}>{new Intl.DateTimeFormat('id-ID', { ...dateOptions, day: '2-digit' }).format(activeDate)}</AssistantText>
-          <View style={styles.dateDetails}>
-            <AssistantText style={styles.weekday}>{new Intl.DateTimeFormat('id-ID', { ...dateOptions, weekday: 'long' }).format(activeDate)}</AssistantText>
-            <AssistantText style={styles.month}>{new Intl.DateTimeFormat('id-ID', { ...dateOptions, month: 'long', year: 'numeric' }).format(activeDate)}</AssistantText>
-          </View>
-          {today && <View style={styles.todayBadge}><AssistantText style={styles.todayLabel}>Hari ini</AssistantText></View>}
-        </View>
-        <View style={styles.bannerFooter}>
-          <AssistantText style={styles.sessionSummary}>{daySessions.length} sesi terjadwal</AssistantText>
-          <View style={styles.openSummary}>
-            <View style={styles.liveDot} />
-            <AssistantText style={styles.openLabel}>{openCount} dibuka</AssistantText>
-          </View>
-        </View>
-      </View>
+    <AssistantScreen
+      header={onBack ? <AssistantTopBar onBack={onBack} title="Jadwal" /> : undefined}
+      edges={['top', 'left', 'right']}
+    >
+      <AgendaBanner date={date} sessions={sessions} />
       <View style={styles.scheduleSection}>
         <View style={styles.listHeading}>
           <AssistantText style={styles.sectionTitle} accessibilityRole="header">{today ? 'Sesi hari ini' : 'Daftar sesi'}</AssistantText>
@@ -114,22 +97,6 @@ export default function ScheduleScreen({
 }
 
 const styles = StyleSheet.create({
-  dayBanner: { overflow: 'hidden', padding: 22, gap: 18, backgroundColor: theme.colors.glassHero, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', borderRadius: 30 },
-  bannerHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  bannerEyebrow: { fontSize: 10, lineHeight: 16, letterSpacing: 1.8, fontFamily: theme.fonts.semibold, color: '#EDF3FF' },
-  calendarWatermark: { position: 'absolute', top: -12, right: -16, opacity: 0.12 },
-  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 14, flexWrap: 'wrap' },
-  day: { fontSize: 58, lineHeight: 64, letterSpacing: -3, fontFamily: theme.fonts.bold, color: theme.colors.surface, fontVariant: ['tabular-nums'] },
-  dateDetails: { gap: 3, flex: 1, minWidth: 100 },
-  weekday: { fontSize: 21, lineHeight: 28, fontFamily: theme.fonts.semibold, color: theme.colors.surface },
-  month: { fontSize: 13, lineHeight: 20, color: '#EDF3FF' },
-  todayBadge: { paddingHorizontal: 10, paddingVertical: 5, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: theme.radius.pill },
-  todayLabel: { color: theme.colors.surface, fontSize: 11, lineHeight: 16, fontFamily: theme.fonts.semibold },
-  bannerFooter: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.16)' },
-  sessionSummary: { fontSize: 12, lineHeight: 18, fontFamily: theme.fonts.medium, color: theme.colors.surface },
-  openSummary: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#DDF59A' },
-  openLabel: { fontSize: 12, lineHeight: 18, color: '#FFFFFF' },
   white: { color: theme.colors.surface },
   scheduleSection: { gap: 14, marginTop: 8 },
   filterViewport: { marginHorizontal: -theme.spacing.page },

@@ -20,6 +20,7 @@ const assets = {
   chartEmpty: require('../../../../assets/asisten/chart-empty.svg'),
   calendarButton: require('../../../../assets/asisten/calendar-button.svg'),
   back: require('../../../../assets/asisten/back.svg'),
+  backPrimary: require('../../../../assets/asisten/back-primary.svg'),
   calendarSmall: require('../../../../assets/asisten/calendar-small.svg'),
   liveDot: require('../../../../assets/asisten/live-dot.svg'),
   lock: require('../../../../assets/asisten/lock.svg'),
@@ -42,6 +43,7 @@ const assets = {
   chart: require('../../../../assets/asisten/chart.svg'),
   calendarPlus: require('../../../../assets/asisten/calendar-plus.svg'),
 };
-export function ScheduleIcon({ name, size }: { name: keyof typeof assets; size: number }) {
+export type ScheduleIconName = keyof typeof assets;
+export function ScheduleIcon({ name, size }: { name: ScheduleIconName; size: number }) {
   return <Image source={assets[name]} style={{ width: size, height: size }} contentFit="contain" accessible={false} />;
 }

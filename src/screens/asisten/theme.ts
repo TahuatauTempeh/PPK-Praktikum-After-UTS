@@ -18,7 +18,7 @@ export const assistantTheme = {
     lime: '#DEF1B4',
   },
   spacing: { xs: 4, sm: 8, md: 12, section: 18, page: 24, lg: 32 },
-  radius: { control: 20, card: 28, panel: 32, pill: 999 },
+  radius: { control: 20, card: 28, panel: 32, banner: 30, block: 24, button: 21, pill: 999 },
   fonts: {
     regular: 'Inter_400Regular',
     medium: 'Inter_500Medium',
