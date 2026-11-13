@@ -2,12 +2,14 @@
  * Profil Asisten — Menampilkan info user dan tombol Ganti Peran (UC-12).
  */
 
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { Spacing } from '@/constants/theme';
+import { useAuth } from '@/context/auth-context';
 import { useSession } from '@/context/session-context';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -15,6 +17,7 @@ export default function ProfilAsistenScreen() {
   const theme = useTheme();
   const { state, logout } = useSession();
   const { currentUser } = state;
+  const { profile } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = () => {
@@ -66,6 +69,22 @@ export default function ProfilAsistenScreen() {
 
         {/* Actions */}
         <View style={styles.actions}>
+          {profile?.isAdmin ? (
+            <Pressable
+              onPress={() => router.push('/pengguna')}
+              style={({ pressed }) => [
+                styles.adminButton,
+                {
+                  backgroundColor: theme.primaryLight,
+                  borderColor: theme.primary,
+                  opacity: pressed ? 0.85 : 1,
+                },
+              ]}
+            >
+              <Text style={[styles.adminText, { color: theme.primary }]}>👥 Kelola Pengguna</Text>
+            </Pressable>
+          ) : null}
+
           <Pressable
             onPress={() => setShowLogoutModal(true)}
             style={({ pressed }) => [
@@ -168,6 +187,17 @@ const styles = StyleSheet.create({
   actions: {
     marginTop: 'auto',
     paddingBottom: Spacing.three,
+  },
+  adminButton: {
+    borderRadius: 14,
+    borderWidth: 1.5,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  adminText: {
+    fontSize: 16,
+    fontWeight: '700',
   },
   logoutButton: {
     borderRadius: 14,
