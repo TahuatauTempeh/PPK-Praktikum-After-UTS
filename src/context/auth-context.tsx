@@ -45,22 +45,23 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [status, setStatus] = useState<AuthStatus>('loading');
+  const [initialAuth] = useState(() => {
+    try {
+      return { auth: getFirebaseAuth(), error: null as AppError | null };
+    } catch (error) {
+      return { auth: null, error: mapFirebaseError(error) };
+    }
+  });
+  const firebaseAuth = initialAuth.auth;
+
+  const [status, setStatus] = useState<AuthStatus>(initialAuth.error ? 'error' : 'loading');
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [profileError, setProfileError] = useState<AppError | null>(null);
+  const [profileError, setProfileError] = useState<AppError | null>(initialAuth.error);
   const [refreshKey, setRefreshKey] = useState(0);
   const pendingProfile = useRef(false);
 
   useEffect(() => {
-    let firebaseAuth: ReturnType<typeof getFirebaseAuth>;
-
-    try {
-      firebaseAuth = getFirebaseAuth();
-    } catch (error) {
-      setProfileError(mapFirebaseError(error));
-      setStatus('error');
-      return;
-    }
+    if (!firebaseAuth) return;
 
     let unsubscribeProfile: (() => void) | undefined;
     let cancelled = false;
@@ -127,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       unsubscribeProfile?.();
       unsubscribeAuth();
     };
-  }, [refreshKey]);
+  }, [firebaseAuth, refreshKey]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     await signInWithEmailAndPassword(
