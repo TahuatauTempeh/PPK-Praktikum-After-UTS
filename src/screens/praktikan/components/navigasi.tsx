@@ -3,7 +3,7 @@
  * Dipasang lewat prop tabBar di Tabs, jadi tab tetap dikelola Expo Router.
  */
 
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 import React, { ComponentProps, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -18,9 +18,15 @@ const TAB: Record<string, { label: string; ikon: IkonNama }> = {
   profil: { label: 'Profil', ikon: 'profil' },
 };
 
+const RUTE: Record<string, '/(praktikan)' | '/(praktikan)/riwayat' | '/(praktikan)/profil'> = {
+  index: '/(praktikan)',
+  riwayat: '/(praktikan)/riwayat',
+  profil: '/(praktikan)/profil',
+};
+
 const JARAK = 8;
 
-export function NavigasiPraktikan({ state, emitter, navigateToTab, insets }: TabBarProps) {
+export function NavigasiPraktikan({ state, emitter, insets }: TabBarProps) {
   const theme = usePraktikanTheme();
   const [kotak, setKotak] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [geser] = useState(() => new Animated.Value(0));
@@ -78,7 +84,7 @@ export function NavigasiPraktikan({ state, emitter, navigateToTab, insets }: Tab
           const warna = terpilih ? theme.aksen : theme.ikonNonaktif;
           const onPress = () => {
             const kejadian = emitter.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
-            if (!terpilih && !kejadian.defaultPrevented) navigateToTab(r.key);
+            if (!terpilih && !kejadian.defaultPrevented) router.navigate(RUTE[r.name]);
           };
           return (
             <Pressable

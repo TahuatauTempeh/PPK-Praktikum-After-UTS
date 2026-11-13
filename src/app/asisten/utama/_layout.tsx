@@ -31,6 +31,7 @@ export default function AsistenLayout() {
         name="index"
         options={{
           title: 'Jadwal',
+          href: '/asisten/utama',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📅</Text>,
         }}
       />
@@ -38,6 +39,7 @@ export default function AsistenLayout() {
         name="rekap"
         options={{
           title: 'Rekap',
+          href: '/asisten/utama/rekap',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📊</Text>,
         }}
       />
@@ -45,6 +47,7 @@ export default function AsistenLayout() {
         name="profil"
         options={{
           title: 'Profil',
+          href: '/asisten/utama/profil',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>👤</Text>,
         }}
       />

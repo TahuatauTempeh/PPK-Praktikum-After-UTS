@@ -94,22 +94,40 @@ function RootNavigator() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!profile}>
+      <Stack.Protected
+        guard={!profile}
+        redirectTo={profile?.role === 'asisten' ? '/asisten/utama' : '/(praktikan)'}
+      >
         <Stack.Screen name="(auth)" options={{ animation: 'slide_from_right' }} />
       </Stack.Protected>
 
-      <Stack.Protected guard={profile?.role === 'praktikan'}>
+      <Stack.Protected
+        guard={profile?.role === 'praktikan'}
+        redirectTo={profile?.role === 'asisten' ? '/asisten/utama' : '/login'}
+      >
         <Stack.Screen name="(praktikan)" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="praktikan/sesi/[id]" options={{ animation: 'slide_from_right' }} />
       </Stack.Protected>
 
-      <Stack.Protected guard={profile?.role === 'asisten'}>
-        <Stack.Screen name="(asisten)" options={{ animation: 'slide_from_right' }} />
+      <Stack.Protected
+        guard={profile?.role === 'asisten'}
+        redirectTo={profile?.role === 'praktikan' ? '/(praktikan)' : '/login'}
+      >
+        <Stack.Screen name="asisten/utama" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="asisten/(tabs)" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="asisten/sesi/[id]" options={{ animation: 'slide_from_right' }} />
       </Stack.Protected>
 
-      <Stack.Protected guard={profile?.isAdmin === true}>
+      <Stack.Protected
+        guard={profile?.isAdmin === true}
+        redirectTo={
+          profile?.role === 'asisten'
+            ? '/asisten/utama'
+            : profile?.role === 'praktikan'
+              ? '/(praktikan)'
+              : '/login'
+        }
+      >
         <Stack.Screen name="(admin)" options={{ animation: 'slide_from_right' }} />
       </Stack.Protected>
 
