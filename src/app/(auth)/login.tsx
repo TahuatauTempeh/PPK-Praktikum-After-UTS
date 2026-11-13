@@ -20,7 +20,7 @@ import {
 } from '@/lib/validation/auth';
 import { useTheme } from '@/hooks/use-theme';
 
-import { authStyles } from './auth-styles';
+import { authStyles } from '@/components/form/auth-styles';
 
 export default function LoginScreen() {
   const theme = useTheme();

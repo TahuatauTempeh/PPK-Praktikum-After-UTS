@@ -21,7 +21,7 @@ import {
 import type { RegisterInput } from '@/types';
 import { useTheme } from '@/hooks/use-theme';
 
-import { authStyles } from './auth-styles';
+import { authStyles } from '@/components/form/auth-styles';
 
 export default function RegisterScreen() {
   const theme = useTheme();
