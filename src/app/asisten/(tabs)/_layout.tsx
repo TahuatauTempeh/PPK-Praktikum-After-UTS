@@ -7,19 +7,19 @@ import { AssistantNavigation, type AssistantTab } from '@/screens/asisten/compon
 import { assistantTheme as theme } from '@/screens/asisten/theme';
 
 const tabFromPath = (pathname: string): AssistantTab | null => {
-  if (pathname === '/asisten/rekap') return 'recap';
-  if (pathname === '/asisten') return 'schedule';
+  if (pathname === '/asisten/profil') return 'profile';
+  if (pathname === '/asisten') return 'home';
   return null;
 };
 
 export default function TabsLayout() {
   const pathname = usePathname();
   const current = tabFromPath(pathname);
-  const [active, setActive] = useState<AssistantTab>(current ?? 'schedule');
+  const [active, setActive] = useState<AssistantTab>(current ?? 'home');
   if (current && current !== active) setActive(current);
 
   const goTo = (tab: AssistantTab) => {
-    if (tab === 'recap') router.navigate('/asisten/rekap');
+    if (tab === 'profile') router.navigate('/asisten/profil');
     else router.dismissTo('/asisten');
   };
 
@@ -28,8 +28,8 @@ export default function TabsLayout() {
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.background } }} />
       <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.bar}>
         <AssistantNavigation active={active}
-          onSchedule={() => goTo('schedule')}
-          onRecap={() => goTo('recap')} />
+          onHome={() => goTo('home')}
+          onProfile={() => goTo('profile')} />
       </SafeAreaView>
     </View>
   );

@@ -5,22 +5,22 @@ import { assistantTheme as theme } from '../theme';
 import { AssistantText } from './assistant-text';
 import { ScheduleIcon } from './schedule-icon';
 
-export type AssistantTab = 'schedule' | 'recap';
+export type AssistantTab = 'home' | 'profile';
 
-type Props = { active: AssistantTab; onSchedule?: () => void; onRecap?: () => void };
+type Props = { active: AssistantTab; onHome?: () => void; onProfile?: () => void };
 type Box = { x: number; y: number; width: number; height: number };
 
-const tabs = ['schedule', 'recap'] as const;
+const tabs = ['home', 'profile'] as const;
 const tabGap = 52;
 const navigationRadius = theme.radius.panel;
 const tabRadius = navigationRadius - theme.spacing.sm;
 const indicatorSlide = { duration: 240, easing: Easing.out(Easing.cubic) };
 
-export function AssistantNavigation({ active, onSchedule, onRecap }: Props) {
+export function AssistantNavigation({ active, onHome, onProfile }: Props) {
   const [track, setTrack] = useState<Box | null>(null);
   const [offset] = useState(() => new Animated.Value(0));
   const placed = useRef(false);
-  const index = active === 'recap' ? 1 : 0;
+  const index = active === 'profile' ? 1 : 0;
 
   useEffect(() => {
     if (!track) return;
@@ -47,17 +47,19 @@ export function AssistantNavigation({ active, onSchedule, onRecap }: Props) {
       )}
       {tabs.map(destination => {
         const selected = active === destination;
-        const onPress = destination === 'schedule' ? onSchedule : onRecap;
+        const onPress = destination === 'home' ? onHome : onProfile;
+        const icon = destination === 'home'
+          ? selected ? 'home' : 'homeInactive'
+          : selected ? 'profile' : 'profileInactive';
         return (
           <Pressable key={destination} accessibilityRole="tab"
             accessibilityState={{ selected, disabled: !selected && !onPress }}
             disabled={!selected && !onPress} onPress={onPress}
-            onLayout={destination === 'schedule' ? event => setTrack(event.nativeEvent.layout) : undefined}
+            onLayout={destination === 'home' ? event => setTrack(event.nativeEvent.layout) : undefined}
             style={({ pressed }) => [styles.tab, pressed && styles.pressed]}>
-            <ScheduleIcon name={destination === 'schedule'
-              ? selected ? 'calendar' : 'calendarInactive' : selected ? 'chartActive' : 'chart'} size={22} />
+            <ScheduleIcon name={icon} size={22} />
             <AssistantText variant="caption" tone={selected ? 'accent' : 'secondary'} style={selected && styles.bold}>
-              {destination === 'schedule' ? 'Jadwal' : 'Rekap'}
+              {destination === 'home' ? 'Beranda' : 'Profil'}
             </AssistantText>
           </Pressable>
         );

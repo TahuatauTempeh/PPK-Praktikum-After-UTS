@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { AssistantScreen } from './components/assistant-screen';
 import { AssistantText } from './components/assistant-text';
+import { AssistantTopBar } from './components/assistant-top-bar';
 import { RecapCard } from './components/recap-card';
 import { RecapFilterDialog } from './components/recap-filter-dialog';
 import { ScheduleIcon } from './components/schedule-icon';
@@ -12,8 +13,8 @@ import { previewDate } from './schedule-data';
 import { formatSessionDate } from './session-format';
 import { assistantTheme as theme } from './theme';
 
-type Props = { initialSessionId?: string; onSchedule: () => void; onDetail: (id: string) => void };
-export default function RecapScreen({ initialSessionId = '', onSchedule, onDetail }: Props) {
+type Props = { initialSessionId?: string; onSchedule: () => void; onDetail: (id: string) => void; onBack?: () => void };
+export default function RecapScreen({ initialSessionId = '', onSchedule, onDetail, onBack }: Props) {
   const { width } = useWindowDimensions();
   const { sessions, attendance, participants } = useAssistantSessions();
   const initialSession = sessions.find(session => session.id === initialSessionId);
@@ -32,7 +33,10 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
   return (
     <>
       <View style={styles.screen} aria-hidden={dialog !== null} importantForAccessibility={dialog ? 'no-hide-descendants' : 'auto'}>
-        <AssistantScreen edges={['top', 'left', 'right']}>
+        <AssistantScreen
+          header={onBack ? <AssistantTopBar onBack={onBack} title="Rekap" /> : undefined}
+          edges={['top', 'left', 'right']}
+        >
           <View style={styles.heading}>
             <View pointerEvents="none" accessible={false} style={styles.chartWatermark}>
               <ScheduleIcon name="chartWhite" size={126} />

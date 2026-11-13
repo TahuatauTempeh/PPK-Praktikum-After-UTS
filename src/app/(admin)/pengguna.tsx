@@ -122,7 +122,10 @@ export default function AdminUsersScreen() {
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => {
+            if (router.canGoBack()) router.back();
+            else router.replace(profile?.role === 'asisten' ? '/asisten' : profile?.role === 'praktikan' ? '/(praktikan)' : '/login');
+          }}
           accessibilityRole="button"
           accessibilityLabel="Kembali"
           style={styles.backButton}
