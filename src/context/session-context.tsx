@@ -40,8 +40,6 @@ const initialState: SessionState = {
 // ─── Actions ─────────────────────────────────────────────────────────────────
 
 type SessionAction =
-  | { type: 'SET_USER'; payload: User }
-  | { type: 'LOGOUT' }
   | { type: 'ADD_SESSION'; payload: Omit<Session, 'id' | 'status'> }
   | { type: 'OPEN_SESSION'; payload: string }
   | { type: 'CLOSE_SESSION'; payload: string }
@@ -51,12 +49,6 @@ type SessionAction =
 
 function sessionReducer(state: SessionState, action: SessionAction): SessionState {
   switch (action.type) {
-    case 'SET_USER':
-      return { ...state, currentUser: action.payload };
-
-    case 'LOGOUT':
-      return { ...state, currentUser: null };
-
     case 'ADD_SESSION': {
       const newSession: Session = {
         ...action.payload,
@@ -97,7 +89,6 @@ function sessionReducer(state: SessionState, action: SessionAction): SessionStat
 
 interface SessionContextValue {
   state: SessionState;
-  setUser: (user: User) => void;
   logout: () => void;
   addSession: (session: Omit<Session, 'id' | 'status'>) => void;
   openSession: (sessionId: string) => { success: boolean; message: string };
@@ -143,10 +134,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const dismissToast = useCallback(() => {
     setToast(null);
-  }, []);
-
-  const setUser = useCallback((user: User) => {
-    dispatch({ type: 'SET_USER', payload: user });
   }, []);
 
   const logout = useCallback(() => {
@@ -264,7 +251,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<SessionContextValue>(
     () => ({
       state: stateWithUser,
-      setUser,
       logout,
       addSession,
       openSession,
@@ -274,7 +260,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       showToast,
       dismissToast,
     }),
-    [stateWithUser, setUser, logout, addSession, openSession, closeSession, submitAttendance, toast, showToast, dismissToast]
+    [stateWithUser, logout, addSession, openSession, closeSession, submitAttendance, toast, showToast, dismissToast]
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
