@@ -16,6 +16,8 @@ const assets = {
   detailArrow: require('../../../../assets/asisten/detail-arrow.svg'),
   check: require('../../../../assets/asisten/check.svg'),
   calendarInactive: require('../../../../assets/asisten/calendar-inactive.svg'),
+  chartPrimary: require('../../../../assets/asisten/chart-primary.svg'),
+  usersPrimary: require('../../../../assets/asisten/users-primary.svg'),
   chartActive: require('../../../../assets/asisten/chart-active.svg'),
   chartEmpty: require('../../../../assets/asisten/chart-empty.svg'),
   calendarButton: require('../../../../assets/asisten/calendar-button.svg'),

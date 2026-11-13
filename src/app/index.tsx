@@ -16,6 +16,6 @@ export default function IndexScreen() {
   }
 
   return (
-    <Redirect href={profile.role === 'asisten' ? '/asisten/utama' : '/(praktikan)'} />
+    <Redirect href={profile.role === 'asisten' ? '/asisten' : '/(praktikan)'} />
   );
 }
