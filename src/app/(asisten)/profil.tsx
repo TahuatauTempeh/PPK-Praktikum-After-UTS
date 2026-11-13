@@ -2,7 +2,6 @@
  * Profil Asisten — Menampilkan info user dan tombol Ganti Peran (UC-12).
  */
 
-import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,7 +20,6 @@ export default function ProfilAsistenScreen() {
   const handleLogout = () => {
     setShowLogoutModal(false);
     logout();
-    router.replace('/');
   };
 
   if (!currentUser) return null;
@@ -79,7 +77,7 @@ export default function ProfilAsistenScreen() {
               },
             ]}
           >
-            <Text style={[styles.logoutText, { color: theme.danger }]}>🔄 Ganti Peran</Text>
+            <Text style={[styles.logoutText, { color: theme.danger }]}>🚪 Keluar</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -87,9 +85,9 @@ export default function ProfilAsistenScreen() {
       {/* Confirm Modal */}
       <ConfirmModal
         visible={showLogoutModal}
-        title="Ganti Peran?"
-        message="Anda akan keluar dan kembali ke halaman pemilihan peran."
-        confirmText="Ya, Ganti"
+        title="Keluar?"
+        message="Anda akan keluar dari akun ini."
+        confirmText="Ya, Keluar"
         cancelText="Batal"
         confirmColor="danger"
         onConfirm={handleLogout}
