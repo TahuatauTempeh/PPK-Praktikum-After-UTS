@@ -2,14 +2,15 @@
   "expo": {
     "name": "Presensi Praktikum",
     "slug": "presensi-praktikum",
-    "owner": "kemal-faza",
+    "owner": "kemal-fazas-team",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "presensipraktikum",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.ppk.presensipraktikum"
     },
     "android": {
       "package": "com.ppk.presensipraktikum",
@@ -34,7 +35,10 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
