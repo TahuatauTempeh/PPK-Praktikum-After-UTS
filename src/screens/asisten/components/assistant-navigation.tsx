@@ -10,7 +10,6 @@ import { ScheduleIcon, type ScheduleIconName } from './schedule-icon';
 export type AssistantTab = 'asisten' | 'admin' | 'profile';
 
 type Props = { active: AssistantTab; showAdmin: boolean; onNavigate: (tab: AssistantTab) => void };
-type Box = { x: number; y: number; width: number; height: number };
 
 const navigationRadius = assistantTokens.radius.panel;
 const navigationPadding = 6;
@@ -26,7 +25,7 @@ const iconFor = (tab: AssistantTab, selected: boolean): ScheduleIconName => {
 
 export function AssistantNavigation({ active, showAdmin, onNavigate }: Props) {
   const barTheme = usePraktikanTheme();
-  const [track, setTrack] = useState<Box | null>(null);
+  const [tabWidth, setTabWidth] = useState<number | null>(null);
   const [offset] = useState(() => new Animated.Value(0));
   const placed = useRef(false);
   const tabs: AssistantTab[] = showAdmin ? ['asisten', 'admin', 'profile'] : ['asisten', 'profile'];
@@ -34,8 +33,8 @@ export function AssistantNavigation({ active, showAdmin, onNavigate }: Props) {
   const index = Math.max(0, tabs.indexOf(active));
 
   useEffect(() => {
-    if (!track) return;
-    const target = index * (track.width + tabGap);
+    if (!tabWidth) return;
+    const target = index * (tabWidth + tabGap);
     if (!placed.current) {
       placed.current = true;
       offset.setValue(target);
@@ -46,14 +45,13 @@ export function AssistantNavigation({ active, showAdmin, onNavigate }: Props) {
     });
     animation.start();
     return () => animation.stop();
-  }, [index, offset, track, tabGap]);
+  }, [index, offset, tabWidth, tabGap]);
 
   return (
     <View
       style={[
         styles.navigation,
         {
-          gap: tabGap,
           backgroundColor: barTheme.navLatar,
           borderColor: barTheme.garisKartu,
           boxShadow: barTheme.bayang,
@@ -61,40 +59,45 @@ export function AssistantNavigation({ active, showAdmin, onNavigate }: Props) {
       ]}
       accessibilityRole="tablist"
     >
-      {track && (
-        <Animated.View pointerEvents="none" accessible={false} style={[styles.indicator, {
-          left: track.x, top: track.y, width: track.width, height: track.height,
-          backgroundColor: barTheme.navAktif,
-          transform: [{ translateX: offset }],
-        }]} />
-      )}
-      {tabs.map(destination => {
-        const selected = active === destination;
-        const tint = selected ? barTheme.aksen : barTheme.ikonNonaktif;
-        return (
-          <Pressable key={destination} accessibilityRole="tab"
-            accessibilityState={{ selected }}
-            accessibilityLabel={LABEL[destination]}
-            onPress={() => onNavigate(destination)}
-            onLayout={destination === 'asisten' ? event => setTrack(event.nativeEvent.layout) : undefined}
-            style={({ pressed }) => [styles.tab, pressed && styles.pressed]}>
-            <ScheduleIcon name={iconFor(destination, selected)} size={18} tintColor={tint} />
-            <AssistantText
-              variant="caption"
-              tone={selected ? 'accent' : 'secondary'}
-              style={[styles.tabLabel, { color: tint }, selected && styles.bold]}
-            >
-              {LABEL[destination]}
-            </AssistantText>
-          </Pressable>
-        );
-      })}
+      <View style={[styles.tabs, { gap: tabGap }]}>
+        {tabWidth !== null && (
+          <Animated.View pointerEvents="none" accessible={false} style={[styles.indicator, {
+            width: tabWidth,
+            backgroundColor: barTheme.navAktif,
+            transform: [{ translateX: offset }],
+          }]} />
+        )}
+        {tabs.map(destination => {
+          const selected = active === destination;
+          const tint = selected ? barTheme.aksen : barTheme.ikonNonaktif;
+          return (
+            <Pressable key={destination} accessibilityRole="tab"
+              accessibilityState={{ selected }}
+              accessibilityLabel={LABEL[destination]}
+              onPress={() => onNavigate(destination)}
+              onLayout={destination === 'asisten'
+                ? event => setTabWidth(event.nativeEvent.layout.width)
+                : undefined}
+              style={({ pressed }) => [styles.tab, pressed && styles.pressed]}>
+              <ScheduleIcon name={iconFor(destination, selected)} size={18} tintColor={tint} />
+              <AssistantText
+                variant="caption"
+                tone={selected ? 'accent' : 'secondary'}
+                style={[styles.tabLabel, { color: tint }, selected && styles.bold]}
+              >
+                {LABEL[destination]}
+              </AssistantText>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
 const styles = StyleSheet.create({
-  navigation: { flexDirection: 'row', paddingHorizontal: navigationPadding, paddingVertical: navigationPadding, marginVertical: 10, borderWidth: 1, borderRadius: navigationRadius, width: '90%', maxWidth: 552, alignSelf: 'center' },
-  indicator: { position: 'absolute', borderRadius: tabRadius },
+  navigation: { paddingHorizontal: navigationPadding, paddingVertical: navigationPadding, marginVertical: 10, borderWidth: 1, borderRadius: navigationRadius, width: '90%', maxWidth: 552, alignSelf: 'center' },
+  tabs: { flexDirection: 'row', position: 'relative' },
+  indicator: { position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: tabRadius },
   tab: { flex: 1, minHeight: 60, alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 10, borderRadius: tabRadius },
   tabLabel: { fontSize: 11, lineHeight: 16 },
   bold: { fontFamily: assistantTokens.fonts.bold },
