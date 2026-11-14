@@ -1,5 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { HeroCard } from '@/screens/shared/components/hero-card';
+
 import { assistantTheme as theme } from '../theme';
 import { formatPraktikumName } from '../session-format';
 import { type AssistantSession } from '../schedule-data';
@@ -40,9 +42,6 @@ export function AgendaBanner({
 
   const content = (
     <>
-      <View pointerEvents="none" accessible={false} style={styles.calendarWatermark}>
-        <ScheduleIcon name="calendarWhite" size={126} />
-      </View>
       <View style={styles.bannerHeading}>
         <AssistantText style={styles.bannerEyebrow}>AGENDA PRAKTIKUM</AssistantText>
       </View>
@@ -75,7 +74,7 @@ export function AgendaBanner({
         <>
           <View style={styles.divider} />
           <AssistantText style={styles.nextSession}>
-            Berikutnya {nextSession.startTime.replace(':', '.')} — {formatPraktikumName(nextSession)}
+            Berikutnya {nextSession.startTime.replace(':', '.')} | {formatPraktikumName(nextSession)}
           </AssistantText>
         </>
       ) : null}
@@ -88,8 +87,19 @@ export function AgendaBanner({
     </>
   );
 
+  const card = (
+    <HeroCard
+      backgroundColor={theme.colors.glassHero}
+      watermark={<ScheduleIcon name="calendarWhite" size={126} />}
+      padding={22}
+      gap={18}
+    >
+      {content}
+    </HeroCard>
+  );
+
   if (!interactive) {
-    return <View style={styles.dayBanner}>{content}</View>;
+    return card;
   }
 
   return (
@@ -97,23 +107,14 @@ export function AgendaBanner({
       accessibilityRole="button"
       accessibilityLabel={`${fullDate}, ${daySessions.length} sesi terjadwal, ${openCount} dibuka`}
       onPress={onPress}
-      style={({ pressed }) => [styles.dayBanner, pressed && styles.pressed]}
+      style={({ pressed }) => (pressed ? styles.pressed : null)}
     >
-      {content}
+      {card}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  dayBanner: {
-    overflow: 'hidden',
-    padding: 22,
-    gap: 18,
-    backgroundColor: theme.colors.glassHero,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-    borderRadius: theme.radius.banner,
-  },
   bannerHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   bannerEyebrow: {
     fontSize: 10,
@@ -122,7 +123,6 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.semibold,
     color: '#EDF3FF',
   },
-  calendarWatermark: { position: 'absolute', top: -12, right: -16, opacity: 0.12 },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 14, flexWrap: 'wrap' },
   day: {
     fontSize: 58,

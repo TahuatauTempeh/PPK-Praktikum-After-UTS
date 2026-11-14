@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
+import { HeroCard } from '@/screens/shared/components/hero-card';
+
 import { AssistantScreen } from './components/assistant-screen';
 import { AssistantText } from './components/assistant-text';
 import { AssistantTopBar } from './components/assistant-top-bar';
@@ -37,10 +39,12 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
           header={onBack ? <AssistantTopBar onBack={onBack} title="Rekap" /> : undefined}
           edges={['top', 'left', 'right']}
         >
-          <View style={styles.heading}>
-            <View pointerEvents="none" accessible={false} style={styles.chartWatermark}>
-              <ScheduleIcon name="chartWhite" size={126} />
-            </View>
+          <HeroCard
+            backgroundColor={theme.colors.glassHero}
+            watermark={<ScheduleIcon name="chartWhite" size={126} />}
+            padding={20}
+            gap={12}
+          >
             <View style={styles.heroTop}>
               <AssistantText style={styles.eyebrow}>HASIL PRAKTIKUM</AssistantText>
             </View>
@@ -54,7 +58,7 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
                   </View>
                 ))}
             </View>
-          </View>
+          </HeroCard>
           <View style={styles.filters}>
             <Pressable accessibilityRole="button" accessibilityLabel={`Filter tanggal: ${dateLabel}`}
               accessibilityState={{ expanded: dialog === 'date' }} onPress={() => setDialog('date')}
@@ -107,10 +111,8 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
 }
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  heading: { overflow: 'hidden', gap: 12, padding: 20, backgroundColor: theme.colors.glassHero, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', borderRadius: 30 },
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   eyebrow: { fontSize: 10, lineHeight: 16, letterSpacing: 1.6, fontFamily: theme.fonts.semibold, color: '#EDF3FF' },
-  chartWatermark: { position: 'absolute', top: -12, right: -16, opacity: 0.12 },
   title: { fontSize: 28, lineHeight: 35, letterSpacing: -0.8, color: theme.colors.surface },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   filter: { flexGrow: 1, flexBasis: 140, flexDirection: 'row', alignItems: 'center', gap: 7, minHeight: 44, paddingHorizontal: 11, paddingVertical: 10, borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: theme.radius.control, backgroundColor: theme.colors.glassSurface },

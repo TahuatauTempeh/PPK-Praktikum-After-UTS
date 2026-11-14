@@ -10,6 +10,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Ikon } from '@/screens/praktikan/components/ikon';
 import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
 
+import { HeroCard } from './hero-card';
+
 interface KartuProfilProps {
   nama: string;
   nomor: string;
@@ -20,7 +22,12 @@ export function KartuProfil({ nama, nomor, peran }: KartuProfilProps) {
   const theme = usePraktikanTheme();
 
   return (
-    <View style={[styles.kartu, { backgroundColor: theme.hero, borderColor: 'rgba(255,255,255,0.3)' }]}>
+    <HeroCard
+      backgroundColor={theme.hero}
+      padding={24}
+      gap={6}
+      contentStyle={styles.content}
+    >
       <View
         style={[
           styles.kotakIkon,
@@ -42,18 +49,13 @@ export function KartuProfil({ nama, nomor, peran }: KartuProfilProps) {
       <View style={[styles.badge, { backgroundColor: 'rgba(255,255,255,0.14)' }]}>
         <Text style={[Tipe.kecil, styles.badgeTeks, { color: theme.heroTeks }]}>{peran}</Text>
       </View>
-    </View>
+    </HeroCard>
   );
 }
 
 const styles = StyleSheet.create({
-  kartu: {
+  content: {
     alignItems: 'center',
-    overflow: 'hidden',
-    padding: 24,
-    gap: 6,
-    borderWidth: 1,
-    borderRadius: 30,
   },
   kotakIkon: {
     width: 80,
