@@ -33,7 +33,6 @@ export default function RiwayatScreen() {
     <Layar>
       <Hero
         judul="Riwayat kehadiran"
-        keterangan="Catatan presensi kamu di setiap sesi praktikum."
         watermark="riwayat"
         statistik={[
           { nilai: String(ringkas.hadir), label: 'Hadir' },
