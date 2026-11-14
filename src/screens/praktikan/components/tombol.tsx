@@ -12,19 +12,31 @@ import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
 interface TombolProps {
   label: string;
   onPress: () => void;
-  varian?: 'utama' | 'lembut' | 'terang';
+  varian?: 'utama' | 'lembut' | 'terang' | 'polos';
   disabled?: boolean;
   panah?: boolean;
   petunjuk?: string;
+  /** Rapatkan padding horizontal agar label sejajar kolom teks kartu (14, bukan 16). */
+  rapat?: boolean;
 }
 
 // 'terang' dipakai di atas kartu biru, jadi warnanya tidak ikut tema
 const TERANG = { latar: '#FFFFFF', teks: '#204CAC' };
 
-export function Tombol({ label, onPress, varian = 'utama', disabled = false, panah = false, petunjuk }: TombolProps) {
+export function Tombol({
+  label,
+  onPress,
+  varian = 'utama',
+  disabled = false,
+  panah = false,
+  petunjuk,
+  rapat = false,
+}: TombolProps) {
   const theme = usePraktikanTheme();
   const utama = varian === 'utama' && !disabled;
   const terang = varian === 'terang' && !disabled;
+  // polos: aksi di dalam kartu tanpa latar, teks dan panah sejajar isi kartu
+  const polos = varian === 'polos' && !disabled;
   const warnaTeks = terang
     ? TERANG.teks
     : utama
@@ -32,7 +44,15 @@ export function Tombol({ label, onPress, varian = 'utama', disabled = false, pan
       : disabled
         ? theme.teksSekunder
         : theme.teksLembut;
-  const latar = terang ? TERANG.latar : utama ? theme.isiAksen : disabled ? theme.kartu : theme.isiLembut;
+  const latar = terang
+    ? TERANG.latar
+    : utama
+      ? theme.isiAksen
+      : disabled
+        ? theme.kartu
+        : polos
+          ? 'transparent'
+          : theme.isiLembut;
 
   return (
     <Pressable
@@ -43,6 +63,7 @@ export function Tombol({ label, onPress, varian = 'utama', disabled = false, pan
       accessibilityHint={petunjuk}
       style={({ pressed }) => [
         styles.tombol,
+        rapat && styles.rapat,
         {
           backgroundColor: latar,
           borderColor: theme.garisKartu,
@@ -69,5 +90,6 @@ const styles = StyleSheet.create({
   },
   isi: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   tengah: { justifyContent: 'center' },
+  rapat: { paddingHorizontal: 14 },
   label: { fontSize: 13, fontWeight: '600', flexShrink: 1 },
 });

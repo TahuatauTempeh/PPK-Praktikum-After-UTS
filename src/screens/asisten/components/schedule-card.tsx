@@ -65,7 +65,7 @@ export function ScheduleCard({ session, attendance, onManage }: {
         accessibilityHint={!onManage ? 'Pengelolaan sesi belum tersedia.' : undefined}
         disabled={!onManage}
         onPress={() => onManage?.(session.id)}
-        style={({ pressed }) => [styles.action, open && styles.openAction, !onManage && styles.disabled, pressed && styles.pressed]}>
+        style={({ pressed }) => [styles.action, open && styles.openAction, !open && styles.plainAction, !onManage && styles.disabled, pressed && styles.pressed]}>
         <AssistantText style={[styles.actionText, open && styles.white]}>{open ? 'Pantau presensi' : 'Kelola sesi'}</AssistantText>
         <ScheduleIcon name={open ? 'arrowWhite' : 'arrow'} size={18} />
       </Pressable>
@@ -98,8 +98,10 @@ const styles = StyleSheet.create({
   progressTrack: { height: 5, borderRadius: 3, backgroundColor: 'rgba(222,232,248,0.65)', overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 3, backgroundColor: '#2856B9' },
   closedProgress: { backgroundColor: theme.colors.textSecondary },
-  action: { minHeight: 46, paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'space-between', borderRadius: 21, backgroundColor: 'rgba(222,232,248,0.65)' },
+  action: { minHeight: 46, paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'space-between', borderRadius: 21, backgroundColor: 'rgba(222,232,248,0.65)' },
   openAction: { backgroundColor: '#2856B9' },
+  // sesi tertutup/pending: aksi jadi tautan tanpa latar, teks sejajar isi panel
+  plainAction: { backgroundColor: 'transparent' },
   actionText: { fontSize: 12, lineHeight: 18, fontFamily: theme.fonts.semibold, color: '#204CAC', flexShrink: 1 },
   white: { color: theme.colors.surface },
   disabled: { opacity: 0.5 },

@@ -92,8 +92,9 @@ export function SesiCard({ session, record, onPress }: SesiCardProps) {
 
       <Tombol
         label={perluPresensi ? 'Presensi' : 'Lihat detail'}
-        varian={perluPresensi ? 'utama' : 'lembut'}
+        varian={perluPresensi ? 'utama' : 'polos'}
         panah
+        rapat
         onPress={onPress}
       />
     </View>
