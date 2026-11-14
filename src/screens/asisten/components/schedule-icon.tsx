@@ -18,6 +18,8 @@ const assets = {
   calendarInactive: require('../../../../assets/asisten/calendar-inactive.svg'),
   chartPrimary: require('../../../../assets/asisten/chart-primary.svg'),
   usersPrimary: require('../../../../assets/asisten/users-primary.svg'),
+  usersInactive: require('../../../../assets/asisten/users-inactive.svg'),
+  usersWhite: require('../../../../assets/asisten/users-white.svg'),
   home: require('../../../../assets/asisten/home.svg'),
   homeInactive: require('../../../../assets/asisten/home-inactive.svg'),
   profile: require('../../../../assets/asisten/profile.svg'),
@@ -50,6 +52,6 @@ const assets = {
   calendarPlus: require('../../../../assets/asisten/calendar-plus.svg'),
 };
 export type ScheduleIconName = keyof typeof assets;
-export function ScheduleIcon({ name, size }: { name: ScheduleIconName; size: number }) {
-  return <Image source={assets[name]} style={{ width: size, height: size }} contentFit="contain" accessible={false} />;
+export function ScheduleIcon({ name, size, tintColor }: { name: ScheduleIconName; size: number; tintColor?: string }) {
+  return <Image source={assets[name]} style={{ width: size, height: size }} tintColor={tintColor} contentFit="contain" accessible={false} />;
 }
