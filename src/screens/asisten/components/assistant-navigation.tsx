@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, StyleSheet, View } from 'react-native';
 
+import { usePraktikanTheme } from '@/screens/praktikan/theme';
+
 import { assistantTheme as theme } from '../theme';
 import { AssistantText } from './assistant-text';
 import { ScheduleIcon, type ScheduleIconName } from './schedule-icon';
@@ -11,17 +13,19 @@ type Props = { active: AssistantTab; showAdmin: boolean; onNavigate: (tab: Assis
 type Box = { x: number; y: number; width: number; height: number };
 
 const navigationRadius = theme.radius.panel;
-const tabRadius = navigationRadius - theme.spacing.sm;
+const navigationPadding = 6;
+const tabRadius = navigationRadius - navigationPadding;
 const indicatorSlide = { duration: 240, easing: Easing.out(Easing.cubic) };
 const LABEL: Record<AssistantTab, string> = { asisten: 'Asisten', admin: 'Admin', profile: 'Profil' };
 
 const iconFor = (tab: AssistantTab, selected: boolean): ScheduleIconName => {
   if (tab === 'asisten') return selected ? 'home' : 'homeInactive';
-  if (tab === 'admin') return 'users';
+  if (tab === 'admin') return selected ? 'usersPrimary' : 'usersInactive';
   return selected ? 'profile' : 'profileInactive';
 };
 
 export function AssistantNavigation({ active, showAdmin, onNavigate }: Props) {
+  const barTheme = usePraktikanTheme();
   const [track, setTrack] = useState<Box | null>(null);
   const [offset] = useState(() => new Animated.Value(0));
   const placed = useRef(false);
@@ -45,15 +49,28 @@ export function AssistantNavigation({ active, showAdmin, onNavigate }: Props) {
   }, [index, offset, track, tabGap]);
 
   return (
-    <View style={[styles.navigation, { gap: tabGap }]} accessibilityRole="tablist">
+    <View
+      style={[
+        styles.navigation,
+        {
+          gap: tabGap,
+          backgroundColor: barTheme.navLatar,
+          borderColor: barTheme.garisKartu,
+          boxShadow: barTheme.bayang,
+        },
+      ]}
+      accessibilityRole="tablist"
+    >
       {track && (
         <Animated.View pointerEvents="none" accessible={false} style={[styles.indicator, {
           left: track.x, top: track.y, width: track.width, height: track.height,
+          backgroundColor: barTheme.navAktif,
           transform: [{ translateX: offset }],
         }]} />
       )}
       {tabs.map(destination => {
         const selected = active === destination;
+        const tint = selected ? barTheme.aksen : barTheme.ikonNonaktif;
         return (
           <Pressable key={destination} accessibilityRole="tab"
             accessibilityState={{ selected }}
@@ -61,10 +78,12 @@ export function AssistantNavigation({ active, showAdmin, onNavigate }: Props) {
             onPress={() => onNavigate(destination)}
             onLayout={destination === 'asisten' ? event => setTrack(event.nativeEvent.layout) : undefined}
             style={({ pressed }) => [styles.tab, pressed && styles.pressed]}>
-            <View style={[!selected && destination === 'admin' && styles.inactiveIcon]}>
-              <ScheduleIcon name={iconFor(destination, selected)} size={22} />
-            </View>
-            <AssistantText variant="caption" tone={selected ? 'accent' : 'secondary'} style={selected && styles.bold}>
+            <ScheduleIcon name={iconFor(destination, selected)} size={18} tintColor={tint} />
+            <AssistantText
+              variant="caption"
+              tone={selected ? 'accent' : 'secondary'}
+              style={[styles.tabLabel, { color: tint }, selected && styles.bold]}
+            >
               {LABEL[destination]}
             </AssistantText>
           </Pressable>
@@ -74,10 +93,10 @@ export function AssistantNavigation({ active, showAdmin, onNavigate }: Props) {
   );
 }
 const styles = StyleSheet.create({
-  navigation: { flexDirection: 'row', paddingHorizontal: theme.spacing.sm, paddingVertical: theme.spacing.sm, marginVertical: 10, backgroundColor: 'rgba(255,255,255,0.85)', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: navigationRadius, width: '90%', maxWidth: 552, alignSelf: 'center', boxShadow: '0 4px 24px rgba(30,65,125,0.08)' },
-  indicator: { position: 'absolute', backgroundColor: '#DFE9FA', borderRadius: tabRadius },
-  tab: { flex: 1, minHeight: 54, alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 6, borderRadius: tabRadius },
-  inactiveIcon: { opacity: 0.55 },
+  navigation: { flexDirection: 'row', paddingHorizontal: navigationPadding, paddingVertical: navigationPadding, marginVertical: 10, borderWidth: 1, borderRadius: navigationRadius, width: '90%', maxWidth: 552, alignSelf: 'center' },
+  indicator: { position: 'absolute', borderRadius: tabRadius },
+  tab: { flex: 1, minHeight: 60, alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 10, borderRadius: tabRadius },
+  tabLabel: { fontSize: 11, lineHeight: 16 },
   bold: { fontFamily: theme.fonts.bold },
   pressed: { opacity: 0.7 },
 });

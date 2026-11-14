@@ -5,11 +5,12 @@
  */
 
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { LoadingState } from '@/components/LoadingState';
 import { useAuth } from '@/context/auth-context';
+import { useThemePreference } from '@/context/theme-context';
 import { useTheme } from '@/hooks/use-theme';
 import { Ikon } from '@/screens/praktikan/components/ikon';
 import { Layar } from '@/screens/praktikan/components/layar';
@@ -32,10 +33,21 @@ function BarisInfo({ label, nilai }: { label: string; nilai: string }) {
 export default function ProfilScreen() {
   const theme = usePraktikanTheme();
   const appTheme = useTheme();
+  const { mode, scheme, setMode } = useThemePreference();
   const { profile, signOut } = useAuth();
   const [konfirmasi, setKonfirmasi] = useState(false);
 
   if (!profile) return <LoadingState message="Memuat profil..." />;
+
+  const dark = scheme === 'dark';
+  const captionTema =
+    profile.role === 'praktikan'
+      ? mode === 'system'
+        ? 'Mengikuti pengaturan perangkat.'
+        : 'Berlaku untuk seluruh halaman Praktikan dan Profil.'
+      : mode === 'system'
+        ? 'Mengikuti perangkat; konten Asisten tetap terang.'
+        : 'Berlaku untuk halaman Profil; konten Asisten tetap terang.';
 
   // Admin bukan role terpisah; badge menampilkan status admin, bukan role dasarnya.
   const peran = profile.isAdmin
@@ -64,6 +76,50 @@ export default function ProfilScreen() {
           >
             <BarisInfo label="Email" nilai={profile.email || '—'} />
           </View>
+        </View>
+
+        <View style={styles.bagian}>
+          <Text style={[Tipe.eyebrow, { color: theme.teksSekunder }]}>TAMPILAN</Text>
+
+          <View
+            style={[
+              styles.kartuInfo,
+              { backgroundColor: theme.kartu, borderColor: theme.garisKartu, boxShadow: theme.bayang },
+            ]}
+          >
+            <View style={styles.barisTampilan}>
+              <View style={styles.labelTampilan}>
+                <Text style={[Tipe.label, { color: theme.teks }]}>Mode gelap</Text>
+                <Text style={[Tipe.caption, { color: theme.teksSekunder }]}>{captionTema}</Text>
+              </View>
+              <Switch
+                accessibilityLabel="Mode gelap"
+                accessibilityHint="Mengganti tema aplikasi antara terang dan gelap"
+                accessibilityState={{ checked: dark }}
+                value={dark}
+                onValueChange={(value) => setMode(value ? 'dark' : 'light')}
+                trackColor={{
+                  false: theme.mode === 'gelap' ? '#3A4560' : '#C9D6EA',
+                  true: theme.isiAksen,
+                }}
+                thumbColor="#FFFFFF"
+                ios_backgroundColor={theme.mode === 'gelap' ? '#3A4560' : '#C9D6EA'}
+              />
+            </View>
+          </View>
+
+          {mode !== 'system' ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Ikuti pengaturan perangkat"
+              onPress={() => setMode('system')}
+              style={({ pressed }) => [styles.resetTema, pressed && styles.ditekan]}
+            >
+              <Text style={[Tipe.caption, { color: theme.teksLembut }]}>
+                Ikuti pengaturan perangkat
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
 
         <Pressable
@@ -123,6 +179,22 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     maxWidth: '68%',
     textAlign: 'right',
+  },
+  barisTampilan: {
+    minHeight: 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
+    paddingVertical: 12,
+  },
+  labelTampilan: {
+    flex: 1,
+    gap: 2,
+  },
+  resetTema: {
+    minHeight: 44,
+    justifyContent: 'center',
   },
   keluar: {
     minHeight: 52,

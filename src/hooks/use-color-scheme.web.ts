@@ -1,13 +1,6 @@
-import { useSyncExternalStore } from 'react';
-import { useColorScheme as useRNColorScheme } from 'react-native';
+import { useThemePreference } from '@/context/theme-context';
 
-const subscribe = () => () => {};
-const getClientSnapshot = () => true;
-const getServerSnapshot = () => false;
-
-/** Keep static HTML and the first hydration render on the same color scheme. */
+/** Skema warna aplikasi setelah preferensi pengguna diterapkan. */
 export function useColorScheme() {
-  const hasHydrated = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
-  const colorScheme = useRNColorScheme();
-  return hasHydrated ? colorScheme : 'light';
+  return useThemePreference().scheme;
 }

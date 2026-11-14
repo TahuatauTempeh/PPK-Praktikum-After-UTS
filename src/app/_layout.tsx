@@ -9,20 +9,20 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
 
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingState } from '@/components/LoadingState';
 import { ToastContainer } from '@/components/Toast';
 import { AuthProvider, useAuth } from '@/context/auth-context';
 import { SessionProvider } from '@/context/session-context';
+import { ThemePreferenceProvider } from '@/context/theme-context';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { missingFirebaseEnvKeys } from '@/lib/firebase/app';
 import { AssistantPreviewProvider } from '@/screens/asisten/preview-session-provider';
 
 void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [loaded, error] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -33,11 +33,21 @@ export default function RootLayout() {
   if (!loaded && !error) return null;
 
   return (
+    <ThemePreferenceProvider>
+      <ThemedRoot />
+    </ThemePreferenceProvider>
+  );
+}
+
+function ThemedRoot() {
+  const colorScheme = useColorScheme();
+
+  return (
     <AuthProvider>
       <SessionProvider>
         <AssistantPreviewProvider>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <StatusBar style="auto" />
+            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
             <RootNavigator />
             <ToastContainer />
           </ThemeProvider>

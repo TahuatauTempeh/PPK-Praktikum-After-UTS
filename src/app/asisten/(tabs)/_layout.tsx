@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/auth-context';
 import { AssistantNavigation, type AssistantTab } from '@/screens/asisten/components/assistant-navigation';
 import { assistantTheme as theme } from '@/screens/asisten/theme';
+import { usePraktikanTheme } from '@/screens/praktikan/theme';
 
 const tabFromPath = (pathname: string): AssistantTab | null => {
   if (pathname === '/asisten/profil') return 'profile';
@@ -16,6 +17,7 @@ const tabFromPath = (pathname: string): AssistantTab | null => {
 
 export default function TabsLayout() {
   const { profile } = useAuth();
+  const barTheme = usePraktikanTheme();
   const showAdmin = profile?.isAdmin === true;
   const pathname = usePathname();
   const current = tabFromPath(pathname);
@@ -31,9 +33,9 @@ export default function TabsLayout() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: barTheme.dasarNav }]}>
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.background } }} />
-      <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.bar}>
+      <SafeAreaView edges={['bottom', 'left', 'right']} style={{ backgroundColor: barTheme.dasarNav }}>
         <AssistantNavigation active={active} showAdmin={showAdmin} onNavigate={goTo} />
       </SafeAreaView>
     </View>
@@ -41,6 +43,5 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background },
-  bar: { backgroundColor: '#E8EFF9' },
+  container: { flex: 1 },
 });
