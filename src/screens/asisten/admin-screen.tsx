@@ -487,8 +487,8 @@ const gaya = (theme: Theme) => StyleSheet.create({
     color: theme.colors.error,
   },
   card: {
-    gap: 10,
-    padding: 14,
+    gap: 16,
+    padding: 18,
     backgroundColor: theme.colors.glassSurface,
     borderWidth: 1,
     borderColor: theme.colors.glassBorder,
@@ -530,11 +530,11 @@ const gaya = (theme: Theme) => StyleSheet.create({
   },
   meta: { fontSize: 11, lineHeight: 16 },
   action: {
-    minHeight: 44,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 11,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderRadius: tokens.radius.button,
   },
   actionText: {

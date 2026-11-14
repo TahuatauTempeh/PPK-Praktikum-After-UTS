@@ -82,9 +82,9 @@ export function ScheduleCard({ session, attendance, onManage }: {
 }
 
 const gaya = (theme: Theme) => StyleSheet.create({
-  card: { padding: 7, backgroundColor: theme.colors.glassCard, borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: tokens.radius.card, boxShadow: theme.colors.shadow },
+  card: { padding: 18, gap: 16, backgroundColor: theme.colors.glassCard, borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: tokens.radius.card, boxShadow: theme.colors.shadow },
   openCard: { borderColor: theme.colors.glassBorder, backgroundColor: theme.colors.cardOpen },
-  content: { padding: 14, gap: 18 },
+  content: { gap: 18 },
   topRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   timeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   time: { fontSize: 12, lineHeight: 18, fontFamily: tokens.fonts.semibold, fontVariant: ['tabular-nums'] },
@@ -106,7 +106,7 @@ const gaya = (theme: Theme) => StyleSheet.create({
   progressTrack: { height: 5, borderRadius: 3, backgroundColor: theme.colors.softSurface, overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 3, backgroundColor: theme.colors.primaryFill },
   closedProgress: { backgroundColor: theme.colors.textSecondary },
-  action: { minHeight: 46, paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'space-between', borderRadius: 21 },
+  action: { minHeight: 48, paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'space-between', borderRadius: 21, backgroundColor: theme.colors.softSurface },
   actionText: { fontSize: 12, lineHeight: 18, fontFamily: tokens.fonts.semibold, color: theme.colors.primary, flexShrink: 1 },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.75 },
