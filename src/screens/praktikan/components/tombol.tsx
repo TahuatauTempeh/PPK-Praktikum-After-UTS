@@ -12,12 +12,10 @@ import { fonts, typography, useTheme } from '@/theme';
 interface TombolProps {
   label: string;
   onPress: () => void;
-  varian?: 'utama' | 'lembut' | 'terang' | 'polos';
+  varian?: 'utama' | 'lembut' | 'terang';
   disabled?: boolean;
   panah?: boolean;
   petunjuk?: string;
-  /** Rapatkan padding horizontal agar label sejajar kolom teks kartu (14, bukan 16). */
-  rapat?: boolean;
 }
 
 // 'terang' dipakai di atas kartu biru, jadi warnanya tidak ikut tema
@@ -30,13 +28,10 @@ export function Tombol({
   disabled = false,
   panah = false,
   petunjuk,
-  rapat = false,
 }: TombolProps) {
   const theme = useTheme();
   const utama = varian === 'utama' && !disabled;
   const terang = varian === 'terang' && !disabled;
-  // polos: aksi di dalam kartu tanpa latar, teks dan panah sejajar isi kartu
-  const polos = varian === 'polos' && !disabled;
   const warnaTeks = terang
     ? TERANG.teks
     : utama
@@ -50,9 +45,7 @@ export function Tombol({
       ? theme.colors.primaryFill
       : disabled
         ? theme.colors.glassCard
-        : polos
-          ? 'transparent'
-          : theme.colors.softSurface;
+        : theme.colors.softSurface;
 
   return (
     <Pressable
@@ -63,7 +56,6 @@ export function Tombol({
       accessibilityHint={petunjuk}
       style={({ pressed }) => [
         styles.tombol,
-        rapat && styles.rapat,
         {
           backgroundColor: latar,
           borderColor: theme.colors.glassBorder,
@@ -90,6 +82,5 @@ const styles = StyleSheet.create({
   },
   isi: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   tengah: { justifyContent: 'center' },
-  rapat: { paddingHorizontal: 14 },
   label: { fontSize: 13, fontFamily: fonts.semibold, flexShrink: 1 },
 });

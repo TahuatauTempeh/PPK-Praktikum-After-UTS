@@ -17,20 +17,20 @@ export function SesiBerlangsung({ session, onPress }: { session: Session; onPres
 
   return (
     <View style={[styles.kartu, { backgroundColor: theme.colors.primaryFill }]}>
-      <Text accessibilityRole="header" style={[typography.sectionTitle, { color: theme.colors.onPrimary }]}>
-        Presensi sedang dibuka
-      </Text>
-      <Text style={[typography.body, { color: theme.colors.onPrimary }]}>
-        {sesi ? `${mataKuliah}, ${sesi}` : mataKuliah}
-      </Text>
-      <View style={styles.aksi}>
-        <Tombol label="Presensi sekarang" varian="terang" panah onPress={onPress} />
+      <View style={styles.teks}>
+        <Text accessibilityRole="header" style={[typography.sectionTitle, { color: theme.colors.onPrimary }]}>
+          Presensi sedang dibuka
+        </Text>
+        <Text style={[typography.body, { color: theme.colors.onPrimary }]}>
+          {sesi ? `${mataKuliah}, ${sesi}` : mataKuliah}
+        </Text>
       </View>
+      <Tombol label="Presensi sekarang" varian="terang" panah onPress={onPress} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  kartu: { borderRadius: 24, padding: 18, gap: 4 },
-  aksi: { marginTop: 12 },
+  kartu: { borderRadius: 24, padding: 18, gap: 16 },
+  teks: { gap: 4 },
 });

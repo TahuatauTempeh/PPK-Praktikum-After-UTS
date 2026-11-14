@@ -92,9 +92,8 @@ export function SesiCard({ session, record, onPress }: SesiCardProps) {
 
       <Tombol
         label={perluPresensi ? 'Presensi' : 'Lihat detail'}
-        varian={perluPresensi ? 'utama' : 'polos'}
+        varian={perluPresensi ? 'utama' : 'lembut'}
         panah
-        rapat
         onPress={onPress}
       />
     </View>
@@ -102,8 +101,8 @@ export function SesiCard({ session, record, onPress }: SesiCardProps) {
 }
 
 const styles = StyleSheet.create({
-  kartu: { padding: 7, borderRadius: 28, borderWidth: 1, overflow: 'hidden' },
-  isi: { padding: 14, gap: 14 },
+  kartu: { padding: 18, gap: 16, borderRadius: 28, borderWidth: 1, overflow: 'hidden' },
+  isi: { gap: 14 },
   baris: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   materi: { gap: 4 },
   meta: { gap: 6 },
