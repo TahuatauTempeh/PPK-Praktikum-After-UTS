@@ -1,5 +1,5 @@
 /**
- * Profil Praktikan: kartu identitas, informasi akun, dan keluar (UC-12).
+ * Profil Praktikan: kartu identitas, email akun, dan keluar (UC-12).
  * Memakai kerangka Layar dan token praktikan supaya satu bahasa dengan Jadwal dan Riwayat.
  */
 
@@ -9,6 +9,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { LoadingState } from '@/components/LoadingState';
 import { useAuth } from '@/context/auth-context';
+import { useTheme } from '@/hooks/use-theme';
 import { Ikon } from '@/screens/praktikan/components/ikon';
 import { KartuProfil } from '@/screens/praktikan/components/kartu-profil';
 import { Layar } from '@/screens/praktikan/components/layar';
@@ -29,19 +30,11 @@ function BarisInfo({ label, nilai }: { label: string; nilai: string }) {
 
 export default function ProfilScreen() {
   const theme = usePraktikanTheme();
+  const appTheme = useTheme();
   const { profile, signOut } = useAuth();
   const [konfirmasi, setKonfirmasi] = useState(false);
 
   if (!profile) return <LoadingState message="Memuat profil..." />;
-
-  const bergabung = profile.createdAt
-    ? new Intl.DateTimeFormat('id-ID', {
-        month: 'long',
-        year: 'numeric',
-        timeZone: 'Asia/Jakarta',
-      }).format(profile.createdAt.toDate())
-    : null;
-  const adaInfo = Boolean(profile.email || bergabung);
 
   return (
     <>
@@ -61,25 +54,25 @@ export default function ProfilScreen() {
               { backgroundColor: theme.kartu, borderColor: theme.garisKartu, boxShadow: theme.bayang },
             ]}
           >
-            {profile.email ? <BarisInfo label="Email" nilai={profile.email} /> : null}
-            {profile.email && bergabung ? (
-              <View style={[styles.pemisah, { backgroundColor: theme.pemisah }]} />
-            ) : null}
-            {bergabung ? <BarisInfo label="Bergabung" nilai={bergabung} /> : null}
-            {adaInfo ? <View style={[styles.pemisah, { backgroundColor: theme.pemisah }]} /> : null}
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Keluar dari akun"
-              accessibilityHint="Membuka konfirmasi untuk keluar dari akun"
-              onPress={() => setKonfirmasi(true)}
-              style={({ pressed }) => [styles.keluar, pressed && styles.ditekan]}
-            >
-              <Text style={[Tipe.label, { color: theme.galat }]}>Keluar dari akun</Text>
-              <Ikon nama="keluar" ukuran={18} warna={theme.galat} />
-            </Pressable>
+            <BarisInfo label="Email" nilai={profile.email || '—'} />
           </View>
         </View>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Keluar dari akun"
+          accessibilityHint="Membuka konfirmasi untuk keluar dari akun"
+          onPress={() => setKonfirmasi(true)}
+          style={({ pressed }) => [
+            styles.keluar,
+            // Mengikuti warna tombol konfirmasi ConfirmModal, bukan palet praktikan.
+            { backgroundColor: appTheme.danger },
+            pressed && styles.ditekan,
+          ]}
+        >
+          <Text style={[Tipe.label, { color: '#FFFFFF' }]}>Keluar dari akun</Text>
+          <Ikon nama="keluar" ukuran={18} warna="#FFFFFF" />
+        </Pressable>
       </Layar>
 
       <ConfirmModal
@@ -123,18 +116,17 @@ const styles = StyleSheet.create({
     maxWidth: '68%',
     textAlign: 'right',
   },
-  pemisah: {
-    height: 1,
-  },
   keluar: {
     minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-    paddingVertical: 12,
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 21,
   },
   ditekan: {
-    opacity: 0.7,
+    opacity: 0.8,
   },
 });
