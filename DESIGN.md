@@ -16,10 +16,10 @@ Ringkasan keadaan sekarang:
 - Aplikasi memiliki empat area: autentikasi, Asisten, Praktikan, dan admin.
 - Sistem visual memakai kobalt dan kaca di atas latar bergradien kobalt di
   bagian atas yang memudar ke biru sangat terang, dengan kartu translusen.
-- Ada tiga sumber token: `assistantTokens`/`useAssistantTheme()` untuk Asisten
-  dan admin, `usePraktikanTheme()` untuk Praktikan, dan `Colors` untuk
-  auth/komponen bersama. Ketiganya punya varian terang dan gelap.
-- Admin memakai `useAssistantTheme()`, `AssistantSurface`, dan `HeroCard`,
+- Ada satu sumber token: `src/theme/` menyediakan `useTheme()`,
+  `useThemedStyles()`, palet warna, skala tipografi, jarak, dan radius yang
+  dipakai semua area. Varian terang dan gelap berada di modul yang sama.
+- Admin memakai `AssistantSurface` dan `HeroCard` yang sama dengan Asisten,
   sehingga halaman kelola pengguna mengikuti preferensi tema pengguna.
 - Audit 105 pasangan warna selesai. Setelah perbaikan, seluruh 98 pasangan teks
   lolos WCAG AA normal (4.5:1). Empat pasangan border tetap di bawah 3:1 dan
@@ -100,27 +100,32 @@ Praktikan memakai `Ikon` di `src/screens/praktikan/components/ikon.tsx`.
 
 ## 4. Token warna
 
-### 4.1 Asisten
+### 4.1 Satu palet semantik
 
-Nilai final di `src/screens/asisten/theme.ts`:
+Nilai final di `src/theme/colors.ts`. Satu nama mewakili satu peran di seluruh
+area; tidak ada palet terpisah per sisi aplikasi.
 
-| Token | Terang | Gelap | Penggunaan |
+| Token | Terang | Gelap | Peran |
 |---|---|---|---|
 | background | `#E8EFF9` | `#0B1226` | Latar halaman |
-| surface | `#FFFFFF` | `#FFFFFF` | Teks di atas hero dan isian |
-| primary | `#204CAC` | `#8FB0FF` | Teks dan ikon aksen |
-| primaryFill | `#204CAC` | `#3A6BDD` | Isian tombol dan badge aktif |
-| onPrimary | `#FFFFFF` | `#FFFFFF` | Teks di atas `primaryFill` |
-| primarySoft | `#DFE9FA` | `#243564` | Latar aksen lembut |
-| onPrimarySoft | `#D5E3FF` | `#DCE7FF` | Teks sekunder di atas `primaryFill` |
+| surface | `#FFFFFF` | `#1F2937` | Bidang opak: sheet, dialog, isian form |
+| panel | `#F1F6FE` | `#16213D` | Permukaan sheet Asisten |
 | textPrimary | `#192138` | `#EAF0FF` | Judul dan teks utama |
 | textSecondary | `#4C5D75` | `#9FB0CE` | Metadata dan teks pendukung |
-| neutralSoft | `#E5EDF8` | `#1C2947` | Permukaan netral |
 | border | `#CBD8EA` | putih 14% | Garis dekoratif |
 | hairline | biru 10% | putih 10% | Garis pemisah halus |
-| success | `#23765B` | `#5FD0A8` | Label hadir |
-| error | `#B83E4D` | `#F28B96` | Teks kesalahan |
-| errorFill | `#B83E4D` | `#AE3645` | Isian tombol bahaya |
+| primary | `#204CAC` | `#8FB0FF` | Teks dan ikon aksen |
+| primaryFill | `#204CAC` | `#3A6BDD` | Isian tombol dan chip aktif |
+| onPrimary | `#FFFFFF` | `#FFFFFF` | Teks di atas `primaryFill` |
+| primarySoft | `#DFE9FA` | `#243564` | Latar aksen lembut dan indikator nav |
+| onPrimarySoft | `#D5E3FF` | `#DCE7FF` | Teks sekunder di atas `primaryFill` |
+| neutralSoft | `#E5EDF8` | `#1C2947` | Permukaan netral |
+| success | `#23765B` | `#5FD0A8` | Teks dan ikon hadir |
+| successFill | `#23765B` | `#23765B` | Isian tombol sukses |
+| onSuccess | `#FFFFFF` | `#FFFFFF` | Teks di atas `successFill` |
+| successSoft | `#E8F5EF` | `#12352B` | Latar sukses lembut |
+| error | `#AE3645` | `#F28B96` | Teks kesalahan |
+| errorFill | `#AE3645` | `#AE3645` | Isian tombol bahaya |
 | onError | `#FFFFFF` | `#FFFFFF` | Teks di atas `errorFill` |
 | errorSoft | `#FFF0F1` | `#3A1E24` | Latar kesalahan |
 | glassSurface | putih 80% | navy 78% | Kartu kaca |
@@ -129,128 +134,87 @@ Nilai final di `src/screens/asisten/theme.ts`:
 | glassBorder | putih 95% | putih 12% | Garis kartu kaca |
 | cardOpen | `rgba(235,243,255,0.75)` | `rgba(34,52,102,0.8)` | Kartu sesi dibuka |
 | softSurface | biru 65% | biru 28% | Badge netral dan track progres |
-| glassHero | `rgba(20,55,128,0.8)` | `rgba(18,40,96,0.82)` | Banner hero |
+| glassHero | `rgba(20,55,128,0.8)` | `rgba(18,40,96,0.82)` | Banner dan hero semua area |
 | heroSoft | `#EDF3FF` | `#DCE7FF` | Teks hero sekunder |
 | heroMuted | putih 80% | putih 75% | Baris "Berikutnya" |
 | heroLine | putih 20% | putih 18% | Pemisah di hero |
 | heroWash | putih 12% | putih 10% | Badge di hero |
-| lime | `#DEF1B4` | `#DEF1B4` | Badge dibuka |
+| onHero | `#FFFFFF` | `#FFFFFF` | Teks dan ikon di atas hero |
+| lime | `#DEF1B4` | `#DEF1B4` | Badge sesi dibuka |
 | onLime | `#35501A` | `#35501A` | Teks di atas `lime` |
+| iconMuted | `#6D7588` | `#9FB0CE` | Ikon nonaktif |
+| navSurface | `rgba(255,255,255,0.85)` | `rgba(24,34,66,0.9)` | Latar bottom bar |
 | shadow | biru 7% | hitam 35% | Bayangan kartu |
 | shadowSmall | biru 8% | hitam 30% | Bayangan tombol kembali |
-| panel | `#F1F6FE` | `#16213D` | Permukaan sheet |
 | scrim | `rgba(12,32,70,0.42)` | `rgba(2,8,23,0.62)` | Backdrop sheet |
 | glassSheenStart/End | putih 94%/65% | navy 95%/70% | Gradien kilau kartu sesi |
 | glassGlowBlue/Lime | biru 55%, lime 40% | biru 35%, lime 22% | Glow kartu sesi |
 
-Perubahan dari versi 25 Oktober 2026:
-
-- `textSecondary` dari `#5C6D86` menjadi `#4C5D75`.
-- `glassHero` dari alpha `0.6` menjadi `0.8`.
-- Palet gelap ditambahkan 15 November 2026 dengan keluarga navy Praktikan.
-- Isian tombol dipisahkan dari warna teks aksen lewat
-  `primaryFill`/`onPrimary` dan `errorFill`/`onError`.
-
 Warna di luar token:
 
-- Teks dan ikon di atas `primaryFill`: `onPrimary`.
 - Gradien atmosfer: `assets/praktikan/atmosfer.svg` (terang) dan
   `assets/praktikan/atmosfer-gelap.svg` (gelap).
 - Kilau kaca: `assets/asisten/session-glass.svg` (terang) dan
   `assets/asisten/session-glass-dark.svg` (gelap).
+- Gradien kedalaman hero: lapisan `#081840` 14% di dalam `HeroCard`.
+- Teks putih pada header biru halaman detail ditulis langsung karena header
+  selalu berada di atas atmosfer gelap, bukan di atas `background`.
 
 Status:
 
 - Belum dibuka: netral.
-- Dibuka: lime dengan teks `#35501A`.
+- Dibuka: lime dengan teks `onLime`.
 - Ditutup: netral dengan label eksplisit.
-- Hadir: hijau.
+- Hadir: `success`.
 - Belum hadir atau tidak hadir: netral.
-- Kesalahan form: merah.
+- Kesalahan form: `error`.
 
-### 4.2 Praktikan
+### 4.2 Aturan pemakaian
 
-Nilai final di `src/screens/praktikan/theme.ts`:
-
-| Peran | Terang | Gelap |
-|---|---|---|
-| background | `#E8EFF9` | `#0B1226` |
-| kartu | `rgba(255,255,255,0.72)` | `rgba(24,34,66,0.78)` |
-| kartuSorot | `rgba(235,243,255,0.75)` | `rgba(34,52,102,0.8)` |
-| teks | `#192138` | `#EAF0FF` |
-| teksSekunder | `#4C5D75` | `#9FB0CE` |
-| aksen | `#204CAC` | `#8FB0FF` |
-| isiAksen | `#2856B9` | `#3A6BDD` |
-| diAtasAksen | `#FFFFFF` | `#FFFFFF` |
-| isiLembut | `rgba(222,232,248,0.65)` | `rgba(58,90,160,0.28)` |
-| teksLembut | `#204CAC` | `#B7CBFF` |
-| hero | `rgba(20,55,128,0.6)` | `rgba(20,45,110,0.7)` |
-| heroTeks | `#FFFFFF` | `#FFFFFF` |
-| heroTeksLembut | `#EDF3FF` | `#DCE7FF` |
-| lencanaBuka | `#DEF1B4` | `#34481A` |
-| teksLencanaBuka | `#35501A` | `#DEF1B4` |
-| sukses | `#23765B` | `#5FD0A8` |
-| galat | `#AE3645` | `#F28B96` |
-| galatLembut | `#FFF0F1` | `#3A1E24` |
-| navLatar | `rgba(255,255,255,0.85)` | `rgba(24,34,66,0.9)` |
-| navAktif | `#DFE9FA` | `#243564` |
-| ikonNonaktif | `#51627C` | `#9FB0CE` |
-
-Perubahan: `teksSekunder` terang dari `#51627C` menjadi `#4C5D75` agar tetap
-lolos di atas gradien atmosfer, bukan hanya di atas `background`.
-
-Pemisahan peran yang wajib dipertahankan:
-
-- `aksen` untuk teks dan ikon di atas permukaan terang/gelap.
-- `isiAksen` untuk isian tombol dan chip terpilih.
-- `diAtasAksen` untuk teks/ikon di atas `isiAksen`.
-- `teksLembut` untuk teks di atas `isiLembut`.
-
-### 4.3 Token bersama
-
-Nilai final di `src/constants/theme.ts`, dipakai auth, admin, dan komponen
-shared:
-
-| Token | Terang | Gelap | Peran |
-|---|---|---|---|
-| text | `#000000` | `#FFFFFF` | Teks utama |
-| textSecondary | `#60646C` | `#B0B4BA` | Teks sekunder |
-| primary | `#1D4ED8` | `#60A5FA` | Teks/ikon aksen |
-| primaryLight | `#DBEAFE` | `#1E3A5F` | Latar aksen lembut |
-| primaryFill | `#1D4ED8` | `#1D4ED8` | Isian tombol/chip |
-| onPrimary | `#FFFFFF` | `#FFFFFF` | Teks di atas `primaryFill` |
-| success | `#23765B` | `#34D399` | Teks/ikon sukses |
-| successLight | `#D1FAE5` | `#064E3B` | Latar sukses lembut |
-| successFill | `#23765B` | `#23765B` | Isian tombol sukses |
-| onSuccess | `#FFFFFF` | `#FFFFFF` | Teks di atas `successFill` |
-| danger | `#AE3645` | `#F87171` | Teks/ikon bahaya |
-| dangerLight | `#FEE2E2` | `#3A1E24` | Latar bahaya lembut |
-| dangerFill | `#AE3645` | `#AE3645` | Isian tombol bahaya |
-| onDanger | `#FFFFFF` | `#FFFFFF` | Teks di atas `dangerFill` |
-| warning | `#7A4A00` | `#FBBF24` | Teks/ikon peringatan |
-| warningLight | `#FEF3C7` | `#78350F` | Latar peringatan lembut |
-| border | `#E5E7EB` | `#374151` | Garis dekoratif |
-| card | `#FFFFFF` | `#1F2937` | Permukaan kartu |
-
-Perubahan dari palet lama:
-
-- `primary` terang dari `#3B82F6` menjadi `#1D4ED8`.
-- `success` terang dari `#10B981` menjadi `#23765B`.
-- `danger` terang dari `#EF4444` menjadi `#AE3645`.
-- `warning` terang dari `#F59E0B` menjadi `#7A4A00`.
-- `dangerLight` gelap dari `#7F1D1D` menjadi `#3A1E24`.
-
-Aturan pemakaian:
-
-- `primary`, `success`, `danger`, dan `warning` adalah warna teks/ikon.
-- `primaryFill`, `successFill`, dan `dangerFill` adalah warna isian kontrol.
-- Label di atas isian memakai `onPrimary`, `onSuccess`, atau `onDanger`,
-  bukan `#FFFFFF` hardcoded.
+- `primary` untuk teks dan ikon aksen, `primaryFill` untuk isian kontrol, dan
+  `onPrimary` untuk label di atasnya. Jangan memakai satu nilai untuk dua
+  peran berbeda tanpa menguji keduanya.
+- `onHero` khusus teks dan ikon di atas hero. `surface` khusus bidang opak
+  seperti sheet, dialog, dan isian form.
+- `navSurface`, `primarySoft`, dan `iconMuted` dipakai kedua bottom bar
+  (Asisten dan Praktikan), sehingga navigasi tidak meminjam token area lain.
 - Di mode gelap, warna teks aksen tetap terang; isian kontrol memakai versi
   gelap agar teks putih tetap lolos AA.
 - `border` adalah garis dekoratif. Jika suatu kontrol hanya dapat dikenali dari
   garisnya, gunakan border yang lebih tegas: `#7488A8` di atas terang atau
   `#6B7280` di atas gelap, dan uji ulang.
+- Jangan menulis `#FFFFFF` untuk label tombol; pakai token `on*`.
+
+### 4.3 Nilai yang disatukan
+
+Saat tiga palet digabung, nilai yang dipakai mayoritas dipertahankan:
+
+| Peran | Sebelum | Sesudah | Alasan |
+|---|---|---|---|
+| Aksen isian | `#1D4ED8` (auth), `#204CAC` (Asisten), `#2856B9` (Praktikan) | `#204CAC` | Dua dari tiga sumber |
+| Galat | `#AE3645` (auth, Praktikan), `#B83E4D` (Asisten) | `#AE3645` | Dua dari tiga sumber |
+| Teks utama | `#000000` (auth), `#192138` (Asisten, Praktikan) | `#192138` | Dua dari tiga sumber |
+| Latar halaman | `#FFFFFF` (auth), `#E8EFF9` (Asisten, Praktikan) | `#E8EFF9` | Dua dari tiga sumber |
+| Teks sekunder | `#60646C` (auth), `#4C5D75` (Asisten, Praktikan) | `#4C5D75` | Dua dari tiga sumber |
+| Hero | alpha 0.6 (Praktikan), 0.8 (Asisten) | 0.8 | Mayoritas, kontras teks lebih aman |
+| Lime gelap | `#34481A` (Praktikan), `#DEF1B4` (Asisten) | `#DEF1B4` | Mayoritas; teks `#35501A` tetap |
+| Ikon aksen | `#4B4ACF` (Asisten), `#204CAC` | `#204CAC` | Satu peran, satu nilai |
+| Garis kartu gelap | putih 10% (Praktikan), 12% (Asisten) | 12% | Mayoritas pemakaian |
+| Ikon nonaktif | `#51627C` (Praktikan), `#6D7588` (Asisten) | `#6D7588` | Mayoritas pemakaian |
+
+Konsekuensi visual yang disengaja:
+
+- Halaman auth kini berlatar `#E8EFF9`, bukan putih; isian form memakai
+  `surface` putih agar tetap jelas.
+- Hero Praktikan dan kartu profil menjadi lebih gelap (alpha 0.8).
+- Tombol utama Praktikan memakai `#204CAC`, bukan `#2856B9`.
+- Badge dibuka di mode gelap memakai lime terang dengan teks `#35501A`.
+
+Seluruh nilai sesudah penggabungan sudah ada di tabel audit 4.4, jadi tidak ada
+pasangan warna baru. Tiga belas pasangan kunci dihitung ulang secara lokal
+setelah penggabungan dan semuanya lolos; rasio terendah 3.99:1 pada ikon
+nonaktif di atas `background`, yang kebutuhan minimumnya 3:1. Pemeriksaan
+visual di perangkat belum dijalankan.
 
 ### 4.4 Audit kontras
 
@@ -262,7 +226,7 @@ Metode:
 - 105 pasangan diuji: 98 pasangan teks, 5 batas UI, 2 dekoratif.
 - Rasio situs sama dengan perhitungan lokal: 0 selisih.
 
-Hasil setelah perbaikan:
+Hasil setelah perbaikan 14 November 2026, saat palet masih terpisah:
 
 | Kelompok | Pasangan teks | Hasil |
 |---|---|---|
@@ -272,7 +236,7 @@ Hasil setelah perbaikan:
 | Token bersama terang | 14 | Semua ≥ 4.5:1 |
 | Token bersama gelap | 14 | Semua ≥ 4.5:1 |
 
-Pasangan kunci:
+Pasangan kunci (nama token mengikuti palet saat pengukuran):
 
 | Pasangan | Rasio |
 |---|---|
@@ -338,17 +302,25 @@ Batas yang tidak diklaim lolos:
 Font: Inter, dimuat lewat `@expo-google-fonts/inter`.
 Bobot: 400 Regular, 500 Medium, 600 Semi Bold, 700 Bold.
 
-Token implementasi di `assistantTokens.typography`:
+Token implementasi di `src/theme/tokens.ts`. Seluruh token memakai
+`fontFamily` Inter, bukan `fontWeight`, karena family Inter dimuat sebagai
+berkas terpisah per bobot.
 
-| Token | Ukuran / line height | Bobot |
-|---|---|---|
-| pageTitle | 27 / 34 | Bold |
-| detailTitle | 25 / 32 | Bold |
-| sectionTitle | 16 / 22 | Bold |
-| body | 14 / 22 | Regular |
-| greeting | 13 / 16 | Regular |
-| label | 15 / 20 | Semi Bold |
-| caption | 12 / 18 | Regular |
+| Token | Ukuran / line height | Bobot | Dipakai untuk |
+|---|---|---|---|
+| pageTitle | 27 / 34 | Bold | Judul halaman |
+| detailTitle | 25 / 32 | Bold | Judul detail |
+| sectionTitle | 16 / 22 | Bold | Judul bagian dan header |
+| cardTitle | 19 / 25 | Bold | Judul kartu |
+| sectionHeading | 20 / 27 | Bold | Judul bagian besar |
+| timeDisplay | 30 / 38 | Bold | Waktu presensi |
+| numeric | 25 / 32 | Bold | Angka statistik |
+| greeting | 13 / 16 | Regular | Sapaan |
+| body | 14 / 22 | Regular | Isi |
+| label | 15 / 20 | Semi Bold | Label dan nilai |
+| caption | 12 / 18 | Regular | Keterangan |
+| tiny | 11 / 16 | Regular | Label tab dan status |
+| eyebrow | 10 / 16 | Semi Bold | Eyebrow huruf kapital |
 
 Ukuran tambahan ditulis langsung di komponen, misalnya:
 
@@ -383,18 +355,21 @@ Pola layout:
 - Safe area dihormati lewat `react-native-safe-area-context`.
 - Target sentuh minimal 44 × 44; tombol utama minimal 48–50.
 
-Spacing di `assistantTokens.spacing`:
+Spacing di `src/theme/tokens.ts`:
 
 | Token | Nilai |
 |---|---|
+| xxs | 2 |
 | xs | 4 |
 | sm | 8 |
 | md | 12 |
+| base | 16 |
 | section | 18 |
 | page | 24 |
 | lg | 32 |
+| xxl | 64 |
 
-Radius di `assistantTokens.radius`:
+Radius di `src/theme/tokens.ts`:
 
 | Token | Nilai | Penggunaan |
 |---|---|---|
@@ -436,9 +411,9 @@ Latar:
   sehingga tidak ada koreksi offset border.
 - Bar: lebar 90%, maksimum 552, padding 6, gap 52 untuk dua tab dan 12 untuk
   tiga tab, tinggi tab minimal 60, padding item 10, ikon 18, label 11/16,
-  radius tab 26, radius panel. Warna bar memakai token Praktikan
-  (`navLatar`, `navAktif`, `ikonNonaktif`, `aksen`) sehingga ikut preferensi
-  tema terang/gelap.
+  radius tab 26, radius panel. Warna bar memakai token nav bersama
+  (`navSurface`, `primarySoft`, `iconMuted`, `primary`) sehingga kedua bottom
+  bar ikut preferensi tema terang/gelap tanpa meminjam palet area lain.
 - Jadwal dan Rekap berada di dalam grup tab; bar bawah tetap terlihat.
 - Detail sesi berada di luar grup tab; bar bawah tertutup.
 - Perpindahan tab memakai `TAB_TRANSITION_SPEC` 240 ms dan
@@ -468,7 +443,7 @@ Latar:
 - Admin memakai route `/asisten/admin` di dalam grup `(tabs)`, dijaga guard
   `isAdmin` di layar; grup `(admin)` dihapus.
 - Halaman admin memakai `AssistantSurface`, `AssistantText`, `HeroCard`, dan
-  `useAssistantTheme()`: hero metrik dengan watermark users, pencarian kaca,
+  `useTheme()`: hero metrik dengan watermark users, pencarian kaca,
   chip filter pil, kartu kaca, serta `AssistantSheet` untuk konfirmasi
   perubahan role. Halaman ini ikut preferensi terang/gelap pengguna.
 - Kartu pengguna menaruh nama di kiri dan kelompok badge di kanan dengan
@@ -497,11 +472,11 @@ slot watermark kanan atas (opacity 0.12), dan gradien kedalaman yang selalu
 dirender. Gradien itu menambahkan lapisan `#081840` 14% di atas, memudar ke 0%
 di bawah, mengikuti arah atmosfer halaman. Semua hero memakai gradien yang
 sama; tidak ada lagi glow radial per area yang membuat latar kartu
-berbeda-beda. Warna dasar tetap berasal dari token area: `theme.hero` (0.6
-terang/0.7 gelap) untuk profile/Praktikan, `glassHero` 0.8 terang/0.82 gelap
-untuk Asisten/admin. Perbedaan alpha itu menjaga kontras teks terhadap atmosfer
-masing-masing area. Teks hero tetap memakai putih, `heroSoft`, atau putih 80%
-(baris Berikutnya) yang sudah diaudit.
+berbeda-beda. Warna dasar berasal dari satu token, `glassHero` 0.8 terang /
+0.82 gelap, untuk profil, Praktikan, Asisten, dan admin. Alpha itu dipilih
+karena dipakai mayoritas dan menjaga kontras teks terhadap atmosfer. Teks hero
+memakai `onHero`, `heroSoft`, atau `heroMuted` (baris Berikutnya) yang sudah
+diaudit.
 
 `AgendaBanner` memakai `glassHero`, border putih 30%, dan teks putih. Dengan
 alpha `glassHero` 0.8 terang/0.82 gelap, seluruh pasangan teks hero lolos AA
@@ -512,7 +487,7 @@ normal. Gradien adalah lapisan dekoratif, bukan pengganti warna teks.
 Kartu memakai `glassSurface`, `glassBorder`, radius card, dan bayangan
 `shadow` (biru di terang, hitam di gelap). `AssistantGlassHighlight`
 menambahkan kilau `session-glass.svg`/`session-glass-dark.svg` sesuai skema.
-Kartu Praktikan memakai `kartu`/`kartuSorot` dan `KilauKaca`. Blok menu hub
+Kartu Praktikan memakai `glassCard`/`cardOpen` dan `KilauKaca`. Blok menu hub
 memakai sel 33,333%, tinggi minimal 104, padding 12, ikon 40, label 12,5/16,
 dan radius block.
 
@@ -521,13 +496,13 @@ dan radius block.
 - Tombol utama Asisten: latar `primaryFill`, teks `onPrimary`.
 - Tombol bahaya Asisten: latar `errorFill`, teks `onError`.
 - Tombol sekunder: latar `glassSurface`, border `glassBorder`.
-- Tombol Praktikan: `isiAksen` + `diAtasAksen`, `isiLembut` + `teksLembut`,
-  atau `lencanaBuka` untuk aksen terang.
-- Tombol shared: `primaryFill` + `onPrimary`, `dangerFill` + `onDanger`,
+- Tombol Praktikan: `primaryFill` + `onPrimary`, `softSurface` + `primary`,
+  atau `lime` untuk aksen terang.
+- Tombol shared: `primaryFill` + `onPrimary`, `errorFill` + `onError`,
   `successFill` + `onSuccess`.
 - Jangan menulis `#FFFFFF` untuk label tombol; pakai token `on*`.
 - Tombol nonaktif tidak memakai opacity rendah untuk teks; gunakan warna
-  `teksSekunder` agar tetap terbaca.
+  `textSecondary` agar tetap terbaca.
 
 ### 8.5 Bottom sheet
 
@@ -552,9 +527,9 @@ perubahan role di halaman admin:
 
 `ThemePreferenceProvider` di `src/context/theme-context.tsx` menyimpan pilihan
 tema `system`/`light`/`dark` di AsyncStorage dengan kunci `ppk.theme-mode`.
-`useColorScheme` mengembalikan skema hasil preferensi itu. Ketiga sumber token
-membacanya lewat `useTheme`, `usePraktikanTheme`, dan `useAssistantTheme`,
-sehingga seluruh halaman ikut berubah tanpa mengubah komponen pemanggil. Mode
+`useColorScheme` mengembalikan skema hasil preferensi itu. Satu-satunya
+pembaca token adalah `useTheme` di `src/theme`, sehingga seluruh halaman ikut
+berubah tanpa mengubah komponen pemanggil. Mode
 `system` mengikuti skema perangkat.
 
 Halaman Profil punya baris **Tema** di bagian TAMPILAN: label "Tema" di kiri
@@ -562,8 +537,8 @@ dan `PemilihTema` di kanan, di dalam kartu berbentuk pil (radius 999, tinggi
 56). Pil memakai track padding 4, segmen 40 × 40, ikon 18, tanpa border, dan
 berjarak 4 px dari tepi kanan, atas, serta bawah kartu; area sentuh diperluas
 `hitSlop` 4. Segmen aktif
-memakai `isiAksen` dengan ikon `diAtasAksen`; segmen lain memakai
-`teksSekunder`. Tidak ada keterangan teks di bawah kontrol; maknanya dijaga
+memakai `primaryFill` dengan ikon `onPrimary`; segmen lain memakai
+`textSecondary`. Tidak ada keterangan teks di bawah kontrol; maknanya dijaga
 `accessibilityRole="radiogroup"` dengan anak `radio` dan
 `accessibilityState.checked`.
 
@@ -571,8 +546,8 @@ memakai `isiAksen` dengan ikon `diAtasAksen`; segmen lain memakai
 
 - Badge selalu berisi teks dan titik warna.
 - Asisten: lime untuk sesi dibuka, netral untuk status lain.
-- Shared: `successLight` + `success`, `dangerLight` + `danger`,
-  `warningLight` + `warning`, `primaryLight` + `primary`.
+- Shared: `successSoft` + `success`, `errorSoft` + `error`,
+  `primarySoft` + `primary`.
 - Jangan mengandalkan warna saja; label teks wajib.
 
 ### 8.8 ConfirmModal
@@ -580,7 +555,7 @@ memakai `isiAksen` dengan ikon `diAtasAksen`; segmen lain memakai
 `ConfirmModal` dipakai untuk konfirmasi keluar akun. Backdrop penuh memakai
 `Pressable` transparan; ketukan di luar kartu memanggil `onCancel`, sedangkan
 kartu dirender setelah backdrop sehingga ketukan di dalam tidak menutup.
-Tombol batal memakai `primaryLight` + `primary` agar sama dengan aksi lembut
+Tombol batal memakai `primarySoft` + `primary` agar sama dengan aksi lembut
 di halaman admin; tombol konfirmasi memakai `*Fill` + `on*`.
 
 ## 9. Aksesibilitas
@@ -614,7 +589,7 @@ Catatan kontras:
 - Border tetap dekoratif. Jika suatu kontrol hanya dikenali dari border,
   perbaiki border sebelum mengklaim kepatuhan 1.4.11.
 - Gradien atmosfer dapat menurunkan kontras teks sekunder. Nilai
-  `textSecondary`/`teksSekunder` sudah diuji pada titik tergelap gradien.
+  `textSecondary` sudah diuji pada titik tergelap gradien.
 
 ## 10. Build dan verifikasi
 
@@ -662,6 +637,10 @@ Repo tidak punya test suite otomatis.
   setelah perubahan terakhir.
 - Tidak ada test suite; verifikasi kontras dilakukan lewat stateofcolors.com
   dan perhitungan WCAG lokal.
+- Pemeriksaan visual di perangkat setelah penggabungan palet belum dijalankan;
+  nilai yang berubah bergerak ke kombinasi yang sudah diaudit di tabel 4.4.
+- Komponen bersama (auth, sheet, toast) masih memakai `fontWeight` sistem,
+  bukan `fontFamily` Inter seperti layar Asisten dan Praktikan.
 
 ## 12. Riwayat perubahan
 
@@ -686,6 +665,10 @@ Repo tidak punya test suite otomatis.
 | 15 Nov 2026 | Grup tab Asisten pindah dari Stack ke Tabs; transisi tab Asisten dan Praktikan mengikuti arah urutan tab |
 | 15 Nov 2026 | Teks aksi admin memakai "Jadikan Asisten"/"Jadikan Praktikan"; aksi sesi berupa tautan tanpa latar |
 | 15 Nov 2026 | Palet gelap Asisten/admin lewat `useAssistantTheme`; seluruh halaman mengikuti preferensi terang/gelap |
+| 15 Nov 2026 | Tema disatukan di `src/theme/`: `useTheme`/`useThemedStyles`, satu palet semantik, satu skala tipografi. `assistantTokens`, `usePraktikanTheme`, dan `Colors` dihapus |
+| 15 Nov 2026 | Nilai minoritas mengikuti mayoritas: aksen `#204CAC`, galat `#AE3645`, hero alpha 0.8, lime terang di kedua mode, ikon aksen `#204CAC` |
+| 15 Nov 2026 | `use-color-scheme.web.ts` dihapus karena identik setelah hidrasi pindah ke `use-device-color-scheme.web.ts` |
+| 15 Nov 2026 | Empat komponen bersama tanpa pemakai dihapus: `EmptyState`, `ScreenState`, `SessionCard`, `StatusBadge` |
 
 Perbaikan kontras 14 November 2026:
 
