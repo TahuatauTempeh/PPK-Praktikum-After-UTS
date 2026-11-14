@@ -122,5 +122,5 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   indikator: { position: 'absolute', borderRadius: 24 },
-  tab: { flex: 1, minHeight: 54, alignItems: 'center', justifyContent: 'center', gap: 4, borderRadius: 24 },
+  tab: { flex: 1, minHeight: 54, alignItems: 'center', justifyContent: 'center', gap: 4, borderRadius: 24, paddingTop: 3 },
 });
