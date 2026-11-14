@@ -26,7 +26,7 @@ export function KartuProfil({ nama, nomor, peran }: KartuProfilProps) {
           { backgroundColor: 'rgba(255,255,255,0.14)', borderColor: 'rgba(255,255,255,0.35)' },
         ]}
       >
-        <Ikon nama="profil" ukuran={30} warna={theme.heroTeks} />
+        <Ikon nama="profil" ukuran={36} warna={theme.heroTeks} />
       </View>
 
       <Text
@@ -55,12 +55,12 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   kotakIkon: {
-    width: 64,
-    height: 64,
+    width: 80,
+    height: 80,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
-    borderRadius: 20,
+    borderRadius: 24,
     borderWidth: 1,
   },
   tengah: {
