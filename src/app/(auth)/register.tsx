@@ -128,12 +128,14 @@ export default function RegisterScreen() {
             style={({ pressed }) => [
               authStyles.button,
               {
-                backgroundColor: theme.primary,
+                backgroundColor: theme.primaryFill,
                 opacity: submitting ? 0.6 : pressed ? 0.85 : 1,
               },
             ]}
           >
-            <Text style={authStyles.buttonText}>{submitting ? 'Memproses...' : 'Daftar'}</Text>
+            <Text style={[authStyles.buttonText, { color: theme.onPrimary }]}>
+              {submitting ? 'Memproses...' : 'Daftar'}
+            </Text>
           </Pressable>
 
           <View style={authStyles.footer}>

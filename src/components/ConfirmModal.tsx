@@ -31,6 +31,18 @@ export function ConfirmModal({
   onCancel,
 }: ConfirmModalProps) {
   const theme = useTheme();
+  const confirmBackground =
+    confirmColor === 'danger'
+      ? theme.dangerFill
+      : confirmColor === 'success'
+        ? theme.successFill
+        : theme.primaryFill;
+  const confirmForeground =
+    confirmColor === 'danger'
+      ? theme.onDanger
+      : confirmColor === 'success'
+        ? theme.onSuccess
+        : theme.onPrimary;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
@@ -56,10 +68,10 @@ export function ConfirmModal({
               style={({ pressed }) => [
                 styles.button,
                 styles.confirmButton,
-                { backgroundColor: theme[confirmColor], opacity: pressed ? 0.8 : 1 },
+                { backgroundColor: confirmBackground, opacity: pressed ? 0.8 : 1 },
               ]}
             >
-              <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>{confirmText}</Text>
+              <Text style={[styles.buttonText, { color: confirmForeground }]}>{confirmText}</Text>
             </Pressable>
           </View>
         </View>

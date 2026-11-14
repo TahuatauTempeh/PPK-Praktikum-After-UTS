@@ -65,13 +65,13 @@ export default function ProfilScreen() {
           onPress={() => setKonfirmasi(true)}
           style={({ pressed }) => [
             styles.keluar,
-            // Mengikuti warna tombol konfirmasi ConfirmModal, bukan palet praktikan.
-            { backgroundColor: appTheme.danger },
+            // Mengikuti isian tombol konfirmasi ConfirmModal, bukan palet praktikan.
+            { backgroundColor: appTheme.dangerFill },
             pressed && styles.ditekan,
           ]}
         >
-          <Text style={[Tipe.label, { color: '#FFFFFF' }]}>Keluar dari akun</Text>
-          <Ikon nama="keluar" ukuran={18} warna="#FFFFFF" />
+          <Text style={[Tipe.label, { color: appTheme.onDanger }]}>Keluar dari akun</Text>
+          <Ikon nama="keluar" ukuran={18} warna={appTheme.onDanger} />
         </Pressable>
       </Layar>
 

@@ -95,12 +95,14 @@ export default function LoginScreen() {
             style={({ pressed }) => [
               authStyles.button,
               {
-                backgroundColor: theme.primary,
+                backgroundColor: theme.primaryFill,
                 opacity: submitting ? 0.6 : pressed ? 0.85 : 1,
               },
             ]}
           >
-            <Text style={authStyles.buttonText}>{submitting ? 'Memproses...' : 'Masuk'}</Text>
+            <Text style={[authStyles.buttonText, { color: theme.onPrimary }]}>
+              {submitting ? 'Memproses...' : 'Masuk'}
+            </Text>
           </Pressable>
 
           <View style={authStyles.footer}>

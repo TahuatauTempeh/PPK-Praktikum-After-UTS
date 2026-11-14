@@ -35,10 +35,10 @@ export function ErrorState({
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.button,
-            { backgroundColor: theme.primary, opacity: pressed ? 0.85 : 1 },
+            { backgroundColor: theme.primaryFill, opacity: pressed ? 0.85 : 1 },
           ]}
         >
-          <Text style={styles.buttonText}>{retryLabel}</Text>
+          <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{retryLabel}</Text>
         </Pressable>
       ) : null}
 
@@ -90,7 +90,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: {
-    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
   },

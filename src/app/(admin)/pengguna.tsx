@@ -164,15 +164,15 @@ export default function AdminUsersScreen() {
               style={[
                 styles.filterChip,
                 {
-                  backgroundColor: active ? theme.primary : theme.backgroundElement,
-                  borderColor: active ? theme.primary : theme.border,
+                  backgroundColor: active ? theme.primaryFill : theme.backgroundElement,
+                  borderColor: active ? theme.primaryFill : theme.border,
                 },
               ]}
             >
               <Text
                 style={[
                   styles.filterText,
-                  { color: active ? '#FFFFFF' : theme.textSecondary },
+                  { color: active ? theme.onPrimary : theme.textSecondary },
                 ]}
               >
                 {value === 'all' ? 'Semua' : value === 'praktikan' ? 'Praktikan' : 'Asisten'}
