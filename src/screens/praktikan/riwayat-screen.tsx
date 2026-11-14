@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { useSession } from '@/context/session-context';
 import { Hero } from '@/screens/praktikan/components/hero';
@@ -18,11 +18,13 @@ import { useUserPraktikan } from '@/screens/praktikan/guard';
 import { bukaDetailSesi, bukaJadwal } from '@/screens/praktikan/navigasi';
 import { pecahJudul, ringkasRiwayat } from '@/screens/praktikan/selectors';
 import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { usePraktikanSchedule } from '@/screens/praktikan/use-praktikan-schedule';
 
 export default function RiwayatScreen() {
   const theme = usePraktikanTheme();
   const currentUser = useUserPraktikan();
-  const { sessions, attendance } = useSession().state;
+  const { attendance } = useSession().state;
+  const { sessions, loading, error, refresh } = usePraktikanSchedule(currentUser?.id ?? '');
 
   const ringkas = useMemo(
     () => ringkasRiwayat(sessions, attendance, currentUser?.id ?? ''),
@@ -52,78 +54,94 @@ export default function RiwayatScreen() {
       </View>
 
       <View style={styles.daftar}>
-        {ringkas.baris.map(({ session, record }) => {
-          const { mataKuliah, sesi } = pecahJudul(session);
-          const belumPresensi = !record && session.status === 'open';
-          return (
-            <View
-              key={session.id}
-              style={[
-                styles.kartu,
-                { backgroundColor: theme.kartu, borderColor: theme.garisKartu, boxShadow: theme.bayang },
-              ]}
-            >
-              <View style={styles.isi}>
-                <View style={styles.baris}>
-                  <Text style={[Tipe.kecil, styles.tebal, styles.tanggal, { color: theme.teksSekunder }]}>
-                    {formatTanggalPendek(session.date).toUpperCase()}
-                  </Text>
-                  <StatusLabel status={session.status} />
-                </View>
-
-                <View style={styles.materi}>
-                  <Text accessibilityRole="header" style={[Tipe.judulKartu, { color: theme.teks }]}>
-                    {mataKuliah}
-                  </Text>
-                  {sesi ? <Text style={[Tipe.body, { color: theme.teksSekunder }]}>{sesi}</Text> : null}
-                  <View style={styles.meta}>
-                    <Ikon nama="jam" ukuran={14} warna={theme.teksSekunder} />
-                    <Text style={[Tipe.caption, { color: theme.teksSekunder }]}>
-                      {formatRentangWIB(session.time)} | {session.room}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={[styles.petak, { backgroundColor: theme.isiLembut }]}>
-                  {record ? (
-                    <>
-                      <Text style={[Tipe.caption, styles.tebal, { color: theme.sukses }]}>Hadir</Text>
-                      <Text style={[Tipe.angka, { color: theme.aksen }]}>
-                        {formatJamWIB(record.timestamp)} WIB
-                      </Text>
-                    </>
-                  ) : belumPresensi ? (
-                    <>
-                      <Text style={[Tipe.caption, styles.tebal, { color: theme.teks }]}>Belum presensi</Text>
-                      <Text style={[Tipe.kecil, { color: theme.teksSekunder }]}>Sesi sedang dibuka</Text>
-                    </>
-                  ) : (
-                    <>
-                      <Text style={[Tipe.caption, styles.tebal, { color: theme.galat }]}>Tidak hadir</Text>
-                      <Text style={[Tipe.kecil, { color: theme.teksSekunder }]}>
-                        Sesi ditutup tanpa catatan presensi
-                      </Text>
-                    </>
-                  )}
-                </View>
-              </View>
-              <Tombol
-                label={belumPresensi ? 'Presensi' : 'Lihat detail sesi'}
-                varian={belumPresensi ? 'utama' : 'lembut'}
-                panah
-                onPress={() => bukaDetailSesi(session.id)}
-              />
-            </View>
-          );
-        })}
-        {ringkas.baris.length === 0 ? (
+        {loading ? (
+          <View style={styles.muat}>
+            <ActivityIndicator size="large" color={theme.aksen} />
+            <Text style={[Tipe.caption, { color: theme.teksSekunder }]}>Memuat riwayat kehadiran...</Text>
+          </View>
+        ) : error ? (
           <Kosong
             ikon="riwayat"
-            judul="Belum ada catatan kehadiran"
-            keterangan="Catatan muncul setelah sesi pertama dibuka."
-            aksi={{ label: 'Kembali ke jadwal', onPress: bukaJadwal }}
+            judul="Gagal memuat riwayat"
+            keterangan={error}
+            aksi={{ label: 'Coba lagi', onPress: () => void refresh() }}
           />
-        ) : null}
+        ) : (
+          <>
+            {ringkas.baris.map(({ session, record }) => {
+              const { mataKuliah, sesi } = pecahJudul(session);
+              const belumPresensi = !record && session.status === 'open';
+              return (
+                <View
+                  key={session.id}
+                  style={[
+                    styles.kartu,
+                    { backgroundColor: theme.kartu, borderColor: theme.garisKartu, boxShadow: theme.bayang },
+                  ]}
+                >
+                  <View style={styles.isi}>
+                    <View style={styles.baris}>
+                      <Text style={[Tipe.kecil, styles.tebal, styles.tanggal, { color: theme.teksSekunder }]}>
+                        {formatTanggalPendek(session.date).toUpperCase()}
+                      </Text>
+                      <StatusLabel status={session.status} />
+                    </View>
+
+                    <View style={styles.materi}>
+                      <Text accessibilityRole="header" style={[Tipe.judulKartu, { color: theme.teks }]}>
+                        {mataKuliah}
+                      </Text>
+                      {sesi ? <Text style={[Tipe.body, { color: theme.teksSekunder }]}>{sesi}</Text> : null}
+                      <View style={styles.meta}>
+                        <Ikon nama="jam" ukuran={14} warna={theme.teksSekunder} />
+                        <Text style={[Tipe.caption, { color: theme.teksSekunder }]}>
+                          {formatRentangWIB(session.time)} | {session.room}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={[styles.petak, { backgroundColor: theme.isiLembut }]}>
+                      {record ? (
+                        <>
+                          <Text style={[Tipe.caption, styles.tebal, { color: theme.sukses }]}>Hadir</Text>
+                          <Text style={[Tipe.angka, { color: theme.aksen }]}>
+                            {formatJamWIB(record.timestamp)} WIB
+                          </Text>
+                        </>
+                      ) : belumPresensi ? (
+                        <>
+                          <Text style={[Tipe.caption, styles.tebal, { color: theme.teks }]}>Belum presensi</Text>
+                          <Text style={[Tipe.kecil, { color: theme.teksSekunder }]}>Sesi sedang dibuka</Text>
+                        </>
+                      ) : (
+                        <>
+                          <Text style={[Tipe.caption, styles.tebal, { color: theme.galat }]}>Tidak hadir</Text>
+                          <Text style={[Tipe.kecil, { color: theme.teksSekunder }]}>
+                            Sesi ditutup tanpa catatan presensi
+                          </Text>
+                        </>
+                      )}
+                    </View>
+                  </View>
+                  <Tombol
+                    label={belumPresensi ? 'Presensi' : 'Lihat detail sesi'}
+                    varian={belumPresensi ? 'utama' : 'lembut'}
+                    panah
+                    onPress={() => bukaDetailSesi(session.id)}
+                  />
+                </View>
+              );
+            })}
+            {ringkas.baris.length === 0 ? (
+              <Kosong
+                ikon="riwayat"
+                judul="Belum ada catatan kehadiran"
+                keterangan="Catatan muncul setelah sesi kelasmu dibuka."
+                aksi={{ label: 'Kembali ke jadwal', onPress: bukaJadwal }}
+              />
+            ) : null}
+          </>
+        )}
       </View>
     </Layar>
   );
@@ -140,4 +158,5 @@ const styles = StyleSheet.create({
   materi: { gap: 4 },
   meta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
   petak: { borderRadius: 20, padding: 16, gap: 2 },
+  muat: { paddingVertical: 40, alignItems: 'center', gap: 12 },
 });

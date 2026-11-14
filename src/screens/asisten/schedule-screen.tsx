@@ -19,11 +19,14 @@ type Props = {
   attendance?: readonly AssistantAttendance[];
   date?: string;
   onManage?: (id: string) => void;
+  onManageClasses?: () => void;
+  onManageParticipants?: () => void;
+  onManageSessions?: () => void;
 };
 
 export default function ScheduleScreen({
   sessions = previewSessions, attendance = previewAttendance, date = previewDate,
-  onManage,
+  onManage, onManageClasses, onManageParticipants, onManageSessions,
 }: Props) {
   const [filter, setFilter] = useState<Filter>('all');
   const daySessions = sessions.filter(session => session.date === date)
@@ -47,6 +50,34 @@ export default function ScheduleScreen({
         </View>
         <View style={styles.bannerHeading}>
           <AssistantText style={styles.bannerEyebrow}>AGENDA PRAKTIKUM</AssistantText>
+          {(onManageClasses || onManageParticipants || onManageSessions) && (
+            <View style={styles.quickActions}>
+              {onManageClasses && (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={onManageClasses}
+                  style={({ pressed }) => [styles.manageClassesButton, pressed && styles.pressed]}>
+                  <AssistantText style={styles.manageClassesLabel}>Kelas</AssistantText>
+                </Pressable>
+              )}
+              {onManageParticipants && (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={onManageParticipants}
+                  style={({ pressed }) => [styles.manageClassesButton, pressed && styles.pressed]}>
+                  <AssistantText style={styles.manageClassesLabel}>Peserta</AssistantText>
+                </Pressable>
+              )}
+              {onManageSessions && (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={onManageSessions}
+                  style={({ pressed }) => [styles.manageClassesButton, pressed && styles.pressed]}>
+                  <AssistantText style={styles.manageClassesLabel}>Atur Sesi</AssistantText>
+                </Pressable>
+              )}
+            </View>
+          )}
         </View>
         <View style={styles.dateRow} accessibilityLabel={fullDate}>
           <AssistantText style={styles.day}>{new Intl.DateTimeFormat('id-ID', { ...dateOptions, day: '2-digit' }).format(activeDate)}</AssistantText>
@@ -115,8 +146,18 @@ export default function ScheduleScreen({
 
 const styles = StyleSheet.create({
   dayBanner: { overflow: 'hidden', padding: 22, gap: 18, backgroundColor: theme.colors.glassHero, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', borderRadius: 30 },
-  bannerHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  bannerHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   bannerEyebrow: { fontSize: 10, lineHeight: 16, letterSpacing: 1.8, fontFamily: theme.fonts.semibold, color: '#EDF3FF' },
+  quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  manageClassesButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: theme.radius.pill,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.28)',
+  },
+  manageClassesLabel: { fontSize: 12, lineHeight: 16, fontFamily: theme.fonts.semibold, color: theme.colors.surface },
   calendarWatermark: { position: 'absolute', top: -12, right: -16, opacity: 0.12 },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 14, flexWrap: 'wrap' },
   day: { fontSize: 58, lineHeight: 64, letterSpacing: -3, fontFamily: theme.fonts.bold, color: theme.colors.surface, fontVariant: ['tabular-nums'] },
