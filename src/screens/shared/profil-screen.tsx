@@ -37,13 +37,20 @@ export default function ProfilScreen() {
 
   if (!profile) return <LoadingState message="Memuat profil..." />;
 
+  // Admin bukan role terpisah; badge menampilkan status admin, bukan role dasarnya.
+  const peran = profile.isAdmin
+    ? 'Admin'
+    : profile.role === 'praktikan'
+      ? 'Praktikan'
+      : 'Asisten';
+
   return (
     <>
       <Layar>
         <KartuProfil
           nama={profile.name}
           nomor={profile.nim}
-          peran={profile.role === 'praktikan' ? 'Praktikan' : 'Asisten'}
+          peran={peran}
         />
 
         <View style={styles.bagian}>
