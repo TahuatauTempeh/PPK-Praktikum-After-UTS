@@ -420,7 +420,9 @@ Latar:
 
 ### 7.1 Asisten
 
-- Tab bawah statis dirender oleh `src/app/asisten/(tabs)/_layout.tsx`.
+- Grup tab Asisten memakai `Tabs` di `src/app/asisten/(tabs)/_layout.tsx`
+  dengan tab bar kustom; urutan layar: `index`, `jadwal`, `rekap`, `admin`,
+  `profil`. `backBehavior="history"` mempertahankan perilaku tombol back.
 - Isi tab: Asisten, Admin (hanya untuk admin), dan Profil.
 - Tab Asisten adalah hub berisi agenda hari aktif serta menu Jadwal dan Rekap
   pada grid tiga kolom.
@@ -439,9 +441,14 @@ Latar:
   tema terang/gelap.
 - Jadwal dan Rekap berada di dalam grup tab; bar bawah tetap terlihat.
 - Detail sesi berada di luar grup tab; bar bawah tertutup.
+- Perpindahan tab memakai `TAB_TRANSITION_SPEC` 240 ms dan
+  `tabSlideInterpolator`: layar berindeks lebih besar masuk dari kanan,
+  yang lebih kecil masuk dari kiri. Animasi aktif karena `transitionSpec`
+  diberikan, tanpa `animation: 'none'`.
 - Kembali dari detail: `router.back()`; jika tidak ada tumpukan, kembali ke
   jadwal.
-- Kembali dari jadwal/rekap: `router.back()` atau `router.replace('/asisten')`.
+- Kembali dari jadwal/rekap: `router.navigate('/asisten')` karena keduanya
+  kini tab, bukan tumpukan layar.
 - Admin memakai route `/asisten/admin` tanpa tombol kembali; guard `isAdmin`
   mengarahkan non-admin ke `/asisten`.
 
@@ -452,6 +459,8 @@ Latar:
   tinggi 60, padding item 10, ikon 18, label 11/16. Indikator juga berada di
   dalam wrapper baris tab dan mengisi tingginya, bukan dihitung dari border bar.
 - Detail sesi berada di `/praktikan/sesi/[id]`, di luar tab.
+- Perpindahan tab memakai spec dan interpolator yang sama dengan Asisten,
+  sehingga arah geser mengikuti urutan Jadwal, Riwayat, Profil.
 
 ### 7.3 Auth dan admin
 
@@ -464,7 +473,9 @@ Latar:
   perubahan role. Halaman ini ikut preferensi terang/gelap pengguna.
 - Kartu pengguna menaruh nama di kiri dan kelompok badge di kanan dengan
   `alignItems: flex-start`; nama membungkus bila panjang.
-- Semua transisi memakai `animation: 'slide_from_right'`.
+- Stack luar (auth, grup role, dan detail sesi) memakai
+  `animation: 'slide_from_right'`; perpindahan tab memakai interpolator geser
+  penuh yang mengikuti urutan tab.
 
 ## 8. Pola komponen
 
@@ -548,8 +559,9 @@ sehingga seluruh halaman ikut berubah tanpa mengubah komponen pemanggil. Mode
 
 Halaman Profil punya baris **Tema** di bagian TAMPILAN: label "Tema" di kiri
 dan `PemilihTema` di kanan, di dalam kartu berbentuk pil (radius 999, tinggi
-48). Pil memakai track padding 4, segmen 40 × 40, ikon 18, tanpa border, dan
-menempel ke tepi kanan kartu; area sentuh diperluas `hitSlop` 4. Segmen aktif
+56). Pil memakai track padding 4, segmen 40 × 40, ikon 18, tanpa border, dan
+berjarak 4 px dari tepi kanan, atas, serta bawah kartu; area sentuh diperluas
+`hitSlop` 4. Segmen aktif
 memakai `isiAksen` dengan ikon `diAtasAksen`; segmen lain memakai
 `teksSekunder`. Tidak ada keterangan teks di bawah kontrol; maknanya dijaga
 `accessibilityRole="radiogroup"` dengan anak `radio` dan
@@ -670,6 +682,9 @@ Repo tidak punya test suite otomatis.
 | 15 Nov 2026 | Indikator bottom bar mengisi wrapper baris tab, menghapus selisih akibat border pada navigasi Asisten dan Praktikan |
 | 15 Nov 2026 | Kartu Tema menjadi pil dengan pemilih 40 px yang menempel ke tepi kanan |
 | 15 Nov 2026 | ConfirmModal menutup lewat ketukan di luar kartu; tombol Batal memakai `primaryLight` + `primary` |
+| 15 Nov 2026 | Pemilih tema diberi jarak 4 px dari tepi kartu; tombol konfirmasi keluar menjadi "Ya" |
+| 15 Nov 2026 | Grup tab Asisten pindah dari Stack ke Tabs; transisi tab Asisten dan Praktikan mengikuti arah urutan tab |
+| 15 Nov 2026 | Teks aksi admin memakai "Jadikan Asisten"/"Jadikan Praktikan"; aksi sesi berupa tautan tanpa latar |
 | 15 Nov 2026 | Palet gelap Asisten/admin lewat `useAssistantTheme`; seluruh halaman mengikuti preferensi terang/gelap |
 
 Perbaikan kontras 14 November 2026:
