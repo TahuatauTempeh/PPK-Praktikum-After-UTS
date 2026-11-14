@@ -5,7 +5,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { useSession } from '@/context/session-context';
 import { Hero } from '@/screens/praktikan/components/hero';
@@ -15,10 +15,8 @@ import { SesiCard } from '@/screens/praktikan/components/sesi-card';
 import { useUserPraktikan } from '@/screens/praktikan/guard';
 import { bukaDetailSesi, bukaJadwal } from '@/screens/praktikan/navigasi';
 import { ringkasRiwayat } from '@/screens/praktikan/selectors';
-import { typography, useTheme } from '@/theme';
 
 export default function RiwayatScreen() {
-  const theme = useTheme();
   const currentUser = useUserPraktikan();
   const { sessions, attendance } = useSession().state;
 
@@ -40,13 +38,6 @@ export default function RiwayatScreen() {
           { nilai: ringkas.kehadiran === null ? '-' : `${ringkas.kehadiran}%`, label: 'Kehadiran' },
         ]}
       />
-
-      <View style={styles.judulBaris}>
-        <Text accessibilityRole="header" style={[typography.sectionHeading, { color: theme.colors.textPrimary }]}>
-          Catatan per sesi
-        </Text>
-        <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>Terbaru lebih dulu</Text>
-      </View>
 
       <View style={styles.daftar}>
         {ringkas.baris.map(({ session, record }) => (
@@ -71,6 +62,5 @@ export default function RiwayatScreen() {
 }
 
 const styles = StyleSheet.create({
-  judulBaris: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 8 },
   daftar: { gap: 14 },
 });
