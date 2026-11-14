@@ -17,9 +17,6 @@ export default function PraktikanLayout() {
     <Tabs
       tabBar={(props) => <NavigasiPraktikan {...props} />}
       screenOptions={{
-        headerStyle: { backgroundColor: theme.background },
-        headerTintColor: theme.text,
-        headerTitleStyle: { fontWeight: '700' },
         tabBarStyle: {
           backgroundColor: theme.background,
           borderTopColor: theme.border,
@@ -49,6 +46,7 @@ export default function PraktikanLayout() {
         name="profil"
         options={{
           title: 'Profil',
+          headerShown: false,
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>👤</Text>,
         }}
       />
