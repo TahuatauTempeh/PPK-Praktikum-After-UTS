@@ -73,10 +73,9 @@ export function ScheduleCard({ session, attendance, onManage }: {
         accessibilityHint={!onManage ? 'Pengelolaan sesi belum tersedia.' : undefined}
         disabled={!onManage}
         onPress={() => onManage?.(session.id)}
-        style={({ pressed }) => [styles.action, open && styles.openAction, !open && styles.plainAction, !onManage && styles.disabled, pressed && styles.pressed]}>
-        <AssistantText style={[styles.actionText, open && styles.white]}>{open ? 'Pantau presensi' : 'Kelola sesi'}</AssistantText>
-        <ScheduleIcon name={open ? 'arrowWhite' : 'arrow'} size={18}
-          tintColor={open ? undefined : theme.colors.iconPrimary} />
+        style={({ pressed }) => [styles.action, !onManage && styles.disabled, pressed && styles.pressed]}>
+        <AssistantText style={styles.actionText}>{open ? 'Pantau presensi' : 'Kelola sesi'}</AssistantText>
+        <ScheduleIcon name="arrow" size={18} tintColor={theme.colors.iconPrimary} />
       </Pressable>
     </View>
   );
@@ -107,12 +106,8 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
   progressTrack: { height: 5, borderRadius: 3, backgroundColor: theme.colors.softSurface, overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: 3, backgroundColor: theme.colors.primaryFill },
   closedProgress: { backgroundColor: theme.colors.textSecondary },
-  action: { minHeight: 46, paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'space-between', borderRadius: 21, backgroundColor: theme.colors.softSurface },
-  openAction: { backgroundColor: theme.colors.primaryFill },
-  // sesi tertutup/pending: aksi jadi tautan tanpa latar, teks sejajar isi panel
-  plainAction: { backgroundColor: 'transparent' },
+  action: { minHeight: 46, paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'space-between', borderRadius: 21 },
   actionText: { fontSize: 12, lineHeight: 18, fontFamily: assistantTokens.fonts.semibold, color: theme.colors.primary, flexShrink: 1 },
-  white: { color: theme.colors.onPrimary },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.75 },
 });

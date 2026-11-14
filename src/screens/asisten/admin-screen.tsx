@@ -331,8 +331,8 @@ export function AdminScreen() {
                         accessibilityRole="button"
                         accessibilityLabel={
                           asisten
-                            ? `Kembalikan ${item.name} ke praktikan`
-                            : `Jadikan ${item.name} sebagai asisten`
+                            ? `Jadikan ${item.name} sebagai Praktikan`
+                            : `Jadikan ${item.name} sebagai Asisten`
                         }
                         accessibilityState={{ disabled: pending }}
                         disabled={pending}
@@ -361,7 +361,7 @@ export function AdminScreen() {
                             },
                           ]}
                         >
-                          {asisten ? 'Kembalikan ke praktikan' : 'Jadikan asisten'}
+                          {asisten ? 'Jadikan Praktikan' : 'Jadikan Asisten'}
                         </AssistantText>
                       </Pressable>
                     ) : null}

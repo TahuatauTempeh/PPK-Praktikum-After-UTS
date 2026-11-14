@@ -20,7 +20,7 @@ export function AdminRoleConfirmation({ target, onCancel, onConfirm }: Props) {
   const styles = useAssistantStyles(gaya);
   const cancelRef = useRef<ComponentRef<typeof Pressable>>(null);
   const promoting = target.role === 'praktikan';
-  const title = promoting ? 'Jadikan asisten?' : 'Kembalikan ke praktikan?';
+  const title = promoting ? 'Jadikan Asisten?' : 'Jadikan Praktikan?';
 
   return (
     <AssistantSheet onCancel={onCancel} onShow={() => cancelRef.current?.focus()}>
@@ -54,8 +54,8 @@ export function AdminRoleConfirmation({ target, onCancel, onConfirm }: Props) {
               accessibilityRole="button"
               accessibilityLabel={
                 promoting
-                  ? `Jadikan ${target.name} sebagai asisten`
-                  : `Kembalikan ${target.name} ke praktikan`
+                  ? `Jadikan ${target.name} sebagai Asisten`
+                  : `Jadikan ${target.name} sebagai Praktikan`
               }
               onPress={() => closeSheet(onConfirm)}
               style={({ pressed }) => [
@@ -65,7 +65,7 @@ export function AdminRoleConfirmation({ target, onCancel, onConfirm }: Props) {
               ]}
             >
               <AssistantText variant="label" style={styles.white}>
-                {promoting ? 'Ya, jadikan asisten' : 'Ya, kembalikan'}
+                {promoting ? 'Ya, jadikan Asisten' : 'Ya, jadikan Praktikan'}
               </AssistantText>
             </Pressable>
 
