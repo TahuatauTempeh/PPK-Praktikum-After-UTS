@@ -1,8 +1,9 @@
-import { router, Stack, usePathname } from 'expo-router';
+import { router, Tabs, usePathname } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { TAB_TRANSITION_SPEC, tabSlideInterpolator } from '@/constants/tab-transition';
 import { useAuth } from '@/context/auth-context';
 import { AssistantNavigation, type AssistantTab } from '@/screens/asisten/components/assistant-navigation';
 import { useAssistantTheme } from '@/screens/asisten/theme';
@@ -19,6 +20,7 @@ export default function TabsLayout() {
   const theme = useAssistantTheme();
   const { profile } = useAuth();
   const barTheme = usePraktikanTheme();
+  const { width } = useWindowDimensions();
   const showAdmin = profile?.isAdmin === true;
   const pathname = usePathname();
   const current = tabFromPath(pathname);
@@ -34,15 +36,25 @@ export default function TabsLayout() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: barTheme.dasarNav }]}>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.background } }} />
-      <SafeAreaView edges={['bottom', 'left', 'right']} style={{ backgroundColor: barTheme.dasarNav }}>
-        <AssistantNavigation active={active} showAdmin={showAdmin} onNavigate={goTo} />
-      </SafeAreaView>
-    </View>
+    <Tabs
+      backBehavior="history"
+      tabBar={() => (
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={{ backgroundColor: barTheme.dasarNav }}>
+          <AssistantNavigation active={active} showAdmin={showAdmin} onNavigate={goTo} />
+        </SafeAreaView>
+      )}
+      screenOptions={{
+        headerShown: false,
+        sceneStyle: { backgroundColor: theme.colors.background },
+        transitionSpec: TAB_TRANSITION_SPEC,
+        sceneStyleInterpolator: tabSlideInterpolator(width),
+      }}
+    >
+      <Tabs.Screen name="index" />
+      <Tabs.Screen name="jadwal" />
+      <Tabs.Screen name="rekap" />
+      <Tabs.Screen name="admin" />
+      <Tabs.Screen name="profil" />
+    </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-});

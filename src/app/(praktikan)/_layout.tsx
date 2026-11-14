@@ -5,18 +5,23 @@
 
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Text } from 'react-native';
+import { Text, useWindowDimensions } from 'react-native';
 
+import { TAB_TRANSITION_SPEC, tabSlideInterpolator } from '@/constants/tab-transition';
 import { useTheme } from '@/hooks/use-theme';
 import { NavigasiPraktikan } from '@/screens/praktikan/components/navigasi';
 
 export default function PraktikanLayout() {
   const theme = useTheme();
+  const { width } = useWindowDimensions();
 
   return (
     <Tabs
       tabBar={(props) => <NavigasiPraktikan {...props} />}
       screenOptions={{
+        sceneStyle: { backgroundColor: theme.background },
+        transitionSpec: TAB_TRANSITION_SPEC,
+        sceneStyleInterpolator: tabSlideInterpolator(width),
         tabBarStyle: {
           backgroundColor: theme.background,
           borderTopColor: theme.border,

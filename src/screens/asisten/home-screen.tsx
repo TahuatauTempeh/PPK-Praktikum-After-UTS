@@ -33,7 +33,7 @@ export function HomeScreen({ name, scheduleDate, sessions }: Props) {
         date={scheduleDate}
         sessions={sessions}
         showNextSession
-        onPress={() => router.push('/asisten/jadwal')}
+        onPress={() => router.navigate('/asisten/jadwal')}
       />
 
       <View style={styles.menuSection}>
@@ -50,7 +50,7 @@ export function HomeScreen({ name, scheduleDate, sessions }: Props) {
               <MenuBlock
                 title={item.title}
                 icon={item.icon}
-                onPress={() => router.push(item.href)}
+                onPress={() => router.navigate(item.href)}
               />
             </View>
           ))}

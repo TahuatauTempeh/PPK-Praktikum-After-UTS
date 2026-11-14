@@ -10,10 +10,7 @@ export default function RecapRoute() {
       initialSessionId={sesi}
       onSchedule={() => router.navigate('/asisten/jadwal')}
       onDetail={id => router.push({ pathname: '/asisten/sesi/[id]', params: { id } })}
-      onBack={() => {
-        if (router.canGoBack()) router.back();
-        else router.replace('/asisten');
-      }}
+      onBack={() => router.navigate('/asisten')}
     />
   );
 }

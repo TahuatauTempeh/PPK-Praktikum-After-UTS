@@ -11,10 +11,7 @@ export default function ScheduleRoute() {
       attendance={attendance}
       date={scheduleDate}
       onManage={id => router.push({ pathname: '/asisten/sesi/[id]', params: { id } })}
-      onBack={() => {
-        if (router.canGoBack()) router.back();
-        else router.replace('/asisten');
-      }}
+      onBack={() => router.navigate('/asisten')}
     />
   );
 }
