@@ -98,7 +98,7 @@ export default function ProfilScreen() {
             pressed && styles.ditekan,
           ]}
         >
-          <Text style={[Tipe.label, { color: appTheme.onDanger }]}>Keluar dari akun</Text>
+          <Text style={[Tipe.label, { color: appTheme.onDanger }]}>Keluar</Text>
           <Ikon nama="keluar" ukuran={18} warna={appTheme.onDanger} />
         </Pressable>
       </Layar>
@@ -107,7 +107,7 @@ export default function ProfilScreen() {
         visible={konfirmasi}
         title="Keluar?"
         message="Anda akan keluar dari akun ini."
-        confirmText="Ya, Keluar"
+        confirmText="Ya"
         cancelText="Batal"
         confirmColor="danger"
         onConfirm={() => {
@@ -154,6 +154,8 @@ const styles = StyleSheet.create({
   kartuTema: {
     paddingHorizontal: 0,
     paddingLeft: 16,
+    paddingRight: 4,
+    paddingVertical: 4,
     borderRadius: 999,
   },
   keluar: {
