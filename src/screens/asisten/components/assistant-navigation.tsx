@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Platform, Pressable, StyleSheet, View } from 'react-native';
 
+import { INDICATOR_SLIDE } from '@/constants/tab-transition';
 import { tokens, useTheme } from '@/theme';
 import { AssistantText } from './assistant-text';
 import { ScheduleIcon, type ScheduleIconName } from './schedule-icon';
@@ -12,7 +13,6 @@ type Props = { active: AssistantTab; showAdmin: boolean; onNavigate: (tab: Assis
 const navigationRadius = tokens.radius.panel;
 const navigationPadding = 6;
 const tabRadius = navigationRadius - navigationPadding;
-const indicatorSlide = { duration: 240, easing: Easing.out(Easing.cubic) };
 const LABEL: Record<AssistantTab, string> = { asisten: 'Asisten', admin: 'Admin', profile: 'Profil' };
 
 const iconFor = (tab: AssistantTab, selected: boolean): ScheduleIconName => {
@@ -39,7 +39,7 @@ export function AssistantNavigation({ active, showAdmin, onNavigate }: Props) {
       return;
     }
     const animation = Animated.timing(offset, {
-      toValue: target, ...indicatorSlide, useNativeDriver: Platform.OS !== 'web',
+      toValue: target, ...INDICATOR_SLIDE, useNativeDriver: Platform.OS !== 'web',
     });
     animation.start();
     return () => animation.stop();

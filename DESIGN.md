@@ -552,9 +552,10 @@ Halaman Profil punya baris **Tema** di bagian TAMPILAN: label "Tema" di kiri
 dan `PemilihTema` di kanan, di dalam kartu berbentuk pil (radius 999, tinggi
 56). Pil memakai track padding 4, segmen 40 × 40, ikon 18, tanpa border, dan
 berjarak 4 px dari tepi kanan, atas, serta bawah kartu; area sentuh diperluas
-`hitSlop` 4. Segmen aktif
-memakai `primaryFill` dengan ikon `onPrimary`; segmen lain memakai
-`textSecondary`. Tidak ada keterangan teks di bawah kontrol; maknanya dijaga
+`hitSlop` 4. Segmen aktif ditandai satu indikator `primaryFill` 40 × 40 yang bergeser di
+belakang ikon memakai `INDICATOR_SLIDE` (240 ms, `Easing.out(Easing.cubic)`),
+durasi dan easing yang sama dengan indikator bottom tab. Ikon aktif memakai
+`onPrimary`; ikon lain memakai `textSecondary`. Tidak ada keterangan teks di bawah kontrol; maknanya dijaga
 `accessibilityRole="radiogroup"` dengan anak `radio` dan
 `accessibilityState.checked`.
 
@@ -686,6 +687,7 @@ Repo tidak punya test suite otomatis.
 | 15 Nov 2026 | `use-color-scheme.web.ts` dihapus karena identik setelah hidrasi pindah ke `use-device-color-scheme.web.ts` |
 | 15 Nov 2026 | Empat komponen bersama tanpa pemakai dihapus: `EmptyState`, `ScreenState`, `SessionCard`, `StatusBadge` |
 | 15 Nov 2026 | Spacing kartu beraksi diseragamkan: bingkai 18, jarak ke aksi 16, aksi 48/21/16 berlatar, berlaku di `SesiBerlangsung`, `SesiCard`, `ScheduleCard`, `RecapCard`, dan kartu admin |
+| 15 Nov 2026 | Pemilih tema memakai indikator geser 240 ms yang sama dengan bottom tab; `INDICATOR_SLIDE` dipakai bersama ketiganya |
 
 Perbaikan kontras 14 November 2026:
 

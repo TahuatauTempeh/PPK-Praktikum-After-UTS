@@ -5,8 +5,9 @@
 
 import { router, Tabs } from 'expo-router';
 import React, { ComponentProps, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { INDICATOR_SLIDE } from '@/constants/tab-transition';
 import { Ikon, IkonNama } from '@/screens/praktikan/components/ikon';
 import { fonts, typography, useTheme } from '@/theme';
 
@@ -48,8 +49,7 @@ export function NavigasiPraktikan({ state, emitter, insets }: TabBarProps) {
     }
     const animasi = Animated.timing(geser, {
       toValue: tujuan,
-      duration: 240,
-      easing: Easing.out(Easing.cubic),
+      ...INDICATOR_SLIDE,
       useNativeDriver: Platform.OS !== 'web',
     });
     animasi.start();
