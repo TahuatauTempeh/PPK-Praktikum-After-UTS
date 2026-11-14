@@ -1,1 +1,1 @@
-export { default } from '@/screens/praktikan/profil-screen';
+export { default } from '@/screens/shared/profil-screen';

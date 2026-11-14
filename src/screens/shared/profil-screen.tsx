@@ -1,6 +1,7 @@
 /**
- * Profil Praktikan: kartu identitas, email akun, dan keluar (UC-12).
- * Memakai kerangka Layar dan token praktikan supaya satu bahasa dengan Jadwal dan Riwayat.
+ * Profil pengguna: kartu identitas, email akun, dan keluar (UC-12).
+ * Satu layar untuk praktikan dan asisten; bahasa visualnya mengikuti sisi praktikan
+ * supaya kedua role melihat halaman yang sama.
  */
 
 import React, { useState } from 'react';
@@ -11,8 +12,8 @@ import { LoadingState } from '@/components/LoadingState';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 import { Ikon } from '@/screens/praktikan/components/ikon';
-import { KartuProfil } from '@/screens/praktikan/components/kartu-profil';
 import { Layar } from '@/screens/praktikan/components/layar';
+import { KartuProfil } from '@/screens/shared/components/kartu-profil';
 import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
 
 function BarisInfo({ label, nilai }: { label: string; nilai: string }) {

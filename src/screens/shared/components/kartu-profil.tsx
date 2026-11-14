@@ -1,6 +1,7 @@
 /**
- * KartuProfil: kartu identitas praktikan di puncak halaman Profil.
- * Isinya terpusat: kotak ikon user, nama, NIM, dan badge peran di atas kaca biru gelap.
+ * KartuProfil: kartu identitas pengguna di puncak halaman Profil.
+ * Dipakai bersama oleh praktikan dan asisten; isinya terpusat: kotak ikon user,
+ * nama, nomor identitas, dan badge peran di atas kaca biru gelap.
  */
 
 import React from 'react';
