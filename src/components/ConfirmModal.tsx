@@ -47,6 +47,11 @@ export function ConfirmModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.overlay}>
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onCancel}
+          accessible={false}
+        />
         <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
           <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
           <Text style={[styles.message, { color: theme.textSecondary }]}>{message}</Text>
@@ -57,10 +62,10 @@ export function ConfirmModal({
               style={({ pressed }) => [
                 styles.button,
                 styles.cancelButton,
-                { backgroundColor: theme.backgroundElement, opacity: pressed ? 0.8 : 1 },
+                { backgroundColor: theme.primaryLight, opacity: pressed ? 0.8 : 1 },
               ]}
             >
-              <Text style={[styles.buttonText, { color: theme.text }]}>{cancelText}</Text>
+              <Text style={[styles.buttonText, { color: theme.primary }]}>{cancelText}</Text>
             </Pressable>
 
             <Pressable
