@@ -1,6 +1,11 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { assistantTheme as theme } from '../theme';
+import {
+  assistantTokens,
+  useAssistantStyles,
+  useAssistantTheme,
+  type AssistantTheme,
+} from '../theme';
 import { AssistantText } from './assistant-text';
 import { ScheduleIcon, type ScheduleIconName } from './schedule-icon';
 
@@ -8,6 +13,9 @@ type Props = { title: string; icon: ScheduleIconName; onPress: () => void };
 
 /** Block menu hub Asisten: ikon dalam lingkaran dan nama menu, tanpa elemen lain. */
 export function MenuBlock({ title, icon, onPress }: Props) {
+  const theme = useAssistantTheme();
+  const styles = useAssistantStyles(gaya);
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -16,7 +24,7 @@ export function MenuBlock({ title, icon, onPress }: Props) {
       style={({ pressed }) => [styles.block, pressed && styles.pressed]}
     >
       <View style={styles.iconCircle}>
-        <ScheduleIcon name={icon} size={20} />
+        <ScheduleIcon name={icon} size={20} tintColor={theme.colors.iconPrimary} />
       </View>
       <AssistantText style={styles.label} numberOfLines={2}>
         {title}
@@ -25,7 +33,7 @@ export function MenuBlock({ title, icon, onPress }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const gaya = (theme: AssistantTheme) => StyleSheet.create({
   block: {
     width: '100%',
     minHeight: 104,
@@ -33,24 +41,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     padding: 12,
-    backgroundColor: 'rgba(255,255,255,0.72)',
+    backgroundColor: theme.colors.glassCard,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.95)',
-    borderRadius: theme.radius.block,
-    boxShadow: '0 8px 28px rgba(30,65,125,0.07)',
+    borderColor: theme.colors.glassBorder,
+    borderRadius: assistantTokens.radius.block,
+    boxShadow: theme.colors.shadow,
   },
   iconCircle: {
     width: 40,
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.radius.pill,
+    borderRadius: assistantTokens.radius.pill,
     backgroundColor: theme.colors.primarySoft,
   },
   label: {
     fontSize: 12.5,
     lineHeight: 16,
-    fontFamily: theme.fonts.semibold,
+    fontFamily: assistantTokens.fonts.semibold,
     textAlign: 'center',
   },
   pressed: { opacity: 0.72 },

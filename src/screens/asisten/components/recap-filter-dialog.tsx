@@ -5,7 +5,11 @@ import { AssistantSheet, type CloseSheet } from './assistant-sheet';
 import { type DateRange, isValidDate, monthRange } from '../recap-data';
 import { type AssistantSession, previewDate } from '../schedule-data';
 import { formatPraktikumName, formatSessionDate } from '../session-format';
-import { assistantTheme as theme } from '../theme';
+import {
+  assistantTokens,
+  useAssistantStyles,
+  type AssistantTheme,
+} from '../theme';
 import { AssistantText } from './assistant-text';
 
 type Props = {
@@ -18,6 +22,7 @@ type Props = {
   onCancel: () => void;
 };
 export function RecapFilterDialog({ kind, range, selectedId, sessions, onRange, onSelect, onCancel }: Props) {
+  const styles = useAssistantStyles(gaya);
   const defaults = range ?? monthRange(previewDate);
   const [start, setStart] = useState(defaults.start);
   const [end, setEnd] = useState(defaults.end);
@@ -86,19 +91,19 @@ export function RecapFilterDialog({ kind, range, selectedId, sessions, onRange, 
     </AssistantSheet>
   );
 }
-const styles = StyleSheet.create({
+const gaya = (theme: AssistantTheme) => StyleSheet.create({
   dialog: { width: '100%', backgroundColor: 'transparent', padding: 24, gap: 16 },
-  title: { fontFamily: theme.fonts.bold, fontSize: 23, lineHeight: 30 },
+  title: { fontFamily: assistantTokens.fonts.bold, fontSize: 23, lineHeight: 30 },
   field: { gap: 7 },
-  bold: { fontFamily: theme.fonts.semibold },
-  input: { backgroundColor: theme.colors.glassSurface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.control, minHeight: 48, padding: 12, fontSize: 16, color: theme.colors.textPrimary, fontFamily: theme.fonts.regular },
+  bold: { fontFamily: assistantTokens.fonts.semibold },
+  input: { backgroundColor: theme.colors.glassSurface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: assistantTokens.radius.control, minHeight: 48, padding: 12, fontSize: 16, color: theme.colors.textPrimary, fontFamily: assistantTokens.fonts.regular },
   invalid: { borderColor: theme.colors.error },
   error: { fontSize: 12, lineHeight: 18, color: theme.colors.error },
-  button: { backgroundColor: theme.colors.glassSurface, alignItems: 'center', justifyContent: 'center', minHeight: 48, padding: 12, borderRadius: theme.radius.control, borderWidth: 1, borderColor: theme.colors.border },
-  primary: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
-  white: { color: theme.colors.surface },
+  button: { backgroundColor: theme.colors.glassSurface, alignItems: 'center', justifyContent: 'center', minHeight: 48, padding: 12, borderRadius: assistantTokens.radius.control, borderWidth: 1, borderColor: theme.colors.border },
+  primary: { backgroundColor: theme.colors.primaryFill, borderColor: theme.colors.primaryFill },
+  white: { color: theme.colors.onPrimary },
   options: { gap: 10 },
-  option: { minHeight: 48, padding: 16, backgroundColor: theme.colors.glassSurface, gap: 5, justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.control },
+  option: { minHeight: 48, padding: 16, backgroundColor: theme.colors.glassSurface, gap: 5, justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border, borderRadius: assistantTokens.radius.control },
   selected: { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.primary },
   pressed: { opacity: 0.7 },
 });

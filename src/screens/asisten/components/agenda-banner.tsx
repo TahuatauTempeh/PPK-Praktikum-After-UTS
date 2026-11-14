@@ -2,7 +2,12 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { HeroCard } from '@/screens/shared/components/hero-card';
 
-import { assistantTheme as theme } from '../theme';
+import {
+  assistantTokens,
+  useAssistantStyles,
+  useAssistantTheme,
+  type AssistantTheme,
+} from '../theme';
 import { formatPraktikumName } from '../session-format';
 import { type AssistantSession } from '../schedule-data';
 import { AssistantText } from './assistant-text';
@@ -23,6 +28,8 @@ type Props = {
 export function AgendaBanner({
   date, sessions, onPress, ctaLabel = 'Lihat jadwal', showNextSession = false,
 }: Props) {
+  const theme = useAssistantTheme();
+  const styles = useAssistantStyles(gaya);
   const daySessions = sessions
     .filter(session => session.date === date)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -114,34 +121,34 @@ export function AgendaBanner({
   );
 }
 
-const styles = StyleSheet.create({
+const gaya = (theme: AssistantTheme) => StyleSheet.create({
   bannerHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   bannerEyebrow: {
     fontSize: 10,
     lineHeight: 16,
     letterSpacing: 1.8,
-    fontFamily: theme.fonts.semibold,
-    color: '#EDF3FF',
+    fontFamily: assistantTokens.fonts.semibold,
+    color: theme.colors.heroSoft,
   },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 14, flexWrap: 'wrap' },
   day: {
     fontSize: 58,
     lineHeight: 64,
     letterSpacing: -3,
-    fontFamily: theme.fonts.bold,
+    fontFamily: assistantTokens.fonts.bold,
     color: theme.colors.surface,
     fontVariant: ['tabular-nums'],
   },
   dateDetails: { gap: 3, flex: 1, minWidth: 100 },
-  weekday: { fontSize: 21, lineHeight: 28, fontFamily: theme.fonts.semibold, color: theme.colors.surface },
-  month: { fontSize: 13, lineHeight: 20, color: '#EDF3FF' },
+  weekday: { fontSize: 21, lineHeight: 28, fontFamily: assistantTokens.fonts.semibold, color: theme.colors.surface },
+  month: { fontSize: 13, lineHeight: 20, color: theme.colors.heroSoft },
   todayBadge: {
     paddingHorizontal: 10,
     paddingVertical: 5,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.heroWash,
+    borderRadius: assistantTokens.radius.pill,
   },
-  todayLabel: { color: theme.colors.surface, fontSize: 11, lineHeight: 16, fontFamily: theme.fonts.semibold },
+  todayLabel: { color: theme.colors.surface, fontSize: 11, lineHeight: 16, fontFamily: assistantTokens.fonts.semibold },
   bannerFooter: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -150,15 +157,15 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.16)',
+    borderTopColor: theme.colors.heroLine,
   },
-  sessionSummary: { fontSize: 12, lineHeight: 18, fontFamily: theme.fonts.medium, color: theme.colors.surface },
+  sessionSummary: { fontSize: 12, lineHeight: 18, fontFamily: assistantTokens.fonts.medium, color: theme.colors.surface },
   openSummary: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#DDF59A' },
-  openLabel: { fontSize: 12, lineHeight: 18, color: '#FFFFFF' },
-  divider: { height: 1, marginTop: 7, backgroundColor: 'rgba(255,255,255,0.18)' },
-  nextSession: { fontSize: 12, lineHeight: 16, color: 'rgba(255,255,255,0.8)' },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.lime },
+  openLabel: { fontSize: 12, lineHeight: 18, color: theme.colors.surface },
+  divider: { height: 1, marginTop: 7, backgroundColor: theme.colors.heroLine },
+  nextSession: { fontSize: 12, lineHeight: 16, color: theme.colors.heroMuted },
   cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 3 },
-  ctaLabel: { fontSize: 13, lineHeight: 18, fontFamily: theme.fonts.semibold, color: theme.colors.surface },
+  ctaLabel: { fontSize: 13, lineHeight: 18, fontFamily: assistantTokens.fonts.semibold, color: theme.colors.surface },
   pressed: { opacity: 0.78 },
 });

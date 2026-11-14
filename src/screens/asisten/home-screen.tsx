@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
-import { assistantTheme as theme } from './theme';
+import { assistantTokens, useAssistantStyles, type AssistantTheme } from './theme';
 import { AgendaBanner } from './components/agenda-banner';
 import { AssistantScreen } from './components/assistant-screen';
 import { AssistantText } from './components/assistant-text';
@@ -20,6 +20,7 @@ const menuGap = 10;
 
 /** Hub Asisten: sapaan, agenda hari aktif, dan menu Jadwal/Rekap. */
 export function HomeScreen({ name, scheduleDate, sessions }: Props) {
+  const styles = useAssistantStyles(gaya);
   const firstName = name.trim().split(/\s+/)[0] || name;
 
   return (
@@ -59,14 +60,14 @@ export function HomeScreen({ name, scheduleDate, sessions }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const gaya = (theme: AssistantTheme) => StyleSheet.create({
   pageTitle: { color: theme.colors.surface },
   menuSection: { gap: 12, marginTop: 6 },
   eyebrow: {
     fontSize: 10,
     lineHeight: 16,
     letterSpacing: 1.4,
-    fontFamily: theme.fonts.semibold,
+    fontFamily: assistantTokens.fonts.semibold,
     color: theme.colors.textSecondary,
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -(menuGap / 2) },

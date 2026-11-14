@@ -29,7 +29,12 @@ import { AdminRoleConfirmation } from './components/admin-role-confirmation';
 import { AssistantSurface } from './components/assistant-screen';
 import { AssistantText } from './components/assistant-text';
 import { ScheduleIcon } from './components/schedule-icon';
-import { assistantTheme as theme } from './theme';
+import {
+  assistantTokens,
+  useAssistantStyles,
+  useAssistantTheme,
+  type AssistantTheme,
+} from './theme';
 
 type Filter = 'all' | Role;
 
@@ -41,6 +46,8 @@ const filters: readonly { value: Filter; label: string }[] = [
 
 /** Kelola pengguna: pencarian, filter peran, dan perubahan role oleh admin. */
 export function AdminScreen() {
+  const theme = useAssistantTheme();
+  const styles = useAssistantStyles(gaya);
   const { profile } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -249,7 +256,7 @@ export function AdminScreen() {
     ) : (
       <View style={styles.empty}>
         <View style={styles.emptyIcon}>
-          <ScheduleIcon name="usersPrimary" size={34} />
+          <ScheduleIcon name="usersPrimary" size={34} tintColor={theme.colors.primary} />
         </View>
         <AssistantText style={styles.emptyTitle} accessibilityRole="header">
           Tidak ada pengguna
@@ -301,7 +308,7 @@ export function AdminScreen() {
                           {item.isAdmin ? (
                             <View style={[styles.badge, { backgroundColor: theme.colors.lime }]}>
                               <AssistantText
-                                style={[styles.badgeText, { color: theme.colors.textPrimary }]}
+                                style={[styles.badgeText, { color: theme.colors.onLime }]}
                               >
                                 Admin
                               </AssistantText>
@@ -381,15 +388,15 @@ export function AdminScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const gaya = (theme: AssistantTheme) => StyleSheet.create({
   screen: { flex: 1 },
   frame: { flex: 1, width: '100%', maxWidth: 600, alignSelf: 'center' },
   listFlex: { flex: 1 },
   list: {
     flexGrow: 1,
-    paddingHorizontal: theme.spacing.page,
+    paddingHorizontal: assistantTokens.spacing.page,
     paddingTop: 14,
-    paddingBottom: theme.spacing.page,
+    paddingBottom: assistantTokens.spacing.page,
     gap: 14,
   },
   headerBlock: { gap: 14 },
@@ -397,8 +404,8 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 16,
     letterSpacing: 1.6,
-    fontFamily: theme.fonts.semibold,
-    color: '#EDF3FF',
+    fontFamily: assistantTokens.fonts.semibold,
+    color: theme.colors.heroSoft,
   },
   heroTitle: {
     fontSize: 28,
@@ -412,23 +419,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.2)',
+    borderTopColor: theme.colors.heroLine,
   },
   metric: { flex: 1, minWidth: 60, gap: 5, paddingHorizontal: 8, paddingVertical: 4 },
   metricDivider: {
     marginRight: 8,
     borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.2)',
+    borderRightColor: theme.colors.heroLine,
   },
   metricValue: {
     fontSize: 20,
     lineHeight: 28,
-    fontFamily: theme.fonts.bold,
+    fontFamily: assistantTokens.fonts.bold,
     color: theme.colors.surface,
     letterSpacing: -0.7,
     fontVariant: ['tabular-nums'],
   },
-  metricLabel: { fontSize: 10, lineHeight: 16, color: '#EDF3FF' },
+  metricLabel: { fontSize: 10, lineHeight: 16, color: theme.colors.heroSoft },
   controls: { gap: 10 },
   search: {
     minHeight: 48,
@@ -437,9 +444,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.glassSurface,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    borderRadius: theme.radius.control,
+    borderRadius: assistantTokens.radius.control,
     color: theme.colors.textPrimary,
-    fontFamily: theme.fonts.regular,
+    fontFamily: assistantTokens.fonts.regular,
     fontSize: 14,
   },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -450,33 +457,33 @@ const styles = StyleSheet.create({
     gap: 7,
     paddingHorizontal: 13,
     paddingVertical: 8,
-    backgroundColor: 'rgba(255,255,255,0.6)',
+    backgroundColor: theme.colors.glassMuted,
     borderWidth: 1,
     borderColor: theme.colors.glassBorder,
-    borderRadius: theme.radius.pill,
+    borderRadius: assistantTokens.radius.pill,
   },
   filterActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primaryFill,
+    borderColor: theme.colors.primaryFill,
   },
   filterLabel: {
     fontSize: 12,
     lineHeight: 18,
-    fontFamily: theme.fonts.semibold,
+    fontFamily: assistantTokens.fonts.semibold,
     color: theme.colors.textSecondary,
   },
-  filterLabelActive: { color: theme.colors.surface },
+  filterLabelActive: { color: theme.colors.onPrimary },
   filterCount: {
     fontSize: 10,
     lineHeight: 16,
-    fontFamily: theme.fonts.semibold,
+    fontFamily: assistantTokens.fonts.semibold,
     color: theme.colors.textSecondary,
   },
-  filterCountActive: { color: '#D5E3FF' },
+  filterCountActive: { color: theme.colors.onPrimarySoft },
   actionError: {
     fontSize: 12,
     lineHeight: 18,
-    fontFamily: theme.fonts.medium,
+    fontFamily: assistantTokens.fonts.medium,
     color: theme.colors.error,
   },
   card: {
@@ -485,8 +492,8 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.glassSurface,
     borderWidth: 1,
     borderColor: theme.colors.glassBorder,
-    borderRadius: theme.radius.card,
-    boxShadow: '0 8px 28px rgba(30,65,125,0.07)',
+    borderRadius: assistantTokens.radius.card,
+    boxShadow: theme.colors.shadow,
   },
   cardInfo: { gap: 5 },
   nameRow: {
@@ -500,7 +507,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
     fontSize: 15,
     lineHeight: 20,
-    fontFamily: theme.fonts.bold,
+    fontFamily: assistantTokens.fonts.bold,
     letterSpacing: -0.2,
   },
   badges: {
@@ -514,12 +521,12 @@ const styles = StyleSheet.create({
   badge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: theme.radius.pill,
+    borderRadius: assistantTokens.radius.pill,
   },
   badgeText: {
     fontSize: 10,
     lineHeight: 15,
-    fontFamily: theme.fonts.semibold,
+    fontFamily: assistantTokens.fonts.semibold,
   },
   meta: { fontSize: 11, lineHeight: 16 },
   action: {
@@ -528,12 +535,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 14,
     paddingVertical: 11,
-    borderRadius: theme.radius.button,
+    borderRadius: assistantTokens.radius.button,
   },
   actionText: {
     fontSize: 12,
     lineHeight: 18,
-    fontFamily: theme.fonts.semibold,
+    fontFamily: assistantTokens.fonts.semibold,
   },
   state: {
     alignItems: 'center',
@@ -544,7 +551,7 @@ const styles = StyleSheet.create({
   stateTitle: {
     fontSize: 18,
     lineHeight: 24,
-    fontFamily: theme.fonts.bold,
+    fontFamily: assistantTokens.fonts.bold,
     textAlign: 'center',
   },
   center: { textAlign: 'center' },
@@ -554,10 +561,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 18,
     paddingVertical: 12,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.control,
+    backgroundColor: theme.colors.primaryFill,
+    borderRadius: assistantTokens.radius.control,
   },
-  white: { color: theme.colors.surface },
+  white: { color: theme.colors.onPrimary },
   empty: {
     alignItems: 'center',
     gap: 16,
@@ -569,13 +576,13 @@ const styles = StyleSheet.create({
     height: 84,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.radius.panel,
-    backgroundColor: 'rgba(255,255,255,0.65)',
+    borderRadius: assistantTokens.radius.panel,
+    backgroundColor: theme.colors.glassMuted,
   },
   emptyTitle: {
     fontSize: 20,
     lineHeight: 27,
-    fontFamily: theme.fonts.bold,
+    fontFamily: assistantTokens.fonts.bold,
     textAlign: 'center',
   },
   pressed: { opacity: 0.75 },

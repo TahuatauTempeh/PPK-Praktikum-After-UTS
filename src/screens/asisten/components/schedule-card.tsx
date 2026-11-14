@@ -2,7 +2,12 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { type AssistantSession, type AssistantAttendance, countAttendance, statusLabels } from '../schedule-data';
 import { formatPraktikumName } from '../session-format';
-import { assistantTheme as theme } from '../theme';
+import {
+  assistantTokens,
+  useAssistantStyles,
+  useAssistantTheme,
+  type AssistantTheme,
+} from '../theme';
 import { AssistantText } from './assistant-text';
 import { AssistantGlassHighlight } from './assistant-atmosphere';
 import { ScheduleIcon } from './schedule-icon';
@@ -12,6 +17,8 @@ export function ScheduleCard({ session, attendance, onManage }: {
   attendance: readonly AssistantAttendance[];
   onManage?: (id: string) => void;
 }) {
+  const theme = useAssistantTheme();
+  const styles = useAssistantStyles(gaya);
   const open = session.status === 'open';
   const pending = session.status === 'pending';
   const registered = new Set(session.participantIds).size;
@@ -24,11 +31,12 @@ export function ScheduleCard({ session, attendance, onManage }: {
       <View style={styles.content}>
         <View style={styles.topRow}>
           <View style={styles.timeRow}>
-            <ScheduleIcon name="clock" size={15} />
+            <ScheduleIcon name="clock" size={15} tintColor={theme.colors.iconMuted} />
             <AssistantText style={styles.time}>{session.startTime.replace(':', '.')}–{session.endTime.replace(':', '.')}</AssistantText>
           </View>
           <View style={[styles.badge, open && styles.openBadge]}>
-            <ScheduleIcon name={open ? 'dotOpen' : 'dotNeutral'} size={5} />
+            <ScheduleIcon name={open ? 'dotOpen' : 'dotNeutral'} size={5}
+              tintColor={open ? theme.colors.iconPrimary : theme.colors.iconMuted} />
             <AssistantText style={[styles.badgeText, open && styles.openBadgeText]} tone={open ? 'accent' : 'secondary'}>{statusLabels[session.status]}</AssistantText>
           </View>
         </View>
@@ -38,7 +46,7 @@ export function ScheduleCard({ session, attendance, onManage }: {
         </View>
         <View style={styles.metadata}>
           <View style={styles.metaItem}>
-            <ScheduleIcon name="pin" size={14} />
+            <ScheduleIcon name="pin" size={14} tintColor={theme.colors.iconMuted} />
             <AssistantText variant="caption" tone="secondary" style={styles.metaText}>{session.room}</AssistantText>
           </View>
         </View>
@@ -67,43 +75,44 @@ export function ScheduleCard({ session, attendance, onManage }: {
         onPress={() => onManage?.(session.id)}
         style={({ pressed }) => [styles.action, open && styles.openAction, !open && styles.plainAction, !onManage && styles.disabled, pressed && styles.pressed]}>
         <AssistantText style={[styles.actionText, open && styles.white]}>{open ? 'Pantau presensi' : 'Kelola sesi'}</AssistantText>
-        <ScheduleIcon name={open ? 'arrowWhite' : 'arrow'} size={18} />
+        <ScheduleIcon name={open ? 'arrowWhite' : 'arrow'} size={18}
+          tintColor={open ? undefined : theme.colors.iconPrimary} />
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  card: { padding: 7, backgroundColor: 'rgba(255,255,255,0.72)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.95)', borderRadius: 28, boxShadow: '0 8px 28px rgba(30,65,125,0.07)' },
-  openCard: { borderColor: '#FFFFFF', backgroundColor: 'rgba(235,243,255,0.75)' },
+const gaya = (theme: AssistantTheme) => StyleSheet.create({
+  card: { padding: 7, backgroundColor: theme.colors.glassCard, borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: assistantTokens.radius.card, boxShadow: theme.colors.shadow },
+  openCard: { borderColor: theme.colors.glassBorder, backgroundColor: theme.colors.cardOpen },
   content: { padding: 14, gap: 18 },
   topRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   timeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  time: { fontSize: 12, lineHeight: 18, fontFamily: theme.fonts.semibold, fontVariant: ['tabular-nums'] },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 5, borderRadius: theme.radius.pill, backgroundColor: 'rgba(222,232,248,0.65)' },
-  openBadge: { backgroundColor: '#DEF1B4' },
-  openBadgeText: { color: '#35501A' },
-  badgeText: { fontSize: 10, lineHeight: 15, fontFamily: theme.fonts.semibold },
+  time: { fontSize: 12, lineHeight: 18, fontFamily: assistantTokens.fonts.semibold, fontVariant: ['tabular-nums'] },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 5, borderRadius: assistantTokens.radius.pill, backgroundColor: theme.colors.softSurface },
+  openBadge: { backgroundColor: theme.colors.lime },
+  openBadgeText: { color: theme.colors.onLime },
+  badgeText: { fontSize: 10, lineHeight: 15, fontFamily: assistantTokens.fonts.semibold },
   material: { gap: 6 },
-  course: { fontFamily: theme.fonts.bold, fontSize: 20, lineHeight: 27, letterSpacing: -0.5 },
+  course: { fontFamily: assistantTokens.fonts.bold, fontSize: 20, lineHeight: 27, letterSpacing: -0.5 },
   topic: { fontSize: 13, lineHeight: 20 },
   metadata: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1 },
   metaText: { flexShrink: 1, fontSize: 11 },
-  attendance: { gap: 8, paddingTop: 14, borderTopWidth: 1, borderTopColor: 'rgba(53,85,142,0.1)' },
+  attendance: { gap: 8, paddingTop: 14, borderTopWidth: 1, borderTopColor: theme.colors.hairline },
   attendanceHeading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   total: { flex: 1, fontSize: 11 },
-  percentage: { fontFamily: theme.fonts.bold, fontSize: 12, lineHeight: 18 },
-  accent: { color: '#204CAC' },
-  progressTrack: { height: 5, borderRadius: 3, backgroundColor: 'rgba(222,232,248,0.65)', overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 3, backgroundColor: '#2856B9' },
+  percentage: { fontFamily: assistantTokens.fonts.bold, fontSize: 12, lineHeight: 18 },
+  accent: { color: theme.colors.primary },
+  progressTrack: { height: 5, borderRadius: 3, backgroundColor: theme.colors.softSurface, overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: 3, backgroundColor: theme.colors.primaryFill },
   closedProgress: { backgroundColor: theme.colors.textSecondary },
-  action: { minHeight: 46, paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'space-between', borderRadius: 21, backgroundColor: 'rgba(222,232,248,0.65)' },
-  openAction: { backgroundColor: '#2856B9' },
+  action: { minHeight: 46, paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'space-between', borderRadius: 21, backgroundColor: theme.colors.softSurface },
+  openAction: { backgroundColor: theme.colors.primaryFill },
   // sesi tertutup/pending: aksi jadi tautan tanpa latar, teks sejajar isi panel
   plainAction: { backgroundColor: 'transparent' },
-  actionText: { fontSize: 12, lineHeight: 18, fontFamily: theme.fonts.semibold, color: '#204CAC', flexShrink: 1 },
-  white: { color: theme.colors.surface },
+  actionText: { fontSize: 12, lineHeight: 18, fontFamily: assistantTokens.fonts.semibold, color: theme.colors.primary, flexShrink: 1 },
+  white: { color: theme.colors.onPrimary },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.75 },
 });

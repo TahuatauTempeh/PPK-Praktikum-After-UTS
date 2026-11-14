@@ -4,7 +4,7 @@ import { AssistantSheet } from './assistant-sheet';
 
 import { type AssistantSession } from '../schedule-data';
 import { formatPraktikumName, formatSessionDate } from '../session-format';
-import { assistantTheme as theme } from '../theme';
+import { assistantTokens, useAssistantStyles, useAssistantTheme, type AssistantTheme } from '../theme';
 import { AssistantText } from './assistant-text';
 import { ScheduleIcon } from './schedule-icon';
 
@@ -18,6 +18,8 @@ type Props = {
 };
 
 export function SessionConfirmation({ session, mode, present, total, onCancel, onConfirm }: Props) {
+  const theme = useAssistantTheme();
+  const styles = useAssistantStyles(gaya);
   const cancelRef = useRef<ComponentRef<typeof Pressable>>(null);
   const closing = mode === 'close';
   const title = closing ? 'Tutup sesi ini?' : 'Buka sesi sekarang?';
@@ -26,7 +28,8 @@ export function SessionConfirmation({ session, mode, present, total, onCancel, o
       {closeSheet => (
         <View style={styles.dialog} role="dialog" accessibilityViewIsModal accessibilityLabel={title}>
           <View style={[styles.icon, closing && styles.dangerIcon]}>
-            <ScheduleIcon name={closing ? 'lockDanger' : 'doorOpen'} size={24} />
+            <ScheduleIcon name={closing ? 'lockDanger' : 'doorOpen'} size={24}
+              tintColor={closing ? theme.colors.error : undefined} />
           </View>
           <View style={styles.message}>
             <AssistantText style={styles.title} accessibilityRole="header">{title}</AssistantText>
@@ -61,21 +64,21 @@ export function SessionConfirmation({ session, mode, present, total, onCancel, o
   );
 }
 
-const styles = StyleSheet.create({
+const gaya = (theme: AssistantTheme) => StyleSheet.create({
   dialog: { width: '100%', backgroundColor: 'transparent', padding: 24, gap: 20 },
   icon: { width: 48, height: 48, borderRadius: 16, backgroundColor: theme.colors.lime, alignItems: 'center', justifyContent: 'center' },
   dangerIcon: { backgroundColor: theme.colors.errorSoft },
   message: { gap: 9 },
-  title: { fontSize: 23, lineHeight: 30, fontFamily: theme.fonts.bold },
-  session: { padding: 14, gap: 7, backgroundColor: theme.colors.glassSurface, borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: theme.radius.control },
-  sessionTitle: { fontFamily: theme.fonts.semibold },
+  title: { fontSize: 23, lineHeight: 30, fontFamily: assistantTokens.fonts.bold },
+  session: { padding: 14, gap: 7, backgroundColor: theme.colors.glassSurface, borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: assistantTokens.radius.control },
+  sessionTitle: { fontFamily: assistantTokens.fonts.semibold },
   totals: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8, paddingTop: 7 },
-  bold: { fontFamily: theme.fonts.semibold },
+  bold: { fontFamily: assistantTokens.fonts.semibold },
   actions: { gap: 10 },
-  button: { minHeight: 50, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.control, borderWidth: 1, paddingHorizontal: 18, paddingVertical: 14 },
-  primary: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
-  danger: { backgroundColor: theme.colors.error, borderColor: theme.colors.error },
+  button: { minHeight: 50, alignItems: 'center', justifyContent: 'center', borderRadius: assistantTokens.radius.control, borderWidth: 1, paddingHorizontal: 18, paddingVertical: 14 },
+  primary: { backgroundColor: theme.colors.primaryFill, borderColor: theme.colors.primaryFill },
+  danger: { backgroundColor: theme.colors.errorFill, borderColor: theme.colors.errorFill },
   cancel: { backgroundColor: theme.colors.glassSurface, borderColor: theme.colors.glassBorder },
-  white: { color: theme.colors.surface },
+  white: { color: theme.colors.onPrimary },
   pressed: { opacity: 0.7 },
 });

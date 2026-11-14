@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/context/auth-context';
 import { AssistantNavigation, type AssistantTab } from '@/screens/asisten/components/assistant-navigation';
-import { assistantTheme as theme } from '@/screens/asisten/theme';
+import { useAssistantTheme } from '@/screens/asisten/theme';
 import { usePraktikanTheme } from '@/screens/praktikan/theme';
 
 const tabFromPath = (pathname: string): AssistantTab | null => {
@@ -16,6 +16,7 @@ const tabFromPath = (pathname: string): AssistantTab | null => {
 };
 
 export default function TabsLayout() {
+  const theme = useAssistantTheme();
   const { profile } = useAuth();
   const barTheme = usePraktikanTheme();
   const showAdmin = profile?.isAdmin === true;
