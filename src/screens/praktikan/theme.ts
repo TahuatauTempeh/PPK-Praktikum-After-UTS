@@ -1,7 +1,9 @@
 /**
  * Token visual sisi praktikan: kobalt dan kaca, mengikuti sisi asisten (DESIGN.md P3).
- * textSecondary dan galat dibuat lebih gelap dari P3 (#5C6D86 dan #B83E4D di bawah 4,5:1 di atas
- * permukaan netral) supaya lolos WCAG AA. suksesLembut diusulkan ke theme bersama P1 (DESIGN.md). Varian gelap dibuat sendiri karena P3 belum punya.
+ * teksSekunder #4C5D75 dipakai supaya tetap lolos WCAG AA di atas gradien atmosfer
+ * yang lebih gelap, bukan hanya di atas background #E8EFF9. galat #AE3645 juga
+ * lebih gelap dari P3 lama (#B83E4D). suksesLembut diusulkan ke theme bersama P1
+ * (DESIGN.md). Varian gelap dibuat sendiri karena P3 belum punya.
  */
 
 import { TextStyle } from 'react-native';
@@ -21,7 +23,7 @@ const terang = {
   heroTeksLembut: '#EDF3FF',
   heroGaris: 'rgba(255,255,255,0.16)',
   teks: '#192138',
-  teksSekunder: '#51627C',
+  teksSekunder: '#4C5D75',
   aksen: '#204CAC',
   isiAksen: '#2856B9',
   diAtasAksen: '#FFFFFF',
