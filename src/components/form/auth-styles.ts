@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
+import { spacing } from '@/theme';
 
 export const authStyles = StyleSheet.create({
   safe: {
@@ -12,8 +12,8 @@ export const authStyles = StyleSheet.create({
   content: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: Spacing.four,
-    gap: Spacing.three,
+    padding: spacing.page,
+    gap: spacing.base,
   },
   title: {
     fontSize: 30,
@@ -24,10 +24,10 @@ export const authStyles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     textAlign: 'center',
-    marginBottom: Spacing.two,
+    marginBottom: spacing.sm,
   },
   form: {
-    gap: Spacing.three,
+    gap: spacing.base,
   },
   formError: {
     fontSize: 13,
@@ -38,7 +38,7 @@ export const authStyles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
-    marginTop: Spacing.two,
+    marginTop: spacing.sm,
   },
   buttonText: {
     fontSize: 16,
@@ -48,7 +48,7 @@ export const authStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: Spacing.three,
+    marginTop: spacing.base,
   },
   footerText: {
     fontSize: 14,

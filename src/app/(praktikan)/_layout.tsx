@@ -8,7 +8,7 @@ import React from 'react';
 import { Text, useWindowDimensions } from 'react-native';
 
 import { TAB_TRANSITION_SPEC, tabSlideInterpolator } from '@/constants/tab-transition';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/theme';
 import { NavigasiPraktikan } from '@/screens/praktikan/components/navigasi';
 
 export default function PraktikanLayout() {
@@ -19,15 +19,15 @@ export default function PraktikanLayout() {
     <Tabs
       tabBar={(props) => <NavigasiPraktikan {...props} />}
       screenOptions={{
-        sceneStyle: { backgroundColor: theme.background },
+        sceneStyle: { backgroundColor: theme.colors.background },
         transitionSpec: TAB_TRANSITION_SPEC,
         sceneStyleInterpolator: tabSlideInterpolator(width),
         tabBarStyle: {
-          backgroundColor: theme.background,
-          borderTopColor: theme.border,
+          backgroundColor: theme.colors.background,
+          borderTopColor: theme.colors.border,
         },
-        tabBarActiveTintColor: theme.primary,
-        tabBarInactiveTintColor: theme.textSecondary,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textSecondary,
         tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
       }}
     >

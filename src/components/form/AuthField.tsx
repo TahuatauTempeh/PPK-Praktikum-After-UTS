@@ -8,8 +8,7 @@ import {
   type TextInputProps,
 } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { spacing, useTheme } from '@/theme';
 
 interface AuthFieldProps
   extends Pick<
@@ -41,24 +40,24 @@ export function AuthField({
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: theme.text }]}>{label}</Text>
+      <Text style={[styles.label, { color: theme.colors.textPrimary }]}>{label}</Text>
 
       <View
         style={[
           styles.inputRow,
           {
-            backgroundColor: theme.backgroundElement,
-            borderColor: error ? theme.danger : theme.border,
+            backgroundColor: theme.colors.surface,
+            borderColor: error ? theme.colors.error : theme.colors.border,
           },
         ]}
       >
         <TextInput
           {...inputProps}
           placeholder={placeholder}
-          placeholderTextColor={theme.textSecondary}
+          placeholderTextColor={theme.colors.textSecondary}
           secureTextEntry={secure && !visible}
           autoCorrect={false}
-          style={[styles.input, { color: theme.text }]}
+          style={[styles.input, { color: theme.colors.textPrimary }]}
         />
 
         {secure ? (
@@ -67,14 +66,14 @@ export function AuthField({
             accessibilityRole="button"
             accessibilityLabel={visible ? 'Sembunyikan password' : 'Tampilkan password'}
           >
-            <Text style={[styles.toggle, { color: theme.primary }]}>
+            <Text style={[styles.toggle, { color: theme.colors.primary }]}>
               {visible ? 'Sembunyikan' : 'Lihat'}
             </Text>
           </Pressable>
         ) : null}
       </View>
 
-      {error ? <Text style={[styles.error, { color: theme.danger }]}>{error}</Text> : null}
+      {error ? <Text style={[styles.error, { color: theme.colors.error }]}>{error}</Text> : null}
     </View>
   );
 }
@@ -103,7 +102,7 @@ const styles = StyleSheet.create({
   toggle: {
     fontSize: 13,
     fontWeight: '700',
-    paddingLeft: Spacing.two,
+    paddingLeft: spacing.sm,
   },
   error: {
     fontSize: 12,

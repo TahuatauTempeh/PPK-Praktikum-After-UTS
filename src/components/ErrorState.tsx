@@ -1,8 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { spacing, useTheme } from '@/theme';
 
 interface ErrorStateProps {
   title?: string;
@@ -26,8 +25,8 @@ export function ErrorState({
   return (
     <View style={styles.container}>
       <Text style={styles.icon}>⚠️</Text>
-      <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
-      <Text style={[styles.message, { color: theme.textSecondary }]}>{message}</Text>
+      <Text style={[styles.title, { color: theme.colors.textPrimary }]}>{title}</Text>
+      <Text style={[styles.message, { color: theme.colors.textSecondary }]}>{message}</Text>
 
       {onRetry ? (
         <Pressable
@@ -35,10 +34,10 @@ export function ErrorState({
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.button,
-            { backgroundColor: theme.primaryFill, opacity: pressed ? 0.85 : 1 },
+            { backgroundColor: theme.colors.primaryFill, opacity: pressed ? 0.85 : 1 },
           ]}
         >
-          <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{retryLabel}</Text>
+          <Text style={[styles.buttonText, { color: theme.colors.onPrimary }]}>{retryLabel}</Text>
         </Pressable>
       ) : null}
 
@@ -48,10 +47,10 @@ export function ErrorState({
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.secondaryButton,
-            { borderColor: theme.border, opacity: pressed ? 0.85 : 1 },
+            { borderColor: theme.colors.border, opacity: pressed ? 0.85 : 1 },
           ]}
         >
-          <Text style={[styles.secondaryText, { color: theme.textSecondary }]}>
+          <Text style={[styles.secondaryText, { color: theme.colors.textSecondary }]}>
             {secondaryLabel}
           </Text>
         </Pressable>
@@ -65,8 +64,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.two,
-    padding: Spacing.four,
+    gap: spacing.sm,
+    padding: spacing.page,
   },
   icon: {
     fontSize: 40,
@@ -83,9 +82,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   button: {
-    marginTop: Spacing.two,
+    marginTop: spacing.sm,
     borderRadius: 12,
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: spacing.page,
     paddingVertical: 12,
     alignItems: 'center',
   },
@@ -96,7 +95,7 @@ const styles = StyleSheet.create({
   secondaryButton: {
     borderRadius: 12,
     borderWidth: 1,
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: spacing.page,
     paddingVertical: 12,
     alignItems: 'center',
   },

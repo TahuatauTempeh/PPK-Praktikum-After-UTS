@@ -8,7 +8,7 @@ import { Animated, Pressable, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useSession } from '@/context/session-context';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/theme';
 
 interface ToastProps {
   visible: boolean;
@@ -19,9 +19,9 @@ interface ToastProps {
 }
 
 const toastConfig = {
-  success: { icon: '✅', bgKey: 'successLight' as const, textKey: 'success' as const },
-  error: { icon: '❌', bgKey: 'dangerLight' as const, textKey: 'danger' as const },
-  info: { icon: 'ℹ️', bgKey: 'primaryLight' as const, textKey: 'primary' as const },
+  success: { icon: '✅', bgKey: 'successSoft' as const, textKey: 'success' as const },
+  error: { icon: '❌', bgKey: 'errorSoft' as const, textKey: 'error' as const },
+  info: { icon: 'ℹ️', bgKey: 'primarySoft' as const, textKey: 'primary' as const },
 };
 
 export function Toast({ visible, type, message, onDismiss, duration = 3000 }: ToastProps) {
@@ -92,13 +92,13 @@ export function Toast({ visible, type, message, onDismiss, duration = 3000 }: To
         style={[
           styles.toast,
           {
-            backgroundColor: theme[config.bgKey],
-            borderColor: theme[config.textKey],
+            backgroundColor: theme.colors[config.bgKey],
+            borderColor: theme.colors[config.textKey],
           },
         ]}
       >
         <Text style={styles.icon}>{config.icon}</Text>
-        <Text style={[styles.message, { color: theme[config.textKey] }]} numberOfLines={3}>
+        <Text style={[styles.message, { color: theme.colors[config.textKey] }]} numberOfLines={3}>
           {message}
         </Text>
       </Pressable>

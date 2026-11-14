@@ -6,8 +6,7 @@
 import React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { spacing, useTheme } from '@/theme';
 
 interface ConfirmModalProps {
   visible: boolean;
@@ -33,16 +32,16 @@ export function ConfirmModal({
   const theme = useTheme();
   const confirmBackground =
     confirmColor === 'danger'
-      ? theme.dangerFill
+      ? theme.colors.errorFill
       : confirmColor === 'success'
-        ? theme.successFill
-        : theme.primaryFill;
+        ? theme.colors.successFill
+        : theme.colors.primaryFill;
   const confirmForeground =
     confirmColor === 'danger'
-      ? theme.onDanger
+      ? theme.colors.onError
       : confirmColor === 'success'
-        ? theme.onSuccess
-        : theme.onPrimary;
+        ? theme.colors.onSuccess
+        : theme.colors.onPrimary;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
@@ -52,9 +51,9 @@ export function ConfirmModal({
           onPress={onCancel}
           accessible={false}
         />
-        <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-          <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
-          <Text style={[styles.message, { color: theme.textSecondary }]}>{message}</Text>
+        <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
+          <Text style={[styles.title, { color: theme.colors.textPrimary }]}>{title}</Text>
+          <Text style={[styles.message, { color: theme.colors.textSecondary }]}>{message}</Text>
 
           <View style={styles.buttonRow}>
             <Pressable
@@ -62,10 +61,10 @@ export function ConfirmModal({
               style={({ pressed }) => [
                 styles.button,
                 styles.cancelButton,
-                { backgroundColor: theme.primaryLight, opacity: pressed ? 0.8 : 1 },
+                { backgroundColor: theme.colors.primarySoft, opacity: pressed ? 0.8 : 1 },
               ]}
             >
-              <Text style={[styles.buttonText, { color: theme.primary }]}>{cancelText}</Text>
+              <Text style={[styles.buttonText, { color: theme.colors.primary }]}>{cancelText}</Text>
             </Pressable>
 
             <Pressable
@@ -91,11 +90,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: spacing.page,
   },
   modalContent: {
     borderRadius: 20,
-    padding: Spacing.four,
+    padding: spacing.page,
     width: '100%',
     maxWidth: 400,
     gap: 12,

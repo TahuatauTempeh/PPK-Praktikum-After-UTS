@@ -19,7 +19,7 @@ import {
   type AuthFieldErrors,
 } from '@/lib/validation/auth';
 import type { RegisterInput } from '@/types';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/theme';
 
 import { authStyles } from '@/components/form/auth-styles';
 
@@ -54,14 +54,14 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={[authStyles.safe, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[authStyles.safe, { backgroundColor: theme.colors.background }]}>
       <KeyboardAvoidingView
         style={authStyles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={authStyles.content} keyboardShouldPersistTaps="handled">
-          <Text style={[authStyles.title, { color: theme.text }]}>Daftar</Text>
-          <Text style={[authStyles.subtitle, { color: theme.textSecondary }]}>
+          <Text style={[authStyles.title, { color: theme.colors.textPrimary }]}>Daftar</Text>
+          <Text style={[authStyles.subtitle, { color: theme.colors.textSecondary }]}>
             Buat akun praktikan
           </Text>
 
@@ -118,7 +118,7 @@ export default function RegisterScreen() {
           </View>
 
           {formError ? (
-            <Text style={[authStyles.formError, { color: theme.danger }]}>{formError}</Text>
+            <Text style={[authStyles.formError, { color: theme.colors.error }]}>{formError}</Text>
           ) : null}
 
           <Pressable
@@ -128,21 +128,21 @@ export default function RegisterScreen() {
             style={({ pressed }) => [
               authStyles.button,
               {
-                backgroundColor: theme.primaryFill,
+                backgroundColor: theme.colors.primaryFill,
                 opacity: submitting ? 0.6 : pressed ? 0.85 : 1,
               },
             ]}
           >
-            <Text style={[authStyles.buttonText, { color: theme.onPrimary }]}>
+            <Text style={[authStyles.buttonText, { color: theme.colors.onPrimary }]}>
               {submitting ? 'Memproses...' : 'Daftar'}
             </Text>
           </Pressable>
 
           <View style={authStyles.footer}>
-            <Text style={[authStyles.footerText, { color: theme.textSecondary }]}>
+            <Text style={[authStyles.footerText, { color: theme.colors.textSecondary }]}>
               Sudah punya akun?{' '}
             </Text>
-            <Link href="/login" style={[authStyles.link, { color: theme.primary }]}>
+            <Link href="/login" style={[authStyles.link, { color: theme.colors.primary }]}>
               Masuk
             </Link>
           </View>

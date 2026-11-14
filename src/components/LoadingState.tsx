@@ -1,8 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { spacing, useTheme } from '@/theme';
 
 interface LoadingStateProps {
   message?: string;
@@ -13,8 +12,8 @@ export function LoadingState({ message = 'Memuat data...' }: LoadingStateProps) 
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color={theme.primary} />
-      <Text style={[styles.message, { color: theme.textSecondary }]}>{message}</Text>
+      <ActivityIndicator size="large" color={theme.colors.primary} />
+      <Text style={[styles.message, { color: theme.colors.textSecondary }]}>{message}</Text>
     </View>
   );
 }
@@ -24,8 +23,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.two,
-    padding: Spacing.four,
+    gap: spacing.sm,
+    padding: spacing.page,
   },
   message: {
     fontSize: 14,
