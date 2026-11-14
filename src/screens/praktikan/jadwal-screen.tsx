@@ -50,8 +50,8 @@ export default function JadwalScreen() {
   return (
     <Layar>
       <Hero
-        sapaan={`${sapaan}, ${currentUser.name.split(' ')[0]}`}
-        judul="Jadwal praktikum"
+        sapaan="Jadwal Praktikum"
+        judul={`${sapaan}, ${currentUser.name.split(' ')[0]}`}
         keterangan={`${currentUser.name} · ${currentUser.nim}`}
         watermark="jadwal"
         statistik={[
