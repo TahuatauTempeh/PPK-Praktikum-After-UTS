@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { fonts } from '@/theme';
+import {
+  fonts,
+  tokens,
+  useThemedStyles,
+  useTheme,
+  type Theme,
+} from '@/theme';
 import { AssistantScreen } from './components/assistant-screen';
 import { AssistantText } from './components/assistant-text';
 import { ScheduleIcon } from './components/schedule-icon';
@@ -10,12 +16,6 @@ import { SessionConfirmation } from './components/session-confirmation';
 import { useAssistantSessions } from './preview-session-provider';
 import { countAttendance, statusLabels } from './schedule-data';
 import { formatAttendanceTime, formatPraktikumName, formatSessionDate, splitSessionTopic } from './session-format';
-import {
-  tokens,
-  useThemedStyles,
-  useTheme,
-  type Theme,
-} from '@/theme';
 
 type Props = { id: string; onBack: () => void; onRecap?: (id: string) => void };
 
