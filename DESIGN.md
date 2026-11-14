@@ -429,6 +429,9 @@ Latar:
 - `AssistantNavigation` memakai `accessibilityRole="tablist"` dengan anak
   `tab`, indikator aktif `Animated.View`, durasi 240 ms,
   `Easing.out(Easing.cubic)`, `translateX`, dan `useNativeDriver` kecuali web.
+  Baris tab dibungkus `View` tanpa border/padding; indikator absolut mengisi
+  tinggi wrapper lewat `top: 0` dan `bottom: 0`, dengan lebar dari tab pertama,
+  sehingga tidak ada koreksi offset border.
 - Bar: lebar 90%, maksimum 552, padding 6, gap 52 untuk dua tab dan 12 untuk
   tiga tab, tinggi tab minimal 60, padding item 10, ikon 18, label 11/16,
   radius tab 26, radius panel. Warna bar memakai token Praktikan
@@ -446,7 +449,8 @@ Latar:
 
 - Tab bawah: Jadwal, Riwayat, Profil.
 - `NavigasiPraktikan` memakai indikator aktif dan metrik tab yang sama:
-  tinggi 60, padding item 10, ikon 18, label 11/16.
+  tinggi 60, padding item 10, ikon 18, label 11/16. Indikator juga berada di
+  dalam wrapper baris tab dan mengisi tingginya, bukan dihitung dari border bar.
 - Detail sesi berada di `/praktikan/sesi/[id]`, di luar tab.
 
 ### 7.3 Auth dan admin
@@ -543,11 +547,11 @@ sehingga seluruh halaman ikut berubah tanpa mengubah komponen pemanggil. Mode
 `system` mengikuti skema perangkat.
 
 Halaman Profil punya baris **Tema** di bagian TAMPILAN: label "Tema" di kiri
-dan `PemilihTema` di kanan. Pil tiga segmen berisi monitor (`system`),
-matahari (`light`), dan bulan (`dark`); ikon memakai `expo-symbols` (SF
-Symbols di iOS, Material Symbols di Android dan web). Segmen aktif memakai
-`isiAksen` dengan ikon `diAtasAksen`; segmen lain memakai `teksSekunder`.
-Tidak ada keterangan teks di bawah kontrol; maknanya dijaga
+dan `PemilihTema` di kanan, di dalam kartu berbentuk pil (radius 999, tinggi
+48). Pil memakai track padding 4, segmen 40 × 40, ikon 18, tanpa border, dan
+menempel ke tepi kanan kartu; area sentuh diperluas `hitSlop` 4. Segmen aktif
+memakai `isiAksen` dengan ikon `diAtasAksen`; segmen lain memakai
+`teksSekunder`. Tidak ada keterangan teks di bawah kontrol; maknanya dijaga
 `accessibilityRole="radiogroup"` dengan anak `radio` dan
 `accessibilityState.checked`.
 
@@ -558,6 +562,14 @@ Tidak ada keterangan teks di bawah kontrol; maknanya dijaga
 - Shared: `successLight` + `success`, `dangerLight` + `danger`,
   `warningLight` + `warning`, `primaryLight` + `primary`.
 - Jangan mengandalkan warna saja; label teks wajib.
+
+### 8.8 ConfirmModal
+
+`ConfirmModal` dipakai untuk konfirmasi keluar akun. Backdrop penuh memakai
+`Pressable` transparan; ketukan di luar kartu memanggil `onCancel`, sedangkan
+kartu dirender setelah backdrop sehingga ketukan di dalam tidak menutup.
+Tombol batal memakai `primaryLight` + `primary` agar sama dengan aksi lembut
+di halaman admin; tombol konfirmasi memakai `*Fill` + `on*`.
 
 ## 9. Aksesibilitas
 
@@ -655,6 +667,9 @@ Repo tidak punya test suite otomatis.
 | 15 Nov 2026 | Preferensi tema `system`/`light`/`dark` di AsyncStorage; switch Mode gelap di bagian TAMPILAN halaman Profil; bottom bar Asisten mengikuti tema |
 | 15 Nov 2026 | TAMPILAN halaman Profil memakai `PemilihTema` tiga segmen ikon (sistem/terang/gelap), menggantikan switch Mode gelap dan tautan Ikuti pengaturan perangkat |
 | 15 Nov 2026 | Baris Tema di TAMPILAN memakai ikon `expo-symbols`, tanpa keterangan teks |
+| 15 Nov 2026 | Indikator bottom bar mengisi wrapper baris tab, menghapus selisih akibat border pada navigasi Asisten dan Praktikan |
+| 15 Nov 2026 | Kartu Tema menjadi pil dengan pemilih 40 px yang menempel ke tepi kanan |
+| 15 Nov 2026 | ConfirmModal menutup lewat ketukan di luar kartu; tombol Batal memakai `primaryLight` + `primary` |
 | 15 Nov 2026 | Palet gelap Asisten/admin lewat `useAssistantTheme`; seluruh halaman mengikuti preferensi terang/gelap |
 
 Perbaikan kontras 14 November 2026:
