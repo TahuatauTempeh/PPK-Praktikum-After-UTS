@@ -3,24 +3,31 @@ import { Animated, Easing, Platform, Pressable, StyleSheet, View } from 'react-n
 
 import { assistantTheme as theme } from '../theme';
 import { AssistantText } from './assistant-text';
-import { ScheduleIcon } from './schedule-icon';
+import { ScheduleIcon, type ScheduleIconName } from './schedule-icon';
 
-export type AssistantTab = 'home' | 'profile';
+export type AssistantTab = 'asisten' | 'admin' | 'profile';
 
-type Props = { active: AssistantTab; onHome?: () => void; onProfile?: () => void };
+type Props = { active: AssistantTab; showAdmin: boolean; onNavigate: (tab: AssistantTab) => void };
 type Box = { x: number; y: number; width: number; height: number };
 
-const tabs = ['home', 'profile'] as const;
-const tabGap = 52;
 const navigationRadius = theme.radius.panel;
 const tabRadius = navigationRadius - theme.spacing.sm;
 const indicatorSlide = { duration: 240, easing: Easing.out(Easing.cubic) };
+const LABEL: Record<AssistantTab, string> = { asisten: 'Asisten', admin: 'Admin', profile: 'Profil' };
 
-export function AssistantNavigation({ active, onHome, onProfile }: Props) {
+const iconFor = (tab: AssistantTab, selected: boolean): ScheduleIconName => {
+  if (tab === 'asisten') return selected ? 'home' : 'homeInactive';
+  if (tab === 'admin') return 'users';
+  return selected ? 'profile' : 'profileInactive';
+};
+
+export function AssistantNavigation({ active, showAdmin, onNavigate }: Props) {
   const [track, setTrack] = useState<Box | null>(null);
   const [offset] = useState(() => new Animated.Value(0));
   const placed = useRef(false);
-  const index = active === 'profile' ? 1 : 0;
+  const tabs: AssistantTab[] = showAdmin ? ['asisten', 'admin', 'profile'] : ['asisten', 'profile'];
+  const tabGap = showAdmin ? 12 : 52;
+  const index = Math.max(0, tabs.indexOf(active));
 
   useEffect(() => {
     if (!track) return;
@@ -35,10 +42,10 @@ export function AssistantNavigation({ active, onHome, onProfile }: Props) {
     });
     animation.start();
     return () => animation.stop();
-  }, [index, offset, track]);
+  }, [index, offset, track, tabGap]);
 
   return (
-    <View style={styles.navigation} accessibilityRole="tablist">
+    <View style={[styles.navigation, { gap: tabGap }]} accessibilityRole="tablist">
       {track && (
         <Animated.View pointerEvents="none" accessible={false} style={[styles.indicator, {
           left: track.x, top: track.y, width: track.width, height: track.height,
@@ -47,19 +54,18 @@ export function AssistantNavigation({ active, onHome, onProfile }: Props) {
       )}
       {tabs.map(destination => {
         const selected = active === destination;
-        const onPress = destination === 'home' ? onHome : onProfile;
-        const icon = destination === 'home'
-          ? selected ? 'home' : 'homeInactive'
-          : selected ? 'profile' : 'profileInactive';
         return (
           <Pressable key={destination} accessibilityRole="tab"
-            accessibilityState={{ selected, disabled: !selected && !onPress }}
-            disabled={!selected && !onPress} onPress={onPress}
-            onLayout={destination === 'home' ? event => setTrack(event.nativeEvent.layout) : undefined}
+            accessibilityState={{ selected }}
+            accessibilityLabel={LABEL[destination]}
+            onPress={() => onNavigate(destination)}
+            onLayout={destination === 'asisten' ? event => setTrack(event.nativeEvent.layout) : undefined}
             style={({ pressed }) => [styles.tab, pressed && styles.pressed]}>
-            <ScheduleIcon name={icon} size={22} />
+            <View style={[!selected && destination === 'admin' && styles.inactiveIcon]}>
+              <ScheduleIcon name={iconFor(destination, selected)} size={22} />
+            </View>
             <AssistantText variant="caption" tone={selected ? 'accent' : 'secondary'} style={selected && styles.bold}>
-              {destination === 'home' ? 'Beranda' : 'Profil'}
+              {LABEL[destination]}
             </AssistantText>
           </Pressable>
         );
@@ -68,9 +74,10 @@ export function AssistantNavigation({ active, onHome, onProfile }: Props) {
   );
 }
 const styles = StyleSheet.create({
-  navigation: { flexDirection: 'row', gap: 52, paddingHorizontal: theme.spacing.sm, paddingVertical: theme.spacing.sm, marginVertical: 10, backgroundColor: 'rgba(255,255,255,0.85)', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: navigationRadius, width: '90%', maxWidth: 552, alignSelf: 'center', boxShadow: '0 4px 24px rgba(30,65,125,0.08)' },
+  navigation: { flexDirection: 'row', paddingHorizontal: theme.spacing.sm, paddingVertical: theme.spacing.sm, marginVertical: 10, backgroundColor: 'rgba(255,255,255,0.85)', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: navigationRadius, width: '90%', maxWidth: 552, alignSelf: 'center', boxShadow: '0 4px 24px rgba(30,65,125,0.08)' },
   indicator: { position: 'absolute', backgroundColor: '#DFE9FA', borderRadius: tabRadius },
   tab: { flex: 1, minHeight: 54, alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 6, borderRadius: tabRadius },
+  inactiveIcon: { opacity: 0.55 },
   bold: { fontFamily: theme.fonts.bold },
   pressed: { opacity: 0.7 },
 });

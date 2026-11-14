@@ -114,22 +114,7 @@ function RootNavigator() {
         redirectTo={profile?.role === 'praktikan' ? '/(praktikan)' : '/login'}
       >
         <Stack.Screen name="asisten/(tabs)" options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen name="asisten/jadwal" options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen name="asisten/rekap" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="asisten/sesi/[id]" options={{ animation: 'slide_from_right' }} />
-      </Stack.Protected>
-
-      <Stack.Protected
-        guard={profile?.isAdmin === true}
-        redirectTo={
-          profile?.role === 'asisten'
-            ? '/asisten'
-            : profile?.role === 'praktikan'
-              ? '/(praktikan)'
-              : '/login'
-        }
-      >
-        <Stack.Screen name="(admin)" options={{ animation: 'slide_from_right' }} />
       </Stack.Protected>
 
       <Stack.Screen name="index" />

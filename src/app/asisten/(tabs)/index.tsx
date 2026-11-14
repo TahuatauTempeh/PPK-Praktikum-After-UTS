@@ -12,7 +12,6 @@ export default function HomeRoute() {
   return (
     <HomeScreen
       name={profile.name}
-      isAdmin={profile.isAdmin}
       scheduleDate={scheduleDate}
       sessions={sessions}
     />

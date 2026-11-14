@@ -15,7 +15,7 @@ type Props = {
 };
 
 /**
- * AgendaBanner: ringkasan tanggal dan jumlah sesi. Dipakai Beranda (dapat ditekan,
+ * AgendaBanner: ringkasan tanggal dan jumlah sesi. Dipakai hub Asisten (dapat ditekan,
  * menampilkan sesi berikutnya dan CTA) dan Jadwal (tanpa CTA).
  */
 export function AgendaBanner({

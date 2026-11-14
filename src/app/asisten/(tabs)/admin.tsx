@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { Redirect } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
@@ -32,7 +32,13 @@ import type { Role, UserProfile } from '@/types';
 
 type Filter = 'all' | Role;
 
-export default function AdminUsersScreen() {
+export default function AdminTabRoute() {
+  const { profile } = useAuth();
+  if (!profile?.isAdmin) return <Redirect href="/asisten" />;
+  return <AdminUsersContent />;
+}
+
+function AdminUsersContent() {
   const theme = useTheme();
   const { profile } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -119,19 +125,8 @@ export default function AdminUsersScreen() {
         : 'ready';
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.safe, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
-        <Pressable
-          onPress={() => {
-            if (router.canGoBack()) router.back();
-            else router.replace(profile?.role === 'asisten' ? '/asisten' : profile?.role === 'praktikan' ? '/(praktikan)' : '/login');
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Kembali"
-          style={styles.backButton}
-        >
-          <Text style={[styles.backText, { color: theme.primary }]}>‹ Kembali</Text>
-        </Pressable>
         <Text style={[styles.title, { color: theme.text }]}>Kelola Pengguna</Text>
         <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
           {users.length} akun terdaftar
@@ -301,14 +296,6 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: 4,
-  },
-  backButton: {
-    alignSelf: 'flex-start',
-    paddingVertical: 4,
-  },
-  backText: {
-    fontSize: 14,
-    fontWeight: '700',
   },
   title: {
     fontSize: 26,

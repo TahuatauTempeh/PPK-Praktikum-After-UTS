@@ -48,12 +48,12 @@ kebenaran; perubahan copy yang disengaja harus dicatat di bagian 12.
 | `/` | `src/app/index.tsx` | Redirect sesuai peran |
 | `/login` | `src/app/(auth)/login.tsx` | Login |
 | `/register` | `src/app/(auth)/register.tsx` | Registrasi |
-| `/asisten` | `src/app/asisten/(tabs)/index.tsx` | Beranda Asisten |
+| `/asisten` | `src/app/asisten/(tabs)/index.tsx` | Hub Asisten |
 | `/asisten/profil` | `src/app/asisten/(tabs)/profil.tsx` | Profil Asisten |
-| `/asisten/jadwal` | `src/app/asisten/jadwal.tsx` | Jadwal praktikum |
-| `/asisten/rekap` | `src/app/asisten/rekap.tsx` | Rekap presensi |
+| `/asisten/jadwal` | `src/app/asisten/(tabs)/jadwal.tsx` | Jadwal praktikum |
+| `/asisten/rekap` | `src/app/asisten/(tabs)/rekap.tsx` | Rekap presensi |
+| `/asisten/admin` | `src/app/asisten/(tabs)/admin.tsx` | Kelola pengguna (admin) |
 | `/asisten/sesi/[id]` | `src/app/asisten/sesi/[id].tsx` | Kelola sesi |
-| `/pengguna` | `src/app/(admin)/pengguna.tsx` | Kelola pengguna (admin) |
 | `/(praktikan)` | `src/app/(praktikan)/index.tsx` | Jadwal Praktikan |
 | `/(praktikan)/riwayat` | `src/app/(praktikan)/riwayat.tsx` | Riwayat Praktikan |
 | `/(praktikan)/profil` | `src/app/(praktikan)/profil.tsx` | Profil Praktikan |
@@ -63,8 +63,9 @@ Guard rute berada di `src/app/_layout.tsx` memakai `Stack.Protected`:
 
 - Tanpa profil: hanya grup `(auth)`.
 - Praktikan: grup `(praktikan)` dan detail sesi Praktikan.
-- Asisten: grup `asisten/(tabs)`, jadwal, rekap, dan detail sesi Asisten.
-- Admin: grup `(admin)`, hanya jika `profile.isAdmin === true`.
+- Asisten: grup `asisten/(tabs)` dan detail sesi Asisten.
+- Admin: route `/asisten/admin` di dalam grup tab, hanya dirender jika
+  `profile.isAdmin === true`.
 
 Sumber data:
 
@@ -381,16 +382,20 @@ Latar:
 ### 7.1 Asisten
 
 - Tab bawah statis dirender oleh `src/app/asisten/(tabs)/_layout.tsx`.
-- Isi tab: Beranda dan Profil.
+- Isi tab: Asisten, Admin (hanya untuk admin), dan Profil.
+- Tab Asisten adalah hub berisi agenda hari aktif serta menu Jadwal dan Rekap.
 - `AssistantNavigation` memakai `accessibilityRole="tablist"` dengan anak
   `tab`, indikator aktif `Animated.View`, durasi 240 ms,
   `Easing.out(Easing.cubic)`, `translateX`, dan `useNativeDriver` kecuali web.
-- Bar: lebar 90%, maksimum 552, gap 52, tinggi tab minimal 54, latar
-  `rgba(255,255,255,0.85)`, radius panel.
-- Jadwal, Rekap, dan detail sesi berada di luar grup tab; bar bawah tertutup.
+- Bar: lebar 90%, maksimum 552, gap 52 untuk dua tab dan 12 untuk tiga tab,
+  tinggi tab minimal 54, latar `rgba(255,255,255,0.85)`, radius panel.
+- Jadwal dan Rekap berada di dalam grup tab; bar bawah tetap terlihat.
+- Detail sesi berada di luar grup tab; bar bawah tertutup.
 - Kembali dari detail: `router.back()`; jika tidak ada tumpukan, kembali ke
   jadwal.
 - Kembali dari jadwal/rekap: `router.back()` atau `router.replace('/asisten')`.
+- Admin memakai route `/asisten/admin` tanpa tombol kembali; guard `isAdmin`
+  mengarahkan non-admin ke `/asisten`.
 
 ### 7.2 Praktikan
 
@@ -401,7 +406,8 @@ Latar:
 ### 7.3 Auth dan admin
 
 - Auth memakai stack `(auth)`.
-- Admin memakai route `/pengguna` di grup `(admin)`.
+- Admin memakai route `/asisten/admin` di dalam grup `(tabs)`, dijaga guard
+  `isAdmin` di layar; grup `(admin)` dihapus.
 - Semua transisi memakai `animation: 'slide_from_right'`.
 
 ## 8. Pola komponen
@@ -546,6 +552,7 @@ Repo tidak punya test suite otomatis.
 | 25 Okt 2026 | Perbaikan bottom sheet, grup rute `(tabs)`, indikator tab |
 | Nov 2026 | Integrasi auth, `SessionContext`, sisi Praktikan, admin, dan redesain kaca/kobalt |
 | 14 Nov 2026 | Audit 105 pasangan warna lewat stateofcolors.com |
+| 15 Nov 2026 | Navigasi asisten: tab Asisten/Admin/Profil; Jadwal dan Rekap masuk grup tab |
 
 Perbaikan kontras 14 November 2026:
 

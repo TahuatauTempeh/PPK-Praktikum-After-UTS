@@ -6,7 +6,7 @@ import { ScheduleIcon, type ScheduleIconName } from './schedule-icon';
 
 type Props = { title: string; icon: ScheduleIconName; onPress: () => void };
 
-/** Block menu Beranda: ikon dalam lingkaran dan nama menu, tanpa elemen lain. */
+/** Block menu hub Asisten: ikon dalam lingkaran dan nama menu, tanpa elemen lain. */
 export function MenuBlock({ title, icon, onPress }: Props) {
   return (
     <Pressable

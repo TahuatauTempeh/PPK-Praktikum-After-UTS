@@ -11,13 +11,12 @@ import { type AssistantSession } from './schedule-data';
 
 type Props = {
   name: string;
-  isAdmin: boolean;
   scheduleDate: string;
   sessions: readonly AssistantSession[];
 };
 
-/** Beranda asisten: sapaan, agenda hari aktif, dan grid menu. */
-export function HomeScreen({ name, isAdmin, scheduleDate, sessions }: Props) {
+/** Hub Asisten: sapaan, agenda hari aktif, dan menu Jadwal/Rekap. */
+export function HomeScreen({ name, scheduleDate, sessions }: Props) {
   const dateLabel = new Intl.DateTimeFormat('id-ID', {
     timeZone: 'Asia/Jakarta',
     weekday: 'long',
@@ -25,13 +24,12 @@ export function HomeScreen({ name, isAdmin, scheduleDate, sessions }: Props) {
     month: 'long',
     year: 'numeric',
   }).format(new Date());
-  const menu = homeMenu.filter(item => !item.adminOnly || isAdmin);
 
   return (
     <AssistantScreen edges={['top', 'left', 'right']}>
       <View style={styles.header}>
         <AssistantText variant="greeting" tone="secondary">Selamat pagi, {name}</AssistantText>
-        <AssistantText variant="pageTitle" accessibilityRole="header">Beranda</AssistantText>
+        <AssistantText variant="pageTitle" accessibilityRole="header">Asisten</AssistantText>
         <AssistantText variant="caption" tone="secondary">{dateLabel}</AssistantText>
       </View>
 
@@ -45,7 +43,7 @@ export function HomeScreen({ name, isAdmin, scheduleDate, sessions }: Props) {
       <View style={styles.menuSection}>
         <AssistantText style={styles.eyebrow}>MENU</AssistantText>
         <View style={styles.grid}>
-          {menu.map(item => (
+          {homeMenu.map(item => (
             <MenuBlock
               key={item.id}
               title={item.title}

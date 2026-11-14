@@ -7,10 +7,9 @@ export type HomeMenuItem = {
   title: string;
   icon: ScheduleIconName;
   href: Href;
-  adminOnly?: boolean;
 };
 
 export const homeMenu: HomeMenuItem[] = [
+  { id: 'jadwal', title: 'Jadwal', icon: 'calendar', href: '/asisten/jadwal' },
   { id: 'rekap', title: 'Rekap', icon: 'chartPrimary', href: '/asisten/rekap' },
-  { id: 'pengguna', title: 'Kelola Pengguna', icon: 'usersPrimary', href: '/pengguna', adminOnly: true },
 ];
