@@ -8,7 +8,7 @@ import React, { ComponentProps, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Ikon, IkonNama } from '@/screens/praktikan/components/ikon';
-import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { fonts, typography, useTheme } from '@/theme';
 
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 
@@ -30,7 +30,7 @@ const BAR_RADIUS = 32;
 const TAB_RADIUS = BAR_RADIUS - PADDING;
 
 export function NavigasiPraktikan({ state, emitter, insets }: TabBarProps) {
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
   const [lebar, setLebar] = useState<number | null>(null);
   const [geser] = useState(() => new Animated.Value(0));
   const sudahDitaruh = useRef(false);
@@ -57,12 +57,12 @@ export function NavigasiPraktikan({ state, emitter, insets }: TabBarProps) {
   }, [indeks, geser, lebar]);
 
   return (
-    <View style={[styles.dasar, { backgroundColor: theme.dasarNav, paddingBottom: insets.bottom }]}>
+    <View style={[styles.dasar, { backgroundColor: theme.colors.background, paddingBottom: insets.bottom }]}>
       <View
         accessibilityRole="tablist"
         style={[
           styles.bar,
-          { backgroundColor: theme.navLatar, borderColor: theme.garisKartu, boxShadow: theme.bayang },
+          { backgroundColor: theme.colors.navSurface, borderColor: theme.colors.glassBorder, boxShadow: theme.colors.shadow },
         ]}
       >
         <View style={[styles.tabs, { gap: JARAK }]}>
@@ -73,7 +73,7 @@ export function NavigasiPraktikan({ state, emitter, insets }: TabBarProps) {
               style={[
                 styles.indikator,
                 {
-                  backgroundColor: theme.navAktif,
+                  backgroundColor: theme.colors.primarySoft,
                   width: lebar,
                   transform: [{ translateX: geser }],
                 },
@@ -82,7 +82,7 @@ export function NavigasiPraktikan({ state, emitter, insets }: TabBarProps) {
           ) : null}
           {rute.map((r, i) => {
             const terpilih = i === indeks;
-            const warna = terpilih ? theme.aksen : theme.ikonNonaktif;
+            const warna = terpilih ? theme.colors.primary : theme.colors.iconMuted;
             const onPress = () => {
               const kejadian = emitter.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
               if (!terpilih && !kejadian.defaultPrevented) router.navigate(RUTE[r.name]);
@@ -98,7 +98,7 @@ export function NavigasiPraktikan({ state, emitter, insets }: TabBarProps) {
                 style={({ pressed }) => [styles.tab, pressed && { opacity: 0.7 }]}
               >
                 <Ikon nama={TAB[r.name].ikon} ukuran={18} warna={warna} />
-                <Text style={[Tipe.kecil, { color: warna, fontWeight: terpilih ? '700' : '400' }]}>
+                <Text style={[typography.tiny, { color: warna }, terpilih && styles.tebal]}>
                   {TAB[r.name].label}
                 </Text>
               </Pressable>
@@ -124,4 +124,5 @@ const styles = StyleSheet.create({
   tabs: { flexDirection: 'row', position: 'relative' },
   indikator: { position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: TAB_RADIUS },
   tab: { flex: 1, minHeight: 60, alignItems: 'center', justifyContent: 'center', gap: 4, borderRadius: TAB_RADIUS, paddingVertical: 10 },
+  tebal: { fontFamily: fonts.bold },
 });

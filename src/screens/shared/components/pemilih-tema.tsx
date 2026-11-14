@@ -10,7 +10,7 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { type ThemeMode } from '@/context/theme-context';
-import { usePraktikanTheme } from '@/screens/praktikan/theme';
+import { useTheme } from '@/theme';
 
 type Simbol = Extract<SymbolViewProps['name'], object>;
 
@@ -44,14 +44,14 @@ type Props = {
 };
 
 export function PemilihTema({ nilai, onPilih }: Props) {
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
 
   return (
     <View
       accessibilityRole="radiogroup"
       accessibilityLabel="Tema"
       accessibilityHint="Mengganti tema seluruh halaman aplikasi."
-      style={[styles.track, { backgroundColor: theme.isiLembut }]}
+      style={[styles.track, { backgroundColor: theme.colors.softSurface }]}
     >
       {PILIHAN.map(({ mode, simbol, label }) => {
         const aktif = mode === nilai;
@@ -65,14 +65,14 @@ export function PemilihTema({ nilai, onPilih }: Props) {
             onPress={() => onPilih(mode)}
             style={({ pressed }) => [
               styles.segmen,
-              aktif && { backgroundColor: theme.isiAksen },
+              aktif && { backgroundColor: theme.colors.primaryFill },
               pressed && styles.ditekan,
             ]}
           >
             <SymbolView
               name={simbol}
               size={18}
-              tintColor={aktif ? theme.diAtasAksen : theme.teksSekunder}
+              tintColor={aktif ? theme.colors.onPrimary : theme.colors.textSecondary}
             />
           </Pressable>
         );

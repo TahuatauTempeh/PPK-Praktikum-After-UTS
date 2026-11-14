@@ -11,20 +11,19 @@ import { ConfirmModal } from '@/components/ConfirmModal';
 import { LoadingState } from '@/components/LoadingState';
 import { useAuth } from '@/context/auth-context';
 import { useThemePreference } from '@/context/theme-context';
-import { useTheme } from '@/hooks/use-theme';
 import { Ikon } from '@/screens/praktikan/components/ikon';
 import { Layar } from '@/screens/praktikan/components/layar';
 import { KartuProfil } from '@/screens/shared/components/kartu-profil';
 import { PemilihTema } from '@/screens/shared/components/pemilih-tema';
-import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { typography, useTheme } from '@/theme';
 
 function BarisInfo({ label, nilai }: { label: string; nilai: string }) {
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
 
   return (
     <View style={styles.baris}>
-      <Text style={[Tipe.caption, { color: theme.teksSekunder }]}>{label}</Text>
-      <Text numberOfLines={2} style={[Tipe.label, styles.nilai, { color: theme.teks }]}>
+      <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>{label}</Text>
+      <Text numberOfLines={2} style={[typography.label, styles.nilai, { color: theme.colors.textPrimary }]}>
         {nilai}
       </Text>
     </View>
@@ -32,8 +31,7 @@ function BarisInfo({ label, nilai }: { label: string; nilai: string }) {
 }
 
 export default function ProfilScreen() {
-  const theme = usePraktikanTheme();
-  const appTheme = useTheme();
+  const theme = useTheme();
   const { mode, setMode } = useThemePreference();
   const { profile, signOut } = useAuth();
   const [konfirmasi, setKonfirmasi] = useState(false);
@@ -57,12 +55,12 @@ export default function ProfilScreen() {
         />
 
         <View style={styles.bagian}>
-          <Text style={[Tipe.eyebrow, { color: theme.teksSekunder }]}>INFORMASI AKUN</Text>
+          <Text style={[typography.eyebrow, { color: theme.colors.textSecondary }]}>INFORMASI AKUN</Text>
 
           <View
             style={[
               styles.kartuInfo,
-              { backgroundColor: theme.kartu, borderColor: theme.garisKartu, boxShadow: theme.bayang },
+              { backgroundColor: theme.colors.glassCard, borderColor: theme.colors.glassBorder, boxShadow: theme.colors.shadow },
             ]}
           >
             <BarisInfo label="Email" nilai={profile.email || '—'} />
@@ -70,17 +68,17 @@ export default function ProfilScreen() {
         </View>
 
         <View style={styles.bagian}>
-          <Text style={[Tipe.eyebrow, { color: theme.teksSekunder }]}>TAMPILAN</Text>
+          <Text style={[typography.eyebrow, { color: theme.colors.textSecondary }]}>TAMPILAN</Text>
 
           <View
             style={[
               styles.kartuInfo,
               styles.kartuTema,
-              { backgroundColor: theme.kartu, borderColor: theme.garisKartu, boxShadow: theme.bayang },
+              { backgroundColor: theme.colors.glassCard, borderColor: theme.colors.glassBorder, boxShadow: theme.colors.shadow },
             ]}
           >
             <View style={styles.barisTampilan}>
-              <Text style={[Tipe.label, { color: theme.teks }]}>Tema</Text>
+              <Text style={[typography.label, { color: theme.colors.textPrimary }]}>Tema</Text>
               <PemilihTema nilai={mode} onPilih={setMode} />
             </View>
           </View>
@@ -94,12 +92,12 @@ export default function ProfilScreen() {
           style={({ pressed }) => [
             styles.keluar,
             // Mengikuti isian tombol konfirmasi ConfirmModal, bukan palet praktikan.
-            { backgroundColor: appTheme.dangerFill },
+            { backgroundColor: theme.colors.errorFill },
             pressed && styles.ditekan,
           ]}
         >
-          <Text style={[Tipe.label, { color: appTheme.onDanger }]}>Keluar</Text>
-          <Ikon nama="keluar" ukuran={18} warna={appTheme.onDanger} />
+          <Text style={[typography.label, { color: theme.colors.onError }]}>Keluar</Text>
+          <Ikon nama="keluar" ukuran={18} warna={theme.colors.onError} />
         </Pressable>
       </Layar>
 

@@ -8,7 +8,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Ikon } from '@/screens/praktikan/components/ikon';
-import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { fonts, typography, useTheme } from '@/theme';
 
 import { HeroCard } from './hero-card';
 
@@ -19,11 +19,11 @@ interface KartuProfilProps {
 }
 
 export function KartuProfil({ nama, nomor, peran }: KartuProfilProps) {
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
 
   return (
     <HeroCard
-      backgroundColor={theme.hero}
+      backgroundColor={theme.colors.glassHero}
       padding={24}
       gap={6}
       contentStyle={styles.content}
@@ -34,20 +34,20 @@ export function KartuProfil({ nama, nomor, peran }: KartuProfilProps) {
           { backgroundColor: 'rgba(255,255,255,0.14)', borderColor: 'rgba(255,255,255,0.35)' },
         ]}
       >
-        <Ikon nama="profil" ukuran={36} warna={theme.heroTeks} />
+        <Ikon nama="profil" ukuran={36} warna={theme.colors.onHero} />
       </View>
 
       <Text
         accessibilityRole="header"
         numberOfLines={2}
-        style={[Tipe.judulHalaman, styles.tengah, { color: theme.heroTeks }]}
+        style={[typography.pageTitle, styles.tengah, { color: theme.colors.onHero }]}
       >
         {nama}
       </Text>
-      <Text style={[Tipe.body, styles.tengah, { color: theme.heroTeksLembut }]}>{nomor}</Text>
+      <Text style={[typography.body, styles.tengah, { color: theme.colors.heroSoft }]}>{nomor}</Text>
 
       <View style={[styles.badge, { backgroundColor: 'rgba(255,255,255,0.14)' }]}>
-        <Text style={[Tipe.kecil, styles.badgeTeks, { color: theme.heroTeks }]}>{peran}</Text>
+        <Text style={[typography.tiny, styles.badgeTeks, { color: theme.colors.onHero }]}>{peran}</Text>
       </View>
     </HeroCard>
   );
@@ -77,6 +77,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   badgeTeks: {
-    fontWeight: '600',
+    fontFamily: fonts.semibold,
   },
 });

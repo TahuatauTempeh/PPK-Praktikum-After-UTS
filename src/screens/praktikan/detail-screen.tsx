@@ -31,13 +31,13 @@ import {
   pecahJudul,
   presensiStatus,
 } from '@/screens/praktikan/selectors';
-import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { fonts, typography, useTheme } from '@/theme';
 
 const SEMUA_TEPI = ['top', 'left', 'right', 'bottom'] as const;
 
 export default function DetailSesiScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
   const { state, submitAttendance } = useSession();
   const [sheetTampil, setSheetTampil] = useState(false);
   const [sedangProses, setSedangProses] = useState(false);
@@ -66,7 +66,7 @@ export default function DetailSesiScreen() {
       >
         <Ikon nama="kembali" ukuran={20} warna="#FFFFFF" />
       </Pressable>
-      <Text accessibilityRole="header" style={[Tipe.sectionTitle, styles.judulHeader]}>
+      <Text accessibilityRole="header" style={[typography.sectionTitle, styles.judulHeader]}>
         Detail sesi
       </Text>
       <View style={styles.penyeimbang} />
@@ -136,7 +136,7 @@ export default function DetailSesiScreen() {
               petunjuk="Menunggu sesi dibuka"
               onPress={bukaSheet}
             />
-            <Text style={[Tipe.caption, styles.tengah, { color: theme.teksSekunder }]}>
+            <Text style={[typography.caption, styles.tengah, { color: theme.colors.textSecondary }]}>
               Menunggu sesi dibuka
             </Text>
           </>
@@ -155,21 +155,21 @@ export default function DetailSesiScreen() {
       overlay={
         <BottomSheet visible={sheetTampil} title="Konfirmasi presensi" onClose={() => setSheetTampil(false)}>
           <View style={styles.sheet}>
-            <Text style={[Tipe.label, styles.tengah, { color: theme.teks }]}>{mataKuliah}</Text>
-            {sesi ? <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>{sesi}</Text> : null}
-            <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>
+            <Text style={[typography.label, styles.tengah, { color: theme.colors.textPrimary }]}>{mataKuliah}</Text>
+            {sesi ? <Text style={[typography.body, styles.tengah, { color: theme.colors.textSecondary }]}>{sesi}</Text> : null}
+            <Text style={[typography.body, styles.tengah, { color: theme.colors.textSecondary }]}>
               {formatTanggal(session.date)}, {formatRentangWIB(session.time)}
             </Text>
-            <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>{session.room}</Text>
-            <Text style={[Tipe.label, styles.tengah, { color: theme.teks }]}>
+            <Text style={[typography.body, styles.tengah, { color: theme.colors.textSecondary }]}>{session.room}</Text>
+            <Text style={[typography.label, styles.tengah, { color: theme.colors.textPrimary }]}>
               Presensi sebagai {currentUser.name} · {currentUser.nim}
             </Text>
-            <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>
+            <Text style={[typography.body, styles.tengah, { color: theme.colors.textSecondary }]}>
               Waktu presensi dicatat saat kamu menekan tombol di bawah.
             </Text>
             {galat ? (
-              <View accessibilityRole="alert" style={[styles.notice, { backgroundColor: theme.galatLembut }]}>
-                <Text style={[Tipe.body, { color: theme.galat }]}>{galat.pesan}</Text>
+              <View accessibilityRole="alert" style={[styles.notice, { backgroundColor: theme.colors.errorSoft }]}>
+                <Text style={[typography.body, { color: theme.colors.error }]}>{galat.pesan}</Text>
               </View>
             ) : null}
             <View style={styles.aksi}>
@@ -191,36 +191,36 @@ export default function DetailSesiScreen() {
       <View
         style={[
           styles.kartuUtama,
-          { backgroundColor: theme.kartuSorot, borderColor: theme.garisKartu, boxShadow: theme.bayang },
+          { backgroundColor: theme.colors.cardOpen, borderColor: theme.colors.glassBorder, boxShadow: theme.colors.shadow },
         ]}
       >
         <KilauKaca />
         <View style={styles.baris}>
-          <Text style={[Tipe.kecil, styles.tanggal, { color: theme.teksSekunder }]}>
+          <Text style={[typography.tiny, styles.tanggal, { color: theme.colors.textSecondary }]}>
             {formatTanggalPendek(session.date).toUpperCase()}
           </Text>
           <StatusLabel status={session.status} />
         </View>
         <View style={styles.materi}>
-          <Text accessibilityRole="header" style={[Tipe.detailTitle, { color: theme.teks }]}>
+          <Text accessibilityRole="header" style={[typography.detailTitle, { color: theme.colors.textPrimary }]}>
             {mataKuliah}
           </Text>
-          {sesi ? <Text style={[Tipe.body, { color: theme.teksSekunder }]}>{sesi}</Text> : null}
+          {sesi ? <Text style={[typography.body, { color: theme.colors.textSecondary }]}>{sesi}</Text> : null}
         </View>
       </View>
 
       <View
         style={[
           styles.kapsul,
-          bentuk === 'aksen' && { backgroundColor: theme.isiAksen },
-          bentuk === 'sukses' && { backgroundColor: theme.suksesLembut },
-          bentuk === 'galat' && { backgroundColor: theme.kartu, borderWidth: 1, borderColor: theme.garisKartu },
+          bentuk === 'aksen' && { backgroundColor: theme.colors.primaryFill },
+          bentuk === 'sukses' && { backgroundColor: theme.colors.successSoft },
+          bentuk === 'galat' && { backgroundColor: theme.colors.glassCard, borderWidth: 1, borderColor: theme.colors.glassBorder },
         ]}
       >
         <Text
           style={[
-            Tipe.caption,
-            { color: bentuk === 'aksen' ? theme.diAtasAksen : theme.teksSekunder },
+            typography.caption,
+            { color: bentuk === 'aksen' ? theme.colors.onPrimary : theme.colors.textSecondary },
           ]}
         >
           Presensi kamu
@@ -228,42 +228,42 @@ export default function DetailSesiScreen() {
         <Text
           accessibilityRole="header"
           style={[
-            record ? Tipe.sectionTitle : Tipe.angka,
-            { color: bentuk === 'aksen' ? theme.diAtasAksen : bentuk === 'sukses' ? theme.sukses : theme.galat },
+            record ? typography.sectionTitle : typography.numeric,
+            { color: bentuk === 'aksen' ? theme.colors.onPrimary : bentuk === 'sukses' ? theme.colors.success : theme.colors.error },
           ]}
         >
           {info.ringkas}
         </Text>
         {record ? (
           <>
-            <Text style={[Tipe.waktuHadir, { color: theme.sukses }]}>{formatJamWIB(record.timestamp)} WIB</Text>
-            <Text style={[Tipe.body, { color: theme.teksSekunder }]}>
+            <Text style={[typography.timeDisplay, { color: theme.colors.success }]}>{formatJamWIB(record.timestamp)} WIB</Text>
+            <Text style={[typography.body, { color: theme.colors.textSecondary }]}>
               {info.note ? `${info.note}. ` : ''}
               {formatTanggal(session.date)}
             </Text>
           </>
         ) : (
-          <Text style={[Tipe.body, { color: bentuk === 'aksen' ? theme.diAtasAksen : theme.teksSekunder }]}>
+          <Text style={[typography.body, { color: bentuk === 'aksen' ? theme.colors.onPrimary : theme.colors.textSecondary }]}>
             {info.note}
           </Text>
         )}
       </View>
 
-      <Text accessibilityRole="header" style={[Tipe.judulBagian, { color: theme.teks }]}>
+      <Text accessibilityRole="header" style={[typography.sectionHeading, { color: theme.colors.textPrimary }]}>
         Informasi sesi
       </Text>
-      <View style={[styles.daftar, { backgroundColor: theme.kartu, borderColor: theme.garisKartu }]}>
+      <View style={[styles.daftar, { backgroundColor: theme.colors.glassCard, borderColor: theme.colors.glassBorder }]}>
         {rincian.map((item, index) => (
           <View
             key={item.label}
-            style={[styles.rincian, index > 0 && { borderTopWidth: 1, borderTopColor: theme.pemisah }]}
+            style={[styles.rincian, index > 0 && { borderTopWidth: 1, borderTopColor: theme.colors.hairline }]}
           >
-            <View style={[styles.ikonBulat, { backgroundColor: theme.isiLembut }]}>
-              <Ikon nama={item.ikon} ukuran={18} warna={theme.aksen} />
+            <View style={[styles.ikonBulat, { backgroundColor: theme.colors.softSurface }]}>
+              <Ikon nama={item.ikon} ukuran={18} warna={theme.colors.primary} />
             </View>
             <View style={styles.teksRincian}>
-              <Text style={[Tipe.kecil, { color: theme.teksSekunder }]}>{item.label}</Text>
-              <Text style={[Tipe.label, { color: theme.teks }]}>{item.nilai}</Text>
+              <Text style={[typography.tiny, { color: theme.colors.textSecondary }]}>{item.label}</Text>
+              <Text style={[typography.label, { color: theme.colors.textPrimary }]}>{item.nilai}</Text>
             </View>
           </View>
         ))}
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   penyeimbang: { width: 44 },
   kartuUtama: { overflow: 'hidden', padding: 20, gap: 14, borderRadius: 28, borderWidth: 1 },
   baris: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  tanggal: { fontWeight: '600', letterSpacing: 0.6 },
+  tanggal: { fontFamily: fonts.semibold, letterSpacing: 0.6 },
   materi: { gap: 6 },
   kapsul: { borderRadius: 24, padding: 18, gap: 4 },
   notice: { borderRadius: 16, padding: 14 },

@@ -6,7 +6,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Ikon, IkonNama } from '@/screens/praktikan/components/ikon';
-import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { typography, useTheme } from '@/theme';
 import { HeroCard } from '@/screens/shared/components/hero-card';
 
 interface HeroProps {
@@ -18,31 +18,31 @@ interface HeroProps {
 }
 
 export function Hero({ judul, watermark, statistik, sapaan, keterangan }: HeroProps) {
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
 
   return (
     <HeroCard
-      backgroundColor={theme.hero}
+      backgroundColor={theme.colors.glassHero}
       watermark={<Ikon nama={watermark} ukuran={126} warna="#FFFFFF" />}
       padding={22}
       gap={10}
     >
-      {sapaan ? <Text style={[Tipe.sapaan, { color: theme.heroTeksLembut }]}>{sapaan}</Text> : null}
-      <Text accessibilityRole="header" style={[Tipe.judulHalaman, { color: theme.heroTeks }]}>
+      {sapaan ? <Text style={[typography.greeting, { color: theme.colors.heroSoft }]}>{sapaan}</Text> : null}
+      <Text accessibilityRole="header" style={[typography.pageTitle, { color: theme.colors.onHero }]}>
         {judul}
       </Text>
-      {keterangan ? <Text style={[Tipe.caption, { color: theme.heroTeksLembut }]}>{keterangan}</Text> : null}
-      <View style={[styles.baris, { borderTopColor: theme.heroGaris }]}>
+      {keterangan ? <Text style={[typography.caption, { color: theme.colors.heroSoft }]}>{keterangan}</Text> : null}
+      <View style={[styles.baris, { borderTopColor: theme.colors.heroLine }]}>
         {statistik.map((item, index) => (
           <View
             key={item.label}
             style={[
               styles.statistik,
-              index > 0 && { borderLeftWidth: 1, borderLeftColor: theme.heroGaris, paddingLeft: 16 },
+              index > 0 && { borderLeftWidth: 1, borderLeftColor: theme.colors.heroLine, paddingLeft: 16 },
             ]}
           >
-            <Text style={[Tipe.angka, { color: theme.heroTeks }]}>{item.nilai}</Text>
-            <Text style={[Tipe.caption, { color: theme.heroTeksLembut }]}>{item.label}</Text>
+            <Text style={[typography.numeric, { color: theme.colors.onHero }]}>{item.nilai}</Text>
+            <Text style={[typography.caption, { color: theme.colors.heroSoft }]}>{item.label}</Text>
           </View>
         ))}
       </View>

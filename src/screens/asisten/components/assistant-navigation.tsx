@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, StyleSheet, View } from 'react-native';
 
-import { usePraktikanTheme } from '@/screens/praktikan/theme';
-
-import { tokens } from '@/theme';
+import { tokens, useTheme } from '@/theme';
 import { AssistantText } from './assistant-text';
 import { ScheduleIcon, type ScheduleIconName } from './schedule-icon';
 
@@ -24,7 +22,7 @@ const iconFor = (tab: AssistantTab, selected: boolean): ScheduleIconName => {
 };
 
 export function AssistantNavigation({ active, showAdmin, onNavigate }: Props) {
-  const barTheme = usePraktikanTheme();
+  const theme = useTheme();
   const [tabWidth, setTabWidth] = useState<number | null>(null);
   const [offset] = useState(() => new Animated.Value(0));
   const placed = useRef(false);
@@ -52,9 +50,9 @@ export function AssistantNavigation({ active, showAdmin, onNavigate }: Props) {
       style={[
         styles.navigation,
         {
-          backgroundColor: barTheme.navLatar,
-          borderColor: barTheme.garisKartu,
-          boxShadow: barTheme.bayang,
+          backgroundColor: theme.colors.navSurface,
+          borderColor: theme.colors.glassBorder,
+          boxShadow: theme.colors.shadow,
         },
       ]}
       accessibilityRole="tablist"
@@ -63,13 +61,13 @@ export function AssistantNavigation({ active, showAdmin, onNavigate }: Props) {
         {tabWidth !== null && (
           <Animated.View pointerEvents="none" accessible={false} style={[styles.indicator, {
             width: tabWidth,
-            backgroundColor: barTheme.navAktif,
+            backgroundColor: theme.colors.primarySoft,
             transform: [{ translateX: offset }],
           }]} />
         )}
         {tabs.map(destination => {
           const selected = active === destination;
-          const tint = selected ? barTheme.aksen : barTheme.ikonNonaktif;
+          const tint = selected ? theme.colors.primary : theme.colors.iconMuted;
           return (
             <Pressable key={destination} accessibilityRole="tab"
               accessibilityState={{ selected }}

@@ -15,10 +15,10 @@ import { SesiCard } from '@/screens/praktikan/components/sesi-card';
 import { useUserPraktikan } from '@/screens/praktikan/guard';
 import { bukaDetailSesi, bukaJadwal } from '@/screens/praktikan/navigasi';
 import { ringkasRiwayat } from '@/screens/praktikan/selectors';
-import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { typography, useTheme } from '@/theme';
 
 export default function RiwayatScreen() {
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
   const currentUser = useUserPraktikan();
   const { sessions, attendance } = useSession().state;
 
@@ -42,10 +42,10 @@ export default function RiwayatScreen() {
       />
 
       <View style={styles.judulBaris}>
-        <Text accessibilityRole="header" style={[Tipe.judulBagian, { color: theme.teks }]}>
+        <Text accessibilityRole="header" style={[typography.sectionHeading, { color: theme.colors.textPrimary }]}>
           Catatan per sesi
         </Text>
-        <Text style={[Tipe.caption, { color: theme.teksSekunder }]}>Terbaru lebih dulu</Text>
+        <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>Terbaru lebih dulu</Text>
       </View>
 
       <View style={styles.daftar}>

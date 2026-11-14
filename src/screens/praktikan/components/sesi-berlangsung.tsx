@@ -8,19 +8,19 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Tombol } from '@/screens/praktikan/components/tombol';
 import { pecahJudul } from '@/screens/praktikan/selectors';
-import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { typography, useTheme } from '@/theme';
 import { Session } from '@/types';
 
 export function SesiBerlangsung({ session, onPress }: { session: Session; onPress: () => void }) {
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
   const { mataKuliah, sesi } = pecahJudul(session);
 
   return (
-    <View style={[styles.kartu, { backgroundColor: theme.isiAksen }]}>
-      <Text accessibilityRole="header" style={[Tipe.sectionTitle, { color: theme.diAtasAksen }]}>
+    <View style={[styles.kartu, { backgroundColor: theme.colors.primaryFill }]}>
+      <Text accessibilityRole="header" style={[typography.sectionTitle, { color: theme.colors.onPrimary }]}>
         Presensi sedang dibuka
       </Text>
-      <Text style={[Tipe.body, { color: theme.diAtasAksen }]}>
+      <Text style={[typography.body, { color: theme.colors.onPrimary }]}>
         {sesi ? `${mataKuliah}, ${sesi}` : mataKuliah}
       </Text>
       <View style={styles.aksi}>

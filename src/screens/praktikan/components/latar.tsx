@@ -7,12 +7,12 @@ import { Image } from 'expo-image';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { usePraktikanTheme } from '@/screens/praktikan/theme';
+import { useTheme } from '@/theme';
 
 export function Latar() {
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
   const sumber =
-    theme.mode === 'gelap'
+    theme.scheme === 'dark'
       ? require('@/assets/praktikan/atmosfer-gelap.svg')
       : require('@/assets/praktikan/atmosfer.svg');
 
@@ -20,7 +20,7 @@ export function Latar() {
     <View
       pointerEvents="none"
       accessible={false}
-      style={[StyleSheet.absoluteFill, { backgroundColor: theme.background }]}
+      style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.background }]}
     >
       <Image source={sumber} contentFit="fill" style={styles.gradien} accessible={false} />
     </View>
@@ -29,8 +29,8 @@ export function Latar() {
 
 /** Kilau kaca di kartu sorotan; hanya di tema terang */
 export function KilauKaca() {
-  const theme = usePraktikanTheme();
-  if (theme.mode === 'gelap') return null;
+  const theme = useTheme();
+  if (theme.scheme === 'dark') return null;
   return (
     <Image
       source={require('@/assets/praktikan/kaca.svg')}

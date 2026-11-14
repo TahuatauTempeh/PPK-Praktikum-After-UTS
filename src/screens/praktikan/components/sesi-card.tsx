@@ -13,7 +13,7 @@ import { StatusLabel } from '@/screens/praktikan/components/status-label';
 import { Tombol } from '@/screens/praktikan/components/tombol';
 import { formatJamWIB, formatRentangWIB, formatTanggal } from '@/screens/praktikan/format';
 import { pecahJudul } from '@/screens/praktikan/selectors';
-import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { fonts, typography, useTheme } from '@/theme';
 import { AttendanceRecord, Session } from '@/types';
 
 interface SesiCardProps {
@@ -23,7 +23,7 @@ interface SesiCardProps {
 }
 
 export function SesiCard({ session, record, onPress }: SesiCardProps) {
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
   const dibuka = session.status === 'open';
   const perluPresensi = dibuka && !record;
   const { mataKuliah, sesi } = pecahJudul(session);
@@ -34,54 +34,54 @@ export function SesiCard({ session, record, onPress }: SesiCardProps) {
       style={[
         styles.kartu,
         {
-          backgroundColor: dibuka ? theme.kartuSorot : theme.kartu,
-          borderColor: theme.garisKartu,
-          boxShadow: theme.bayang,
+          backgroundColor: dibuka ? theme.colors.cardOpen : theme.colors.glassCard,
+          borderColor: theme.colors.glassBorder,
+          boxShadow: theme.colors.shadow,
         },
       ]}
     >
       {dibuka ? <KilauKaca /> : null}
       <View style={styles.isi}>
         <View style={styles.baris}>
-          <Text style={[Tipe.eyebrow, { color: theme.teksSekunder }]}>PRAKTIKUM</Text>
+          <Text style={[typography.eyebrow, { color: theme.colors.textSecondary }]}>PRAKTIKUM</Text>
           <StatusLabel status={session.status} />
         </View>
 
         <View style={styles.materi}>
-          <Text accessibilityRole="header" style={[Tipe.judulKartu, { color: theme.teks }]}>
+          <Text accessibilityRole="header" style={[typography.cardTitle, { color: theme.colors.textPrimary }]}>
             {mataKuliah}
           </Text>
-          {sesi ? <Text style={[Tipe.body, { color: theme.teksSekunder }]}>{sesi}</Text> : null}
+          {sesi ? <Text style={[typography.body, { color: theme.colors.textSecondary }]}>{sesi}</Text> : null}
         </View>
 
         <View style={styles.meta}>
           <View style={styles.barisMeta}>
-            <Ikon nama="jadwal" ukuran={15} warna={theme.teksSekunder} />
-            <Text style={[Tipe.caption, { color: theme.teksSekunder }]}>{formatTanggal(session.date)}</Text>
+            <Ikon nama="jadwal" ukuran={15} warna={theme.colors.textSecondary} />
+            <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>{formatTanggal(session.date)}</Text>
           </View>
           <View style={styles.barisMeta}>
-            <Ikon nama="jam" ukuran={15} warna={theme.teksSekunder} />
-            <Text style={[Tipe.caption, styles.tebal, { color: theme.teks }]}>
+            <Ikon nama="jam" ukuran={15} warna={theme.colors.textSecondary} />
+            <Text style={[typography.caption, styles.tebal, { color: theme.colors.textPrimary }]}>
               {formatRentangWIB(session.time)}
             </Text>
           </View>
           <View style={styles.barisMeta}>
-            <Ikon nama="lokasi" ukuran={14} warna={theme.teksSekunder} />
-            <Text style={[Tipe.caption, { color: theme.teksSekunder }]}>{session.room}</Text>
+            <Ikon nama="lokasi" ukuran={14} warna={theme.colors.textSecondary} />
+            <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>{session.room}</Text>
           </View>
         </View>
 
         {tampilKehadiran ? (
-          <View style={[styles.kehadiran, { borderTopColor: theme.pemisah }]}>
+          <View style={[styles.kehadiran, { borderTopColor: theme.colors.hairline }]}>
             {record ? (
-              <Text style={[Tipe.caption, styles.tebal, { color: theme.sukses }]}>
+              <Text style={[typography.caption, styles.tebal, { color: theme.colors.success }]}>
                 Hadir {formatJamWIB(record.timestamp)} WIB
               </Text>
             ) : dibuka ? (
-              <Text style={[Tipe.caption, { color: theme.teksSekunder }]}>Belum presensi</Text>
+              <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>Belum presensi</Text>
             ) : (
-              <View style={[styles.pil, { backgroundColor: theme.isiLembut }]}>
-                <Text numberOfLines={1} style={[Tipe.caption, styles.tebal, { color: theme.galat }]}>
+              <View style={[styles.pil, { backgroundColor: theme.colors.softSurface }]}>
+                <Text numberOfLines={1} style={[typography.caption, styles.tebal, { color: theme.colors.error }]}>
                   Tidak hadir
                 </Text>
               </View>
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   materi: { gap: 4 },
   meta: { gap: 6 },
   barisMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  tebal: { fontWeight: '600' },
+  tebal: { fontFamily: fonts.semibold },
   kehadiran: { paddingTop: 12, borderTopWidth: 1, alignItems: 'flex-start' },
   pil: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, flexShrink: 0 },
 });

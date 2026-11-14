@@ -7,7 +7,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Ikon } from '@/screens/praktikan/components/ikon';
-import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { fonts, typography, useTheme } from '@/theme';
 
 interface TombolProps {
   label: string;
@@ -32,7 +32,7 @@ export function Tombol({
   petunjuk,
   rapat = false,
 }: TombolProps) {
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
   const utama = varian === 'utama' && !disabled;
   const terang = varian === 'terang' && !disabled;
   // polos: aksi di dalam kartu tanpa latar, teks dan panah sejajar isi kartu
@@ -40,19 +40,19 @@ export function Tombol({
   const warnaTeks = terang
     ? TERANG.teks
     : utama
-      ? theme.diAtasAksen
+      ? theme.colors.onPrimary
       : disabled
-        ? theme.teksSekunder
-        : theme.teksLembut;
+        ? theme.colors.textSecondary
+        : theme.colors.primary;
   const latar = terang
     ? TERANG.latar
     : utama
-      ? theme.isiAksen
+      ? theme.colors.primaryFill
       : disabled
-        ? theme.kartu
+        ? theme.colors.glassCard
         : polos
           ? 'transparent'
-          : theme.isiLembut;
+          : theme.colors.softSurface;
 
   return (
     <Pressable
@@ -66,14 +66,14 @@ export function Tombol({
         rapat && styles.rapat,
         {
           backgroundColor: latar,
-          borderColor: theme.garisKartu,
+          borderColor: theme.colors.glassBorder,
           borderWidth: disabled ? 1 : 0,
           opacity: pressed ? 0.75 : 1,
         },
       ]}
     >
       <View style={[styles.isi, !panah && styles.tengah]}>
-        <Text style={[Tipe.caption, styles.label, { color: warnaTeks }]}>{label}</Text>
+        <Text style={[typography.caption, styles.label, { color: warnaTeks }]}>{label}</Text>
         {panah && !disabled ? <Ikon nama="panah" ukuran={18} warna={warnaTeks} /> : null}
       </View>
     </Pressable>
@@ -91,5 +91,5 @@ const styles = StyleSheet.create({
   isi: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   tengah: { justifyContent: 'center' },
   rapat: { paddingHorizontal: 14 },
-  label: { fontSize: 13, fontWeight: '600', flexShrink: 1 },
+  label: { fontSize: 13, fontFamily: fonts.semibold, flexShrink: 1 },
 });
