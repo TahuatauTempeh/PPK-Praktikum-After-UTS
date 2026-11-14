@@ -491,6 +491,20 @@ Kartu Praktikan memakai `glassCard`/`cardOpen` dan `KilauKaca`. Blok menu hub
 memakai sel 33,333%, tinggi minimal 104, padding 12, ikon 40, label 12,5/16,
 dan radius block.
 
+Kartu yang berakhir dengan aksi memakai satu aturan jarak:
+
+- Bingkai 18 (`spacing.section`) di semua sisi.
+- Jarak antarkelompok 16 (`spacing.base`), ditulis sebagai `gap` kartu.
+- Jarak antarbaris teks 4 (`spacing.xs`) di dalam satu blok teks.
+- Aksi selebar konten, tinggi 48, radius 21, padding horizontal 16, dan selalu
+  punya latar: putih di atas kartu biru, `softSurface`, atau `primarySoft`.
+- Jarak antarbagian di dalam konten (10–14) tidak ikut diseragamkan karena
+  bagian-bagian itu bukan satu blok teks.
+
+Kartu yang mengikuti aturan ini: `SesiBerlangsung` (acuan), `SesiCard`,
+`ScheduleCard`, `RecapCard`, dan kartu pengguna di halaman admin. Radius tetap
+mengikuti jenis permukaan: 28 untuk kartu kaca, 24 untuk kartu solid.
+
 ### 8.4 Tombol
 
 - Tombol utama Asisten: latar `primaryFill`, teks `onPrimary`.
@@ -503,6 +517,8 @@ dan radius block.
 - Jangan menulis `#FFFFFF` untuk label tombol; pakai token `on*`.
 - Tombol nonaktif tidak memakai opacity rendah untuk teks; gunakan warna
   `textSecondary` agar tetap terbaca.
+- Aksi di dalam kartu selalu punya latar dan mengikuti ukuran 48/21/16.
+  Varian tanpa latar (`polos`) dan prop `rapat` dihapus 15 November 2026.
 
 ### 8.5 Bottom sheet
 
@@ -669,6 +685,7 @@ Repo tidak punya test suite otomatis.
 | 15 Nov 2026 | Nilai minoritas mengikuti mayoritas: aksen `#204CAC`, galat `#AE3645`, hero alpha 0.8, lime terang di kedua mode, ikon aksen `#204CAC` |
 | 15 Nov 2026 | `use-color-scheme.web.ts` dihapus karena identik setelah hidrasi pindah ke `use-device-color-scheme.web.ts` |
 | 15 Nov 2026 | Empat komponen bersama tanpa pemakai dihapus: `EmptyState`, `ScreenState`, `SessionCard`, `StatusBadge` |
+| 15 Nov 2026 | Spacing kartu beraksi diseragamkan: bingkai 18, jarak ke aksi 16, aksi 48/21/16 berlatar, berlaku di `SesiBerlangsung`, `SesiCard`, `ScheduleCard`, `RecapCard`, dan kartu admin |
 
 Perbaikan kontras 14 November 2026:
 
