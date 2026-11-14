@@ -6,8 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { TAB_TRANSITION_SPEC, tabSlideInterpolator } from '@/constants/tab-transition';
 import { useAuth } from '@/context/auth-context';
 import { AssistantNavigation, type AssistantTab } from '@/screens/asisten/components/assistant-navigation';
-import { useAssistantTheme } from '@/screens/asisten/theme';
-import { usePraktikanTheme } from '@/screens/praktikan/theme';
+import { useTheme } from '@/theme';
 
 const tabFromPath = (pathname: string): AssistantTab | null => {
   if (pathname === '/asisten/profil') return 'profile';
@@ -17,9 +16,8 @@ const tabFromPath = (pathname: string): AssistantTab | null => {
 };
 
 export default function TabsLayout() {
-  const theme = useAssistantTheme();
+  const theme = useTheme();
   const { profile } = useAuth();
-  const barTheme = usePraktikanTheme();
   const { width } = useWindowDimensions();
   const showAdmin = profile?.isAdmin === true;
   const pathname = usePathname();
@@ -39,7 +37,7 @@ export default function TabsLayout() {
     <Tabs
       backBehavior="history"
       tabBar={() => (
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={{ backgroundColor: barTheme.dasarNav }}>
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={{ backgroundColor: theme.colors.background }}>
           <AssistantNavigation active={active} showAdmin={showAdmin} onNavigate={goTo} />
         </SafeAreaView>
       )}

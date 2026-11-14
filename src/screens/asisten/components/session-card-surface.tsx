@@ -3,11 +3,11 @@ import { Platform, StyleSheet, View, type LayoutChangeEvent, type StyleProp, typ
 import Svg, { ClipPath, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import {
-  assistantTokens,
-  useAssistantStyles,
-  useAssistantTheme,
-  type AssistantTheme,
-} from '../theme';
+  tokens,
+  useThemedStyles,
+  useTheme,
+  type Theme,
+} from '@/theme';
 
 /** Ukuran kapsul ringkasan kehadiran dan jarak cekungan tempat kapsul itu duduk. */
 export const summaryDock = { width: 172, height: 58, radius: 22, gap: 12 } as const;
@@ -21,7 +21,7 @@ const decorativeSvgAccessibility = Platform.OS === 'web'
 
 /** Siluet kartu: persegi membulat dengan cekungan inverse radius di sudut kanan bawah. */
 function surfacePath(width: number, height: number) {
-  const radius = assistantTokens.radius.card;
+  const radius = tokens.radius.card;
   const top = height - summaryDock.height - NOTCH_GAP;
   const left = width - summaryDock.width - NOTCH_GAP;
   return [
@@ -46,8 +46,8 @@ type Props = { style?: StyleProp<ViewStyle> };
 
 /** Latar kartu sesi bercekung; anak-anaknya digambar di atas siluet ini. */
 export function SessionCardSurface({ style, children }: PropsWithChildren<Props>) {
-  const theme = useAssistantTheme();
-  const styles = useAssistantStyles(gaya);
+  const theme = useTheme();
+  const styles = useThemedStyles(gaya);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   const path = size ? surfacePath(size.width, size.height) : null;
 
@@ -90,8 +90,8 @@ export function SessionCardSurface({ style, children }: PropsWithChildren<Props>
   );
 }
 
-const gaya = (theme: AssistantTheme) => StyleSheet.create({
-  surface: { position: 'relative', borderRadius: assistantTokens.radius.card },
+const gaya = (theme: Theme) => StyleSheet.create({
+  surface: { position: 'relative', borderRadius: tokens.radius.card },
   fallback: {
     backgroundColor: theme.colors.glassSurface,
     borderWidth: 1,

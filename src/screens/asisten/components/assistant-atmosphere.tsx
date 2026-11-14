@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 
-import { assistantTokens, useAssistantTheme } from '../theme';
+import { tokens, useTheme } from '@/theme';
 
 const atmosfer = {
   light: require('../../../../assets/praktikan/atmosfer.svg'),
@@ -19,7 +19,7 @@ const kilau = {
  * termasuk varian gelapnya.
  */
 export function AssistantAtmosphere() {
-  const theme = useAssistantTheme();
+  const theme = useTheme();
 
   return (
     <View
@@ -34,7 +34,7 @@ export function AssistantAtmosphere() {
 }
 
 export function AssistantGlassHighlight() {
-  const theme = useAssistantTheme();
+  const theme = useTheme();
 
   return <Image source={kilau[theme.scheme]}
     contentFit="fill" style={styles.highlight} accessible={false} pointerEvents="none" />;
@@ -49,6 +49,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     left: 0,
-    borderRadius: assistantTokens.radius.card,
+    borderRadius: tokens.radius.card,
   },
 });

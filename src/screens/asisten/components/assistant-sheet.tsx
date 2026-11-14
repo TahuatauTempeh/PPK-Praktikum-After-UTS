@@ -6,10 +6,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
-  assistantTokens,
-  useAssistantStyles,
-  type AssistantTheme,
-} from '../theme';
+  tokens,
+  useThemedStyles,
+  type Theme,
+} from '@/theme';
 import { AssistantGlassHighlight } from './assistant-atmosphere';
 
 export type CloseSheet = (action?: () => void) => void;
@@ -28,7 +28,7 @@ const DISMISS_VELOCITY = 0.9;
 
 export function AssistantSheet({ children, onCancel, onShow }: Props) {
   const { height } = useWindowDimensions();
-  const styles = useAssistantStyles(gaya);
+  const styles = useThemedStyles(gaya);
   const [translateY] = useState(() => new Animated.Value(height));
   const [backdropOpacity] = useState(() => new Animated.Value(0));
   const [sheetHeight, setSheetHeight] = useState(0);
@@ -97,7 +97,7 @@ export function AssistantSheet({ children, onCancel, onShow }: Props) {
   );
 }
 
-const gaya = (theme: AssistantTheme) => StyleSheet.create({
+const gaya = (theme: Theme) => StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'flex-end' },
   backdrop: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: theme.colors.scrim },
   frame: { maxHeight: '92%', width: '100%', maxWidth: 600, alignSelf: 'center' },
@@ -106,8 +106,8 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
     backgroundColor: theme.colors.panel,
     borderWidth: 1,
     borderColor: theme.colors.glassBorder,
-    borderTopLeftRadius: assistantTokens.radius.panel,
-    borderTopRightRadius: assistantTokens.radius.panel,
+    borderTopLeftRadius: tokens.radius.panel,
+    borderTopRightRadius: tokens.radius.panel,
     overflow: 'hidden',
   },
   grabArea: { alignSelf: 'stretch', alignItems: 'center', paddingTop: 12, paddingBottom: 4 },

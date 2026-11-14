@@ -3,11 +3,11 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { HeroCard } from '@/screens/shared/components/hero-card';
 
 import {
-  assistantTokens,
-  useAssistantStyles,
-  useAssistantTheme,
-  type AssistantTheme,
-} from '../theme';
+  tokens,
+  useThemedStyles,
+  useTheme,
+  type Theme,
+} from '@/theme';
 import { formatPraktikumName } from '../session-format';
 import { type AssistantSession } from '../schedule-data';
 import { AssistantText } from './assistant-text';
@@ -28,8 +28,8 @@ type Props = {
 export function AgendaBanner({
   date, sessions, onPress, ctaLabel = 'Lihat jadwal', showNextSession = false,
 }: Props) {
-  const theme = useAssistantTheme();
-  const styles = useAssistantStyles(gaya);
+  const theme = useTheme();
+  const styles = useThemedStyles(gaya);
   const daySessions = sessions
     .filter(session => session.date === date)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -121,13 +121,13 @@ export function AgendaBanner({
   );
 }
 
-const gaya = (theme: AssistantTheme) => StyleSheet.create({
+const gaya = (theme: Theme) => StyleSheet.create({
   bannerHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   bannerEyebrow: {
     fontSize: 10,
     lineHeight: 16,
     letterSpacing: 1.8,
-    fontFamily: assistantTokens.fonts.semibold,
+    fontFamily: tokens.fonts.semibold,
     color: theme.colors.heroSoft,
   },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 14, flexWrap: 'wrap' },
@@ -135,20 +135,20 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
     fontSize: 58,
     lineHeight: 64,
     letterSpacing: -3,
-    fontFamily: assistantTokens.fonts.bold,
-    color: theme.colors.surface,
+    fontFamily: tokens.fonts.bold,
+    color: theme.colors.onHero,
     fontVariant: ['tabular-nums'],
   },
   dateDetails: { gap: 3, flex: 1, minWidth: 100 },
-  weekday: { fontSize: 21, lineHeight: 28, fontFamily: assistantTokens.fonts.semibold, color: theme.colors.surface },
+  weekday: { fontSize: 21, lineHeight: 28, fontFamily: tokens.fonts.semibold, color: theme.colors.onHero },
   month: { fontSize: 13, lineHeight: 20, color: theme.colors.heroSoft },
   todayBadge: {
     paddingHorizontal: 10,
     paddingVertical: 5,
     backgroundColor: theme.colors.heroWash,
-    borderRadius: assistantTokens.radius.pill,
+    borderRadius: tokens.radius.pill,
   },
-  todayLabel: { color: theme.colors.surface, fontSize: 11, lineHeight: 16, fontFamily: assistantTokens.fonts.semibold },
+  todayLabel: { color: theme.colors.onHero, fontSize: 11, lineHeight: 16, fontFamily: tokens.fonts.semibold },
   bannerFooter: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -159,13 +159,13 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: theme.colors.heroLine,
   },
-  sessionSummary: { fontSize: 12, lineHeight: 18, fontFamily: assistantTokens.fonts.medium, color: theme.colors.surface },
+  sessionSummary: { fontSize: 12, lineHeight: 18, fontFamily: tokens.fonts.medium, color: theme.colors.onHero },
   openSummary: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.lime },
-  openLabel: { fontSize: 12, lineHeight: 18, color: theme.colors.surface },
+  openLabel: { fontSize: 12, lineHeight: 18, color: theme.colors.onHero },
   divider: { height: 1, backgroundColor: theme.colors.heroLine },
   nextSession: { fontSize: 12, lineHeight: 16, color: theme.colors.heroMuted },
   cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 3 },
-  ctaLabel: { fontSize: 13, lineHeight: 18, fontFamily: assistantTokens.fonts.semibold, color: theme.colors.surface },
+  ctaLabel: { fontSize: 13, lineHeight: 18, fontFamily: tokens.fonts.semibold, color: theme.colors.onHero },
   pressed: { opacity: 0.78 },
 });

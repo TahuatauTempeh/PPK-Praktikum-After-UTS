@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { UserProfile } from '@/types';
 
-import { assistantTokens, useAssistantStyles, useAssistantTheme, type AssistantTheme } from '../theme';
+import { tokens, useThemedStyles, useTheme, type Theme } from '@/theme';
 import { AssistantSheet } from './assistant-sheet';
 import { AssistantText } from './assistant-text';
 import { ScheduleIcon } from './schedule-icon';
@@ -16,8 +16,8 @@ type Props = {
 
 /** Konfirmasi perubahan role di halaman admin, memakai sheet Asisten. */
 export function AdminRoleConfirmation({ target, onCancel, onConfirm }: Props) {
-  const theme = useAssistantTheme();
-  const styles = useAssistantStyles(gaya);
+  const theme = useTheme();
+  const styles = useThemedStyles(gaya);
   const cancelRef = useRef<ComponentRef<typeof Pressable>>(null);
   const promoting = target.role === 'praktikan';
   const title = promoting ? 'Jadikan Asisten?' : 'Jadikan Praktikan?';
@@ -87,7 +87,7 @@ export function AdminRoleConfirmation({ target, onCancel, onConfirm }: Props) {
   );
 }
 
-const gaya = (theme: AssistantTheme) => StyleSheet.create({
+const gaya = (theme: Theme) => StyleSheet.create({
   dialog: { width: '100%', backgroundColor: 'transparent', padding: 24, gap: 20 },
   icon: {
     width: 48,
@@ -99,16 +99,16 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
   promoteIcon: { backgroundColor: theme.colors.primarySoft },
   demoteIcon: { backgroundColor: theme.colors.errorSoft },
   message: { gap: 9 },
-  title: { fontSize: 23, lineHeight: 30, fontFamily: assistantTokens.fonts.bold },
+  title: { fontSize: 23, lineHeight: 30, fontFamily: tokens.fonts.bold },
   target: {
     gap: 7,
     padding: 14,
     backgroundColor: theme.colors.glassSurface,
     borderWidth: 1,
     borderColor: theme.colors.glassBorder,
-    borderRadius: assistantTokens.radius.control,
+    borderRadius: tokens.radius.control,
   },
-  targetName: { fontFamily: assistantTokens.fonts.semibold },
+  targetName: { fontFamily: tokens.fonts.semibold },
   actions: { gap: 10 },
   button: {
     minHeight: 50,
@@ -117,7 +117,7 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderWidth: 1,
-    borderRadius: assistantTokens.radius.control,
+    borderRadius: tokens.radius.control,
   },
   primary: { backgroundColor: theme.colors.primaryFill, borderColor: theme.colors.primaryFill },
   danger: { backgroundColor: theme.colors.errorFill, borderColor: theme.colors.errorFill },

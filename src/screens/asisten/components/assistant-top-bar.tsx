@@ -1,10 +1,10 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import {
-  useAssistantStyles,
-  useAssistantTheme,
-  type AssistantTheme,
-} from '../theme';
+  useThemedStyles,
+  useTheme,
+  type Theme,
+} from '@/theme';
 import { AssistantText } from './assistant-text';
 import { ScheduleIcon } from './schedule-icon';
 
@@ -12,8 +12,8 @@ type Props = { onBack: () => void; title?: string };
 
 /** Tombol kembali untuk Jadwal dan Rekap, di luar area gulir. */
 export function AssistantTopBar({ onBack, title }: Props) {
-  const theme = useAssistantTheme();
-  const styles = useAssistantStyles(gaya);
+  const theme = useTheme();
+  const styles = useThemedStyles(gaya);
 
   return (
     <View style={styles.bar}>
@@ -23,7 +23,7 @@ export function AssistantTopBar({ onBack, title }: Props) {
         onPress={onBack}
         style={({ pressed }) => [styles.back, pressed && styles.pressed]}
       >
-        <ScheduleIcon name="backPrimary" size={20} tintColor={theme.colors.iconPrimary} />
+        <ScheduleIcon name="backPrimary" size={20} tintColor={theme.colors.primary} />
       </Pressable>
       {title ? (
         <AssistantText variant="label" accessibilityRole="header" style={styles.title}>
@@ -34,7 +34,7 @@ export function AssistantTopBar({ onBack, title }: Props) {
   );
 }
 
-const gaya = (theme: AssistantTheme) => StyleSheet.create({
+const gaya = (theme: Theme) => StyleSheet.create({
   bar: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8 },
   back: {
     minWidth: 44,
@@ -47,6 +47,6 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
     borderRadius: 16,
     boxShadow: theme.colors.shadowSmall,
   },
-  title: { flexShrink: 1, color: theme.colors.surface },
+  title: { flexShrink: 1, color: theme.colors.onHero },
   pressed: { opacity: 0.6 },
 });

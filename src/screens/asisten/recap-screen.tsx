@@ -14,16 +14,16 @@ import { buildRecap, type DateRange, monthRange } from './recap-data';
 import { previewDate } from './schedule-data';
 import { formatSessionDate } from './session-format';
 import {
-  assistantTokens,
-  useAssistantStyles,
-  useAssistantTheme,
-  type AssistantTheme,
-} from './theme';
+  tokens,
+  useThemedStyles,
+  useTheme,
+  type Theme,
+} from '@/theme';
 
 type Props = { initialSessionId?: string; onSchedule: () => void; onDetail: (id: string) => void; onBack?: () => void };
 export default function RecapScreen({ initialSessionId = '', onSchedule, onDetail, onBack }: Props) {
-  const theme = useAssistantTheme();
-  const styles = useAssistantStyles(gaya);
+  const theme = useTheme();
+  const styles = useThemedStyles(gaya);
   const { width } = useWindowDimensions();
   const { sessions, attendance, participants } = useAssistantSessions();
   const initialSession = sessions.find(session => session.id === initialSessionId);
@@ -70,7 +70,7 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
             <Pressable accessibilityRole="button" accessibilityLabel={`Filter tanggal: ${dateLabel}`}
               accessibilityState={{ expanded: dialog === 'date' }} onPress={() => setDialog('date')}
               style={({ pressed }) => [styles.filter, styles.dateFilter, pressed && styles.pressed]}>
-              <ScheduleIcon name="filterCalendar" size={16} tintColor={theme.colors.iconPrimary} />
+              <ScheduleIcon name="filterCalendar" size={16} tintColor={theme.colors.primary} />
               <AssistantText variant="caption" style={styles.filterText}>{range && range.start.slice(0, 7) === range.end.slice(0, 7)
                 ? `${Number(range.start.slice(8))}–${formatSessionDate(range.end)}` : dateLabel}</AssistantText>
               <ScheduleIcon name="chevron" size={14} tintColor={theme.colors.iconMuted} />
@@ -93,7 +93,7 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
             </View>
           ) : (
             <View style={styles.empty}>
-              <View style={styles.emptyIcon}><ScheduleIcon name="chartEmpty" size={34} tintColor={theme.colors.iconPrimary} /></View>
+              <View style={styles.emptyIcon}><ScheduleIcon name="chartEmpty" size={34} tintColor={theme.colors.primary} /></View>
               <AssistantText accessibilityRole="header" style={styles.emptyTitle}>{closedSessions.length ? 'Tidak ada rekap untuk filter ini' : 'Belum ada rekap'}</AssistantText>
               <AssistantText tone="secondary" style={styles.center}>{closedSessions.length
                 ? 'Tidak ada sesi ditutup yang cocok dengan tanggal dan sesi pilihan. Ubah filter untuk melihat rekap lainnya.'
@@ -116,31 +116,31 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
     </>
   );
 }
-const gaya = (theme: AssistantTheme) => StyleSheet.create({
+const gaya = (theme: Theme) => StyleSheet.create({
   screen: { flex: 1 },
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
-  eyebrow: { fontSize: 10, lineHeight: 16, letterSpacing: 1.6, fontFamily: assistantTokens.fonts.semibold, color: theme.colors.heroSoft },
-  title: { fontSize: 28, lineHeight: 35, letterSpacing: -0.8, color: theme.colors.surface },
+  eyebrow: { fontSize: 10, lineHeight: 16, letterSpacing: 1.6, fontFamily: tokens.fonts.semibold, color: theme.colors.heroSoft },
+  title: { fontSize: 28, lineHeight: 35, letterSpacing: -0.8, color: theme.colors.onHero },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  filter: { flexGrow: 1, flexBasis: 140, flexDirection: 'row', alignItems: 'center', gap: 7, minHeight: 44, paddingHorizontal: 11, paddingVertical: 10, borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: assistantTokens.radius.control, backgroundColor: theme.colors.glassSurface },
+  filter: { flexGrow: 1, flexBasis: 140, flexDirection: 'row', alignItems: 'center', gap: 7, minHeight: 44, paddingHorizontal: 11, paddingVertical: 10, borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: tokens.radius.control, backgroundColor: theme.colors.glassSurface },
   dateFilter: { flexBasis: 185 },
   filterText: { flex: 1 },
   metrics: { marginTop: 4, paddingTop: 14, flexDirection: 'row', flexWrap: 'wrap', borderTopWidth: 1, borderTopColor: theme.colors.heroLine },
   metric: { flex: 1, minWidth: 60, gap: 5, paddingHorizontal: 8, paddingVertical: 4 },
   metricDivider: { marginRight: 8, borderRightWidth: 1, borderRightColor: theme.colors.heroLine },
-  metricNumber: { fontSize: 20, lineHeight: 28, fontFamily: assistantTokens.fonts.bold, color: theme.colors.surface, letterSpacing: -0.7 },
+  metricNumber: { fontSize: 20, lineHeight: 28, fontFamily: tokens.fonts.bold, color: theme.colors.onHero, letterSpacing: -0.7 },
   metricNumberCompact: { fontSize: 16, lineHeight: 22, letterSpacing: -0.4 },
   metricLabel: { fontSize: 10, lineHeight: 16, color: theme.colors.heroSoft },
   small: { fontSize: 11, lineHeight: 16 },
-  sectionTitle: { fontSize: 20, lineHeight: 27, fontFamily: assistantTokens.fonts.bold, letterSpacing: -0.4 },
+  sectionTitle: { fontSize: 20, lineHeight: 27, fontFamily: tokens.fonts.bold, letterSpacing: -0.4 },
   list: { gap: 13 },
   listHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   empty: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', gap: 16, paddingVertical: 32 },
-  emptyIcon: { width: 84, height: 84, borderRadius: assistantTokens.radius.panel, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
-  emptyTitle: { fontFamily: assistantTokens.fonts.bold, fontSize: 20, lineHeight: 27, textAlign: 'center' },
+  emptyIcon: { width: 84, height: 84, borderRadius: tokens.radius.panel, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  emptyTitle: { fontFamily: tokens.fonts.bold, fontSize: 20, lineHeight: 27, textAlign: 'center' },
   center: { textAlign: 'center', paddingHorizontal: 22 },
   reset: { alignItems: 'center', justifyContent: 'center', minHeight: 44, padding: 12 },
-  primary: { alignSelf: 'stretch', flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', minHeight: 50, paddingHorizontal: 18, paddingVertical: 14, backgroundColor: theme.colors.primaryFill, borderRadius: assistantTokens.radius.control },
+  primary: { alignSelf: 'stretch', flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', minHeight: 50, paddingHorizontal: 18, paddingVertical: 14, backgroundColor: theme.colors.primaryFill, borderRadius: tokens.radius.control },
   white: { color: theme.colors.onPrimary },
   pressed: { opacity: 0.7 },
 });

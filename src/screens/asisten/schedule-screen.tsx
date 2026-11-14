@@ -11,7 +11,7 @@ import {
   type AssistantSession, type AssistantAttendance, type SessionStatus,
   previewAttendance, previewDate, previewSessions, statusLabels,
 } from './schedule-data';
-import { assistantTokens, useAssistantStyles, useAssistantTheme, type AssistantTheme } from './theme';
+import { tokens, useThemedStyles, useTheme, type Theme } from '@/theme';
 
 type Filter = 'all' | SessionStatus;
 const filters: readonly Filter[] = ['all', 'pending', 'open', 'closed'];
@@ -28,8 +28,8 @@ export default function ScheduleScreen({
   sessions = previewSessions, attendance = previewAttendance, date = previewDate,
   onManage, onBack,
 }: Props) {
-  const theme = useAssistantTheme();
-  const styles = useAssistantStyles(gaya);
+  const theme = useTheme();
+  const styles = useThemedStyles(gaya);
   const [filter, setFilter] = useState<Filter>('all');
   const daySessions = sessions.filter(session => session.date === date)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -77,7 +77,7 @@ export default function ScheduleScreen({
         {visible.map(session => <ScheduleCard key={session.id} session={session} attendance={attendance} onManage={onManage} />)}
         {visible.length === 0 && (
           <View style={styles.empty}>
-            <View style={styles.emptyIcon}><ScheduleIcon name="calendarPlus" size={34} tintColor={theme.colors.iconPrimary} /></View>
+            <View style={styles.emptyIcon}><ScheduleIcon name="calendarPlus" size={34} tintColor={theme.colors.primary} /></View>
             <AssistantText style={styles.emptyTitle} accessibilityRole="header">
               {daySessions.length === 0 ? 'Jadwal masih kosong' : 'Tidak ada sesi untuk filter ini'}
             </AssistantText>
@@ -98,23 +98,23 @@ export default function ScheduleScreen({
   );
 }
 
-const gaya = (theme: AssistantTheme) => StyleSheet.create({
+const gaya = (theme: Theme) => StyleSheet.create({
   white: { color: theme.colors.onPrimary },
   scheduleSection: { gap: 14, marginTop: 8 },
-  filterViewport: { marginHorizontal: -assistantTokens.spacing.page },
-  filters: { flexDirection: 'row', gap: 8, paddingHorizontal: assistantTokens.spacing.page, paddingBottom: 2 },
-  filter: { minHeight: 44, paddingHorizontal: 13, gap: 8, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: assistantTokens.radius.pill, backgroundColor: theme.colors.glassMuted },
+  filterViewport: { marginHorizontal: -tokens.spacing.page },
+  filters: { flexDirection: 'row', gap: 8, paddingHorizontal: tokens.spacing.page, paddingBottom: 2 },
+  filter: { minHeight: 44, paddingHorizontal: 13, gap: 8, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: tokens.radius.pill, backgroundColor: theme.colors.glassMuted },
   selectedFilter: { backgroundColor: theme.colors.primaryFill, borderColor: theme.colors.primaryFill },
-  filterLabel: { fontSize: 12, lineHeight: 18, fontFamily: assistantTokens.fonts.semibold },
-  filterCount: { fontSize: 10, lineHeight: 16, fontFamily: assistantTokens.fonts.semibold, color: theme.colors.textSecondary },
+  filterLabel: { fontSize: 12, lineHeight: 18, fontFamily: tokens.fonts.semibold },
+  filterCount: { fontSize: 10, lineHeight: 16, fontFamily: tokens.fonts.semibold, color: theme.colors.textSecondary },
   selectedCount: { color: theme.colors.onPrimarySoft },
   pressed: { opacity: 0.7 },
   listHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  sectionTitle: { fontSize: 20, lineHeight: 27, fontFamily: assistantTokens.fonts.bold, letterSpacing: -0.4 },
+  sectionTitle: { fontSize: 20, lineHeight: 27, fontFamily: tokens.fonts.bold, letterSpacing: -0.4 },
   list: { gap: 14 },
   empty: { alignItems: 'center', paddingHorizontal: 22, paddingVertical: 32, gap: 16 },
-  emptyIcon: { width: 84, height: 84, alignItems: 'center', justifyContent: 'center', borderRadius: assistantTokens.radius.panel, backgroundColor: theme.colors.glassMuted },
-  emptyTitle: { fontFamily: assistantTokens.fonts.bold, fontSize: 20, lineHeight: 27, textAlign: 'center' },
+  emptyIcon: { width: 84, height: 84, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.panel, backgroundColor: theme.colors.glassMuted },
+  emptyTitle: { fontFamily: tokens.fonts.bold, fontSize: 20, lineHeight: 27, textAlign: 'center' },
   center: { textAlign: 'center' },
-  reset: { backgroundColor: theme.colors.primaryFill, borderRadius: assistantTokens.radius.control, paddingHorizontal: 18, paddingVertical: 14, minHeight: 50, alignSelf: 'stretch', alignItems: 'center' },
+  reset: { backgroundColor: theme.colors.primaryFill, borderRadius: tokens.radius.control, paddingHorizontal: 18, paddingVertical: 14, minHeight: 50, alignSelf: 'stretch', alignItems: 'center' },
 });

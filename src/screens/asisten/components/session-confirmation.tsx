@@ -4,7 +4,7 @@ import { AssistantSheet } from './assistant-sheet';
 
 import { type AssistantSession } from '../schedule-data';
 import { formatPraktikumName, formatSessionDate } from '../session-format';
-import { assistantTokens, useAssistantStyles, useAssistantTheme, type AssistantTheme } from '../theme';
+import { tokens, useThemedStyles, useTheme, type Theme } from '@/theme';
 import { AssistantText } from './assistant-text';
 import { ScheduleIcon } from './schedule-icon';
 
@@ -18,8 +18,8 @@ type Props = {
 };
 
 export function SessionConfirmation({ session, mode, present, total, onCancel, onConfirm }: Props) {
-  const theme = useAssistantTheme();
-  const styles = useAssistantStyles(gaya);
+  const theme = useTheme();
+  const styles = useThemedStyles(gaya);
   const cancelRef = useRef<ComponentRef<typeof Pressable>>(null);
   const closing = mode === 'close';
   const title = closing ? 'Tutup sesi ini?' : 'Buka sesi sekarang?';
@@ -64,18 +64,18 @@ export function SessionConfirmation({ session, mode, present, total, onCancel, o
   );
 }
 
-const gaya = (theme: AssistantTheme) => StyleSheet.create({
+const gaya = (theme: Theme) => StyleSheet.create({
   dialog: { width: '100%', backgroundColor: 'transparent', padding: 24, gap: 20 },
   icon: { width: 48, height: 48, borderRadius: 16, backgroundColor: theme.colors.lime, alignItems: 'center', justifyContent: 'center' },
   dangerIcon: { backgroundColor: theme.colors.errorSoft },
   message: { gap: 9 },
-  title: { fontSize: 23, lineHeight: 30, fontFamily: assistantTokens.fonts.bold },
-  session: { padding: 14, gap: 7, backgroundColor: theme.colors.glassSurface, borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: assistantTokens.radius.control },
-  sessionTitle: { fontFamily: assistantTokens.fonts.semibold },
+  title: { fontSize: 23, lineHeight: 30, fontFamily: tokens.fonts.bold },
+  session: { padding: 14, gap: 7, backgroundColor: theme.colors.glassSurface, borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: tokens.radius.control },
+  sessionTitle: { fontFamily: tokens.fonts.semibold },
   totals: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8, paddingTop: 7 },
-  bold: { fontFamily: assistantTokens.fonts.semibold },
+  bold: { fontFamily: tokens.fonts.semibold },
   actions: { gap: 10 },
-  button: { minHeight: 50, alignItems: 'center', justifyContent: 'center', borderRadius: assistantTokens.radius.control, borderWidth: 1, paddingHorizontal: 18, paddingVertical: 14 },
+  button: { minHeight: 50, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.control, borderWidth: 1, paddingHorizontal: 18, paddingVertical: 14 },
   primary: { backgroundColor: theme.colors.primaryFill, borderColor: theme.colors.primaryFill },
   danger: { backgroundColor: theme.colors.errorFill, borderColor: theme.colors.errorFill },
   cancel: { backgroundColor: theme.colors.glassSurface, borderColor: theme.colors.glassBorder },

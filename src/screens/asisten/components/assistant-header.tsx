@@ -1,12 +1,12 @@
 import { StyleSheet, View } from 'react-native';
 
-import { assistantTokens, useAssistantStyles, type AssistantTheme } from '../theme';
+import { tokens, useThemedStyles, type Theme } from '@/theme';
 import { AssistantText } from './assistant-text';
 
 type Props = { greeting: string; title: string; initials: string; identityLabel: string };
 
 export function AssistantHeader({ greeting, title, initials, identityLabel }: Props) {
-  const styles = useAssistantStyles(gaya);
+  const styles = useThemedStyles(gaya);
 
   return (
     <View style={styles.header}>
@@ -23,19 +23,19 @@ export function AssistantHeader({ greeting, title, initials, identityLabel }: Pr
   );
 }
 
-const gaya = (theme: AssistantTheme) => StyleSheet.create({
+const gaya = (theme: Theme) => StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   heading: { flex: 1, gap: 7 },
   greeting: { color: theme.colors.heroSoft },
-  title: { color: theme.colors.surface },
+  title: { color: theme.colors.onHero },
   avatar: {
     minWidth: 46,
     minHeight: 46,
     padding: 10,
-    borderRadius: assistantTokens.radius.pill,
+    borderRadius: tokens.radius.pill,
     backgroundColor: theme.colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  initials: { fontFamily: assistantTokens.fonts.bold },
+  initials: { fontFamily: tokens.fonts.bold },
 });

@@ -5,10 +5,10 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import {
-  assistantTokens,
-  useAssistantStyles,
-  type AssistantTheme,
-} from '../theme';
+  tokens,
+  useThemedStyles,
+  type Theme,
+} from '@/theme';
 import { AssistantAtmosphere } from './assistant-atmosphere';
 
 type SurfaceProps = PropsWithChildren<{
@@ -21,7 +21,7 @@ type SurfaceProps = PropsWithChildren<{
  */
 export function AssistantSurface({ children, footer, header, edges }: SurfaceProps) {
   const focused = useIsFocused();
-  const styles = useAssistantStyles(gaya);
+  const styles = useThemedStyles(gaya);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={edges}>
@@ -37,7 +37,7 @@ export function AssistantSurface({ children, footer, header, edges }: SurfacePro
 export function AssistantScreen({ children, footer, header, scrollRef, edges }: PropsWithChildren<{
   footer?: ReactNode; header?: ReactNode; scrollRef?: Ref<ComponentRef<typeof ScrollView>>; edges?: readonly Edge[];
 }>) {
-  const styles = useAssistantStyles(gaya);
+  const styles = useThemedStyles(gaya);
 
   return (
     <AssistantSurface header={header} footer={footer} edges={edges}>
@@ -48,23 +48,23 @@ export function AssistantScreen({ children, footer, header, scrollRef, edges }: 
   );
 }
 
-const gaya = (theme: AssistantTheme) => StyleSheet.create({
+const gaya = (theme: Theme) => StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: theme.colors.background },
   header: {
     width: '100%',
-    maxWidth: 600,
+    maxWidth: tokens.contentWidth,
     alignSelf: 'center',
-    paddingHorizontal: assistantTokens.spacing.page,
+    paddingHorizontal: tokens.spacing.page,
     paddingTop: 14,
   },
   scrollContent: { flexGrow: 1, alignItems: 'center' },
   content: {
     width: '100%',
-    maxWidth: 600,
+    maxWidth: tokens.contentWidth,
     flexGrow: 1,
-    paddingHorizontal: assistantTokens.spacing.page,
+    paddingHorizontal: tokens.spacing.page,
     paddingTop: 14,
-    paddingBottom: assistantTokens.spacing.page,
-    gap: assistantTokens.spacing.section,
+    paddingBottom: tokens.spacing.page,
+    gap: tokens.spacing.section,
   },
 });

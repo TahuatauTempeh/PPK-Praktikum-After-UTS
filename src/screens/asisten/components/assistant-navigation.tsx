@@ -3,7 +3,7 @@ import { Animated, Easing, Platform, Pressable, StyleSheet, View } from 'react-n
 
 import { usePraktikanTheme } from '@/screens/praktikan/theme';
 
-import { assistantTokens } from '../theme';
+import { tokens } from '@/theme';
 import { AssistantText } from './assistant-text';
 import { ScheduleIcon, type ScheduleIconName } from './schedule-icon';
 
@@ -11,7 +11,7 @@ export type AssistantTab = 'asisten' | 'admin' | 'profile';
 
 type Props = { active: AssistantTab; showAdmin: boolean; onNavigate: (tab: AssistantTab) => void };
 
-const navigationRadius = assistantTokens.radius.panel;
+const navigationRadius = tokens.radius.panel;
 const navigationPadding = 6;
 const tabRadius = navigationRadius - navigationPadding;
 const indicatorSlide = { duration: 240, easing: Easing.out(Easing.cubic) };
@@ -100,6 +100,6 @@ const styles = StyleSheet.create({
   indicator: { position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: tabRadius },
   tab: { flex: 1, minHeight: 60, alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 10, borderRadius: tabRadius },
   tabLabel: { fontSize: 11, lineHeight: 16 },
-  bold: { fontFamily: assistantTokens.fonts.bold },
+  bold: { fontFamily: tokens.fonts.bold },
   pressed: { opacity: 0.7 },
 });

@@ -30,11 +30,11 @@ import { AssistantSurface } from './components/assistant-screen';
 import { AssistantText } from './components/assistant-text';
 import { ScheduleIcon } from './components/schedule-icon';
 import {
-  assistantTokens,
-  useAssistantStyles,
-  useAssistantTheme,
-  type AssistantTheme,
-} from './theme';
+  tokens,
+  useThemedStyles,
+  useTheme,
+  type Theme,
+} from '@/theme';
 
 type Filter = 'all' | Role;
 
@@ -46,8 +46,8 @@ const filters: readonly { value: Filter; label: string }[] = [
 
 /** Kelola pengguna: pencarian, filter peran, dan perubahan role oleh admin. */
 export function AdminScreen() {
-  const theme = useAssistantTheme();
-  const styles = useAssistantStyles(gaya);
+  const theme = useTheme();
+  const styles = useThemedStyles(gaya);
   const { profile } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -388,15 +388,15 @@ export function AdminScreen() {
   );
 }
 
-const gaya = (theme: AssistantTheme) => StyleSheet.create({
+const gaya = (theme: Theme) => StyleSheet.create({
   screen: { flex: 1 },
   frame: { flex: 1, width: '100%', maxWidth: 600, alignSelf: 'center' },
   listFlex: { flex: 1 },
   list: {
     flexGrow: 1,
-    paddingHorizontal: assistantTokens.spacing.page,
+    paddingHorizontal: tokens.spacing.page,
     paddingTop: 14,
-    paddingBottom: assistantTokens.spacing.page,
+    paddingBottom: tokens.spacing.page,
     gap: 14,
   },
   headerBlock: { gap: 14 },
@@ -404,14 +404,14 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
     fontSize: 10,
     lineHeight: 16,
     letterSpacing: 1.6,
-    fontFamily: assistantTokens.fonts.semibold,
+    fontFamily: tokens.fonts.semibold,
     color: theme.colors.heroSoft,
   },
   heroTitle: {
     fontSize: 28,
     lineHeight: 35,
     letterSpacing: -0.8,
-    color: theme.colors.surface,
+    color: theme.colors.onHero,
   },
   metrics: {
     marginTop: 2,
@@ -430,8 +430,8 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
   metricValue: {
     fontSize: 20,
     lineHeight: 28,
-    fontFamily: assistantTokens.fonts.bold,
-    color: theme.colors.surface,
+    fontFamily: tokens.fonts.bold,
+    color: theme.colors.onHero,
     letterSpacing: -0.7,
     fontVariant: ['tabular-nums'],
   },
@@ -444,9 +444,9 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
     backgroundColor: theme.colors.glassSurface,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    borderRadius: assistantTokens.radius.control,
+    borderRadius: tokens.radius.control,
     color: theme.colors.textPrimary,
-    fontFamily: assistantTokens.fonts.regular,
+    fontFamily: tokens.fonts.regular,
     fontSize: 14,
   },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -460,7 +460,7 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
     backgroundColor: theme.colors.glassMuted,
     borderWidth: 1,
     borderColor: theme.colors.glassBorder,
-    borderRadius: assistantTokens.radius.pill,
+    borderRadius: tokens.radius.pill,
   },
   filterActive: {
     backgroundColor: theme.colors.primaryFill,
@@ -469,21 +469,21 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
   filterLabel: {
     fontSize: 12,
     lineHeight: 18,
-    fontFamily: assistantTokens.fonts.semibold,
+    fontFamily: tokens.fonts.semibold,
     color: theme.colors.textSecondary,
   },
   filterLabelActive: { color: theme.colors.onPrimary },
   filterCount: {
     fontSize: 10,
     lineHeight: 16,
-    fontFamily: assistantTokens.fonts.semibold,
+    fontFamily: tokens.fonts.semibold,
     color: theme.colors.textSecondary,
   },
   filterCountActive: { color: theme.colors.onPrimarySoft },
   actionError: {
     fontSize: 12,
     lineHeight: 18,
-    fontFamily: assistantTokens.fonts.medium,
+    fontFamily: tokens.fonts.medium,
     color: theme.colors.error,
   },
   card: {
@@ -492,7 +492,7 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
     backgroundColor: theme.colors.glassSurface,
     borderWidth: 1,
     borderColor: theme.colors.glassBorder,
-    borderRadius: assistantTokens.radius.card,
+    borderRadius: tokens.radius.card,
     boxShadow: theme.colors.shadow,
   },
   cardInfo: { gap: 5 },
@@ -507,7 +507,7 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
     minWidth: 0,
     fontSize: 15,
     lineHeight: 20,
-    fontFamily: assistantTokens.fonts.bold,
+    fontFamily: tokens.fonts.bold,
     letterSpacing: -0.2,
   },
   badges: {
@@ -521,12 +521,12 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
   badge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: assistantTokens.radius.pill,
+    borderRadius: tokens.radius.pill,
   },
   badgeText: {
     fontSize: 10,
     lineHeight: 15,
-    fontFamily: assistantTokens.fonts.semibold,
+    fontFamily: tokens.fonts.semibold,
   },
   meta: { fontSize: 11, lineHeight: 16 },
   action: {
@@ -535,12 +535,12 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 14,
     paddingVertical: 11,
-    borderRadius: assistantTokens.radius.button,
+    borderRadius: tokens.radius.button,
   },
   actionText: {
     fontSize: 12,
     lineHeight: 18,
-    fontFamily: assistantTokens.fonts.semibold,
+    fontFamily: tokens.fonts.semibold,
   },
   state: {
     alignItems: 'center',
@@ -551,7 +551,7 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
   stateTitle: {
     fontSize: 18,
     lineHeight: 24,
-    fontFamily: assistantTokens.fonts.bold,
+    fontFamily: tokens.fonts.bold,
     textAlign: 'center',
   },
   center: { textAlign: 'center' },
@@ -562,7 +562,7 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 12,
     backgroundColor: theme.colors.primaryFill,
-    borderRadius: assistantTokens.radius.control,
+    borderRadius: tokens.radius.control,
   },
   white: { color: theme.colors.onPrimary },
   empty: {
@@ -576,13 +576,13 @@ const gaya = (theme: AssistantTheme) => StyleSheet.create({
     height: 84,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: assistantTokens.radius.panel,
+    borderRadius: tokens.radius.panel,
     backgroundColor: theme.colors.glassMuted,
   },
   emptyTitle: {
     fontSize: 20,
     lineHeight: 27,
-    fontFamily: assistantTokens.fonts.bold,
+    fontFamily: tokens.fonts.bold,
     textAlign: 'center',
   },
   pressed: { opacity: 0.75 },
