@@ -51,7 +51,7 @@ export function PemilihTema({ nilai, onPilih }: Props) {
       accessibilityRole="radiogroup"
       accessibilityLabel="Tema"
       accessibilityHint="Mengganti tema seluruh halaman aplikasi."
-      style={[styles.track, { backgroundColor: theme.isiLembut, borderColor: theme.pemisah }]}
+      style={[styles.track, { backgroundColor: theme.isiLembut }]}
     >
       {PILIHAN.map(({ mode, simbol, label }) => {
         const aktif = mode === nilai;
@@ -61,6 +61,7 @@ export function PemilihTema({ nilai, onPilih }: Props) {
             accessibilityRole="radio"
             accessibilityLabel={`Tema ${label.toLowerCase()}`}
             accessibilityState={{ checked: aktif }}
+            hitSlop={4}
             onPress={() => onPilih(mode)}
             style={({ pressed }) => [
               styles.segmen,
@@ -70,7 +71,7 @@ export function PemilihTema({ nilai, onPilih }: Props) {
           >
             <SymbolView
               name={simbol}
-              size={21}
+              size={18}
               tintColor={aktif ? theme.diAtasAksen : theme.teksSekunder}
             />
           </Pressable>
@@ -83,15 +84,13 @@ export function PemilihTema({ nilai, onPilih }: Props) {
 const styles = StyleSheet.create({
   track: {
     flexDirection: 'row',
-    alignSelf: 'center',
     gap: 2,
     padding: 4,
-    borderWidth: 1,
     borderRadius: 999,
   },
   segmen: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 999,

@@ -75,6 +75,7 @@ export default function ProfilScreen() {
           <View
             style={[
               styles.kartuInfo,
+              styles.kartuTema,
               { backgroundColor: theme.kartu, borderColor: theme.garisKartu, boxShadow: theme.bayang },
             ]}
           >
@@ -144,12 +145,16 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   barisTampilan: {
-    minHeight: 64,
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 16,
-    paddingVertical: 6,
+    gap: 12,
+  },
+  kartuTema: {
+    paddingHorizontal: 0,
+    paddingLeft: 16,
+    borderRadius: 999,
   },
   keluar: {
     minHeight: 52,
