@@ -1,5 +1,6 @@
 /**
  * Latar: gradien kobalt di atas, memudar ke warna halaman. Dekoratif, tidak menerima sentuhan.
+ * Asisten/admin memakai aset terang yang sama lewat AssistantAtmosphere.
  */
 
 import { Image } from 'expo-image';

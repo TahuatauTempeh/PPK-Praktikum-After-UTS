@@ -16,7 +16,7 @@ export function MenuBlock({ title, icon, onPress }: Props) {
       style={({ pressed }) => [styles.block, pressed && styles.pressed]}
     >
       <View style={styles.iconCircle}>
-        <ScheduleIcon name={icon} size={24} />
+        <ScheduleIcon name={icon} size={20} />
       </View>
       <AssistantText style={styles.label} numberOfLines={2}>
         {title}
@@ -27,12 +27,12 @@ export function MenuBlock({ title, icon, onPress }: Props) {
 
 const styles = StyleSheet.create({
   block: {
-    width: '47.9%',
-    aspectRatio: 1,
+    width: '100%',
+    minHeight: 104,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 14,
-    padding: 16,
+    gap: 8,
+    padding: 12,
     backgroundColor: 'rgba(255,255,255,0.72)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.95)',
@@ -40,16 +40,16 @@ const styles = StyleSheet.create({
     boxShadow: '0 8px 28px rgba(30,65,125,0.07)',
   },
   iconCircle: {
-    width: 56,
-    height: 56,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: theme.radius.pill,
     backgroundColor: theme.colors.primarySoft,
   },
   label: {
-    fontSize: 13.5,
-    lineHeight: 18,
+    fontSize: 12.5,
+    lineHeight: 16,
     fontFamily: theme.fonts.semibold,
     textAlign: 'center',
   },

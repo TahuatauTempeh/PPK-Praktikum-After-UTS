@@ -8,6 +8,7 @@ import { AssistantText } from './components/assistant-text';
 import { MenuBlock } from './components/menu-block';
 import { homeMenu } from './home-menu';
 import { type AssistantSession } from './schedule-data';
+import { sapaanWIB } from './session-format';
 
 type Props = {
   name: string;
@@ -15,23 +16,17 @@ type Props = {
   sessions: readonly AssistantSession[];
 };
 
+const menuGap = 10;
+
 /** Hub Asisten: sapaan, agenda hari aktif, dan menu Jadwal/Rekap. */
 export function HomeScreen({ name, scheduleDate, sessions }: Props) {
-  const dateLabel = new Intl.DateTimeFormat('id-ID', {
-    timeZone: 'Asia/Jakarta',
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date());
+  const firstName = name.trim().split(/\s+/)[0] || name;
 
   return (
     <AssistantScreen edges={['top', 'left', 'right']}>
-      <View style={styles.header}>
-        <AssistantText variant="greeting" tone="secondary">Selamat pagi, {name}</AssistantText>
-        <AssistantText variant="pageTitle" accessibilityRole="header">Asisten</AssistantText>
-        <AssistantText variant="caption" tone="secondary">{dateLabel}</AssistantText>
-      </View>
+      <AssistantText variant="pageTitle" accessibilityRole="header" style={styles.pageTitle}>
+        {sapaanWIB()}, {firstName}
+      </AssistantText>
 
       <AgendaBanner
         date={scheduleDate}
@@ -44,12 +39,19 @@ export function HomeScreen({ name, scheduleDate, sessions }: Props) {
         <AssistantText style={styles.eyebrow}>MENU</AssistantText>
         <View style={styles.grid}>
           {homeMenu.map(item => (
-            <MenuBlock
+            <View
               key={item.id}
-              title={item.title}
-              icon={item.icon}
-              onPress={() => router.push(item.href)}
-            />
+              style={[
+                styles.cell,
+                { paddingHorizontal: menuGap / 2, paddingBottom: menuGap },
+              ]}
+            >
+              <MenuBlock
+                title={item.title}
+                icon={item.icon}
+                onPress={() => router.push(item.href)}
+              />
+            </View>
           ))}
         </View>
       </View>
@@ -58,7 +60,7 @@ export function HomeScreen({ name, scheduleDate, sessions }: Props) {
 }
 
 const styles = StyleSheet.create({
-  header: { gap: 3 },
+  pageTitle: { color: theme.colors.surface },
   menuSection: { gap: 12, marginTop: 6 },
   eyebrow: {
     fontSize: 10,
@@ -67,5 +69,6 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.semibold,
     color: theme.colors.textSecondary,
   },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -(menuGap / 2) },
+  cell: { width: '33.333%' },
 });
