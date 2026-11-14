@@ -25,6 +25,9 @@ const RUTE: Record<string, '/(praktikan)' | '/(praktikan)/riwayat' | '/(praktika
 };
 
 const JARAK = 8;
+const PADDING = 6;
+const BAR_RADIUS = 32;
+const TAB_RADIUS = BAR_RADIUS - PADDING;
 
 export function NavigasiPraktikan({ state, emitter, insets }: TabBarProps) {
   const theme = usePraktikanTheme();
@@ -96,8 +99,8 @@ export function NavigasiPraktikan({ state, emitter, insets }: TabBarProps) {
               onLayout={i === 0 ? (e) => setKotak(e.nativeEvent.layout) : undefined}
               style={({ pressed }) => [styles.tab, pressed && { opacity: 0.7 }]}
             >
-              <Ikon nama={TAB[r.name].ikon} ukuran={22} warna={warna} />
-              <Text style={[Tipe.caption, { color: warna, fontWeight: terpilih ? '700' : '400' }]}>
+              <Ikon nama={TAB[r.name].ikon} ukuran={18} warna={warna} />
+              <Text style={[Tipe.kecil, { color: warna, fontWeight: terpilih ? '700' : '400' }]}>
                 {TAB[r.name].label}
               </Text>
             </Pressable>
@@ -113,14 +116,14 @@ const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
     gap: JARAK,
-    padding: 8,
+    padding: PADDING,
     marginVertical: 10,
-    borderRadius: 32,
+    borderRadius: BAR_RADIUS,
     borderWidth: 1,
     width: '100%',
     maxWidth: 552,
     alignSelf: 'center',
   },
-  indikator: { position: 'absolute', borderRadius: 24 },
-  tab: { flex: 1, minHeight: 54, alignItems: 'center', justifyContent: 'center', gap: 4, borderRadius: 24, paddingTop: 3 },
+  indikator: { position: 'absolute', borderRadius: TAB_RADIUS },
+  tab: { flex: 1, minHeight: 60, alignItems: 'center', justifyContent: 'center', gap: 4, borderRadius: TAB_RADIUS, paddingVertical: 10 },
 });
