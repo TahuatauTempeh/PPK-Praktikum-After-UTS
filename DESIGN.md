@@ -21,6 +21,8 @@ Ringkasan keadaan sekarang:
   dipakai semua area. Varian terang dan gelap berada di modul yang sama.
 - Admin memakai `AssistantSurface` dan `HeroCard` yang sama dengan Asisten,
   sehingga halaman kelola pengguna mengikuti preferensi tema pengguna.
+- Bottom bar mengapung tanpa auto-hide; tinggi bar terukur menjadi padding bawah
+  area gulir. Area aman atas tetap dihormati.
 - Audit 105 pasangan warna selesai. Setelah perbaikan, seluruh 98 pasangan teks
   lolos WCAG AA normal (4.5:1). Empat pasangan border tetap di bawah 3:1 dan
   dikategorikan dekoratif, bukan satu-satunya penanda kontrol.
@@ -353,6 +355,12 @@ Pola layout:
 - Footer aksi berada di luar area gulir.
 - Halaman detail dan form berfokus pada satu tugas.
 - Safe area dihormati lewat `react-native-safe-area-context`.
+- Area aman atas tetap dihormati: area gulir berhenti di bawah status bar, lalu
+  konten memakai jarak desain 14 px. Tidak ada konten yang lewat di bawah area
+  status bar.
+- Bottom bar mengapung (`position: absolute`) di atas konten. Area gulir
+  menambah padding bawah sebesar tinggi bar terukur (termasuk `insets.bottom`)
+  supaya jarak visual 24 ke kapsul tetap sama seperti saat bar ikut flow.
 - Target sentuh minimal 44 × 44; tombol utama minimal 48–50.
 
 Spacing di `src/theme/tokens.ts`:
@@ -414,7 +422,12 @@ Latar:
   radius tab 26, radius panel. Warna bar memakai token nav bersama
   (`navSurface`, `primarySoft`, `iconMuted`, `primary`) sehingga kedua bottom
   bar ikut preferensi tema terang/gelap tanpa meminjam palet area lain.
-- Jadwal dan Rekap berada di dalam grup tab; bar bawah tetap terlihat.
+- Bar mengapung: root `position: absolute` di dasar layar dengan
+  `pointerEvents="box-none"` tanpa latar, dan tinggi bar (termasuk safe area
+  bawah) dilaporkan lewat `onLayout` ke `TabBarInsetProvider`. Area gulir
+  menambah padding bawah sebesar tinggi itu.
+- Jadwal dan Rekap berada di dalam grup tab; bar bawah tetap terlihat dan
+  mengapung di atas konten yang lewat di belakangnya.
 - Detail sesi berada di luar grup tab; bar bawah tertutup.
 - Perpindahan tab memakai `TAB_TRANSITION_SPEC` 240 ms dan
   `tabSlideInterpolator`: layar berindeks lebih besar masuk dari kanan,
@@ -434,6 +447,9 @@ Latar:
   tinggi 60, padding item 10, ikon 18, label 11/16. Indikator juga berada di
   dalam wrapper baris tab dan mengisi tingginya, bukan dihitung dari border bar.
 - Detail sesi berada di `/praktikan/sesi/[id]`, di luar tab.
+- Bar mengapung dengan aturan yang sama seperti Asisten; padding bawah `Layar`
+  mengikuti tinggi bar dari context, dan bernilai 0 di layar detail yang berada
+  di luar grup tab.
 - Perpindahan tab memakai spec dan interpolator yang sama dengan Asisten,
   sehingga arah geser mengikuti urutan Jadwal, Riwayat, Profil.
 
@@ -457,7 +473,9 @@ Latar:
 ### 8.1 AssistantScreen dan atmosfer
 
 `AssistantScreen` menyusun safe area, atmosfer, header opsional, ScrollView,
-dan footer. Konten memakai lebar maksimum 600 dan padding 24. Header memakai
+dan footer. Konten memakai lebar maksimum 600 dan padding 24. Area aman atas
+tetap dihormati lewat `SafeAreaView`, lalu konten diberi jarak desain 14 px;
+`Layar` Praktikan memakai aturan yang sama. Header memakai
 `AssistantTopBar` bila layar membutuhkan tombol kembali. `AssistantSurface`
 adalah kerangka yang sama tanpa ScrollView, dipakai layar yang membawa daftar
 sendiri (admin) agar `FlatList` tetap menjadi area gulir. Keduanya memakai
@@ -688,6 +706,7 @@ Repo tidak punya test suite otomatis.
 | 15 Nov 2026 | Empat komponen bersama tanpa pemakai dihapus: `EmptyState`, `ScreenState`, `SessionCard`, `StatusBadge` |
 | 15 Nov 2026 | Spacing kartu beraksi diseragamkan: bingkai 18, jarak ke aksi 16, aksi 48/21/16 berlatar, berlaku di `SesiBerlangsung`, `SesiCard`, `ScheduleCard`, `RecapCard`, dan kartu admin |
 | 15 Nov 2026 | Pemilih tema memakai indikator geser 240 ms yang sama dengan bottom tab; `INDICATOR_SLIDE` dipakai bersama ketiganya |
+| 15 Nov 2026 | Bottom bar mengapung tanpa auto-hide; tinggi bar terukur menjadi padding bawah area gulir, area aman atas tetap dihormati |
 
 Perbaikan kontras 14 November 2026:
 
