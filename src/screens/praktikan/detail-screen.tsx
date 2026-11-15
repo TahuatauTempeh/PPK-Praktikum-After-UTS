@@ -274,15 +274,12 @@ export default function DetailSesiScreen() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  // Area sentuh 44 px; panah duduk langsung di gradien halaman tanpa kotak kaca.
   kembali: {
     width: 44,
     height: 44,
-    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
   },
   judulHeader: { flex: 1, textAlign: 'center', color: '#FFFFFF' },
   penyeimbang: { width: 44 },
