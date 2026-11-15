@@ -42,7 +42,13 @@ export const authStyles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
+    lineHeight: 20,
     fontWeight: '700',
+  },
+  buttonBusy: {
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   footer: {
     flexDirection: 'row',
