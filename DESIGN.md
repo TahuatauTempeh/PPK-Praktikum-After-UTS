@@ -21,8 +21,9 @@ Ringkasan keadaan sekarang:
   dipakai semua area. Varian terang dan gelap berada di modul yang sama.
 - Admin memakai `AssistantSurface` dan `HeroCard` yang sama dengan Asisten,
   sehingga halaman kelola pengguna mengikuti preferensi tema pengguna.
-- Bottom bar mengapung tanpa auto-hide; tinggi bar terukur menjadi padding bawah
-  area gulir. Area aman atas tetap dihormati.
+- Bottom bar mengapung tanpa auto-hide; kapsulnya memblur konten di belakang
+  lewat `expo-blur`, dan tinggi bar terukur menjadi padding bawah area gulir.
+  Area aman atas tetap dihormati.
 - Audit 105 pasangan warna selesai. Setelah perbaikan, seluruh 98 pasangan teks
   lolos WCAG AA normal (4.5:1). Empat pasangan border tetap di bawah 3:1 dan
   dikategorikan dekoratif, bukan satu-satunya penanda kontrol.
@@ -147,7 +148,6 @@ area; tidak ada palet terpisah per sisi aplikasi.
 | iconMuted | `#6D7588` | `#9FB0CE` | Ikon nonaktif |
 | navSurface | `rgba(255,255,255,0.85)` | `rgba(24,34,66,0.9)` | Latar bottom bar |
 | shadow | biru 7% | hitam 35% | Bayangan kartu |
-| shadowSmall | biru 8% | hitam 30% | Bayangan tombol kembali |
 | scrim | `rgba(12,32,70,0.42)` | `rgba(2,8,23,0.62)` | Backdrop sheet |
 | glassSheenStart/End | putih 94%/65% | navy 95%/70% | Gradien kilau kartu sesi |
 | glassGlowBlue/Lime | biru 55%, lime 40% | biru 35%, lime 22% | Glow kartu sesi |
@@ -411,6 +411,13 @@ Latar:
   pada grid tiga kolom.
 - Header hub hanya satu baris sapaan `Selamat <waktu>, <nama depan>`;
   judul "Asisten" dan tanggal tidak ditampilkan.
+- `AssistantTopBar` di Jadwal dan Rekap memakai panah putih tanpa kotak kaca,
+  duduk langsung di gradien dengan margin yang sama dengan konten. Header
+  menempel absolut setinggi 58 px (14 padding + 44 bar) dengan latar atmosfer
+  yang sama seperti safe area, lalu bergeser keluar saat konten digulir turun.
+  Begitu arah gulir berubah ke atas, header langsung kembali tanpa menunggu
+  posisi teratas. Konten mengimbangi tinggi header lewat padding atas
+  (14 px dasar ditambah 58 px).
 - `AssistantNavigation` memakai `accessibilityRole="tablist"` dengan anak
   `tab`, indikator aktif `Animated.View`, durasi 240 ms,
   `Easing.out(Easing.cubic)`, `translateX`, dan `useNativeDriver` kecuali web.
@@ -426,9 +433,20 @@ Latar:
   `pointerEvents="box-none"` tanpa latar, dan tinggi bar (termasuk safe area
   bawah) dilaporkan lewat `onLayout` ke `TabBarInsetProvider`. Area gulir
   menambah padding bawah sebesar tinggi itu.
+- Kapsul memakai `BlurView` dari `expo-blur` di atas `BlurTargetView` layar yang
+  sedang fokus (`BlurTargetProvider`), dengan `tint` mengikuti tema dan
+  `intensity` 60. Android memakai `blurMethod="dimezisBlurViewSdk31Plus"`; di
+  bawah API 31 atau sebelum target siap, latar `navSurface` dipakai penuh
+  sebagai fallback. `blurMethod` dan `blurTarget` Android baru dipasang setelah
+  target layar terdaftar, sehingga `BlurView` tidak pernah memulai dengan
+  method dimezis tanpa target. Di atas blur ada lapisan `navSurface` 35% agar
+  hue kapsul tetap sama.
 - Jadwal dan Rekap berada di dalam grup tab; bar bawah tetap terlihat dan
   mengapung di atas konten yang lewat di belakangnya.
 - Detail sesi berada di luar grup tab; bar bawah tertutup.
+- Tombol kembali di detail sesi memakai panah putih `onHero` berarea sentuh
+  44 px tanpa latar, sama seperti `AssistantTopBar`; kotak kaca, border, dan
+  bayangan dihapus agar panah duduk langsung di gradien atmosfer.
 - Perpindahan tab memakai `TAB_TRANSITION_SPEC` 240 ms dan
   `tabSlideInterpolator`: layar berindeks lebih besar masuk dari kanan,
   yang lebih kecil masuk dari kiri. Animasi aktif karena `transitionSpec`
@@ -447,6 +465,8 @@ Latar:
   tinggi 60, padding item 10, ikon 18, label 11/16. Indikator juga berada di
   dalam wrapper baris tab dan mengisi tingginya, bukan dihitung dari border bar.
 - Detail sesi berada di `/praktikan/sesi/[id]`, di luar tab.
+- Tombol kembali detail sesi memakai panah putih berarea sentuh 44 px tanpa
+  lingkaran kaca atau border; panah duduk langsung di gradien halaman.
 - Bar mengapung dengan aturan yang sama seperti Asisten; padding bawah `Layar`
   mengikuti tinggi bar dari context, dan bernilai 0 di layar detail yang berada
   di luar grup tab.
@@ -456,6 +476,9 @@ Latar:
 ### 7.3 Auth dan admin
 
 - Auth memakai stack `(auth)`.
+- Field password memakai ikon mata (bukan teks "Lihat") untuk membuka atau
+  menyembunyikan isi; tombol submit menampilkan spinner saat menunggu respons
+  dan tetap memiliki label aksesibilitas "Masuk"/"Daftar".
 - Admin memakai route `/asisten/admin` di dalam grup `(tabs)`, dijaga guard
   `isAdmin` di layar; grup `(admin)` dihapus.
 - Halaman admin memakai `AssistantSurface`, `AssistantText`, `HeroCard`, dan
@@ -472,11 +495,17 @@ Latar:
 
 ### 8.1 AssistantScreen dan atmosfer
 
-`AssistantScreen` menyusun safe area, atmosfer, header opsional, ScrollView,
-dan footer. Konten memakai lebar maksimum 600 dan padding 24. Area aman atas
-tetap dihormati lewat `SafeAreaView`, lalu konten diberi jarak desain 14 px;
+`AssistantScreen` menyusun `BlurTargetView` yang mencakup seluruh layar
+(termasuk atmosfer), `SafeAreaView`, header opsional, ScrollView, dan footer.
+Konten memakai lebar maksimum 600 dan padding 24. Area aman atas tetap
+dihormati lewat `SafeAreaView`, lalu konten diberi jarak desain 14 px;
 `Layar` Praktikan memakai aturan yang sama. Header memakai
-`AssistantTopBar` bila layar membutuhkan tombol kembali. `AssistantSurface`
+`AssistantTopBar` bila layar membutuhkan tombol kembali; tombolnya transparan
+(panah putih berarea sentuh 44 px tanpa latar, juga di detail sesi Asisten dan
+Praktikan), latarnya memakai atmosfer halaman yang sama. Pada header yang
+menempel, posisinya digeser lewat `headerTranslateY` dari arah gulir
+(`onScroll`). Header kembali segera saat pengguna menggulir ke atas, bukan
+hanya di posisi teratas. `AssistantSurface`
 adalah kerangka yang sama tanpa ScrollView, dipakai layar yang membawa daftar
 sendiri (admin) agar `FlatList` tetap menjadi area gulir. Keduanya memakai
 `useAssistantStyles`, sehingga latar dan warna ikut preferensi tema.
@@ -566,6 +595,19 @@ pembaca token adalah `useTheme` di `src/theme`, sehingga seluruh halaman ikut
 berubah tanpa mengubah komponen pemanggil. Mode
 `system` mengikuti skema perangkat.
 
+Pergantian palet memakai fade-through, bukan pergantian instan. `mode` berubah
+seketika (indikator pemilih dan AsyncStorage), tetapi `scheme` yang dibaca
+`useTheme` ditahan sampai tirai `ThemeFade` menutup layar. Tirai berisi warna
+`background` dan gradien atmosfer tema tujuan, dipasang `absoluteFill` dengan
+`pointerEvents="none"` dan `zIndex` 1000. Urutannya: tirai memudar masuk
+160 ms `Easing.out(Easing.cubic)`; saat opak palet ditukar sehingga seluruh
+re-render terjadi tanpa terlihat; satu frame setelah commit tirai memudar
+keluar 220 ms. Tirai memakai skema tujuan supaya arah terang ke gelap meredup
+mulus, bukan sempat menyala. Preferensi yang dipulihkan dari AsyncStorage saat
+aplikasi dibuka dipakai langsung tanpa fade, dan mode yang menghasilkan skema
+sama (misalnya "Ikuti sistem" saat perangkat sudah terang) tidak memicu
+animasi. Di web animasi memakai driver JS (`useNativeDriver: false`).
+
 Halaman Profil punya baris **Tema** di bagian TAMPILAN: label "Tema" di kiri
 dan `PemilihTema` di kanan, di dalam kartu berbentuk pil (radius 999, tinggi
 56). Pil memakai track padding 4, segmen 40 × 40, ikon 18, tanpa border, dan
@@ -640,8 +682,10 @@ Identitas aplikasi:
 | EAS projectId | 973698af-d649-4bb7-a583-4fbf399f00a2 |
 
 Aplikasi memerlukan development build. Expo Go tidak dapat menjalankannya
-karena ada modul native seperti `@expo/ui`, `expo-glass-effect`, dan
-`expo-symbols`.
+karena ada modul native seperti `@expo/ui`, `expo-blur`, `expo-glass-effect`,
+dan `expo-symbols`. Setelah menambah `expo-blur` untuk kapsul bottom bar,
+dev client harus dibangun ulang (`npx expo run:android`); Fast Refresh saja
+tidak cukup.
 
 Perintah:
 
@@ -666,6 +710,8 @@ Repo tidak punya test suite otomatis.
   (`com.ppk.presensipraktikum`).
 - Verifikasi perangkat hanya di emulator Android; verifikasi web terbatas.
 - `KeyboardAvoidingView` di sheet hanya menangani iOS.
+- Blur kapsul di Android memakai RenderNode dan hanya aktif di API 31+;
+  di bawah itu bar kembali ke latar `navSurface` tanpa blur.
 - Border tipis sengaja dekoratif; jangan dipakai sebagai satu-satunya penanda
   kontrol.
 - `expo-doctor` pernah melaporkan paket versi lama; belum dijalankan ulang
@@ -707,6 +753,12 @@ Repo tidak punya test suite otomatis.
 | 15 Nov 2026 | Spacing kartu beraksi diseragamkan: bingkai 18, jarak ke aksi 16, aksi 48/21/16 berlatar, berlaku di `SesiBerlangsung`, `SesiCard`, `ScheduleCard`, `RecapCard`, dan kartu admin |
 | 15 Nov 2026 | Pemilih tema memakai indikator geser 240 ms yang sama dengan bottom tab; `INDICATOR_SLIDE` dipakai bersama ketiganya |
 | 15 Nov 2026 | Bottom bar mengapung tanpa auto-hide; tinggi bar terukur menjadi padding bawah area gulir, area aman atas tetap dihormati |
+| 15 Nov 2026 | Kapsul bottom bar memblur konten di belakangnya memakai `expo-blur` + `BlurTargetView`; dev client perlu dibangun ulang |
+| 15 Nov 2026 | Header Jadwal/Rekap: panah putih tanpa kotak kaca, latar atmosfer yang sama dengan safe area, dan auto-hide berbasis arah (muncul saat scroll naik, 58 px) |
+| 15 Nov 2026 | Panah kembali detail sesi Asisten dan Praktikan tanpa latar sendiri; ikon Asisten menjadi putih `onHero` di atas gradien |
+| 15 Nov 2026 | Pergantian tema memakai fade-through `ThemeFade`: tirai atmosfer tema tujuan 160 ms masuk, palet ditukar saat opak, lalu 220 ms keluar |
+| 15 Nov 2026 | Auth: toggle password memakai ikon mata dan tombol submit memakai spinner |
+| 15 Nov 2026 | Bottom bar: `blurMethod`/`blurTarget` Android dipasang setelah target siap agar tidak ada warning fallback |
 
 Perbaikan kontras 14 November 2026:
 
