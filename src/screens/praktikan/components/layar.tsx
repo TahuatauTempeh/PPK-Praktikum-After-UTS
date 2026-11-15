@@ -11,7 +11,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Edge, SafeAreaView } from 'react-native-safe-area-context';
 
 import { Latar } from '@/screens/praktikan/components/latar';
-import { LebarKonten, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { contentWidth, useTheme } from '@/theme';
 
 interface LayarProps {
   footer?: ReactNode;
@@ -27,12 +27,12 @@ export function Layar({
   sembunyikan = false,
   edges = ['top', 'left', 'right'],
 }: PropsWithChildren<LayarProps>) {
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
   // bagian atas halaman selalu biru tua, jadi ikon status bar harus terang; hanya saat layar ini aktif
   const fokus = useIsFocused();
 
   return (
-    <SafeAreaView style={[styles.area, { backgroundColor: theme.background }]} edges={edges}>
+    <SafeAreaView style={[styles.area, { backgroundColor: theme.colors.background }]} edges={edges}>
       {fokus ? <StatusBar style="light" /> : null}
       <Latar />
       <View
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   gulir: { flexGrow: 1, alignItems: 'center' },
   isi: {
     width: '100%',
-    maxWidth: LebarKonten,
+    maxWidth: contentWidth,
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 14,

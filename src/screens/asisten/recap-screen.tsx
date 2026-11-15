@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
+import { HeroCard } from '@/screens/shared/components/hero-card';
+
 import { AssistantScreen } from './components/assistant-screen';
 import { AssistantText } from './components/assistant-text';
+import { AssistantTopBar } from './components/assistant-top-bar';
 import { RecapCard } from './components/recap-card';
 import { RecapFilterDialog } from './components/recap-filter-dialog';
 import { ScheduleIcon } from './components/schedule-icon';
@@ -10,10 +13,17 @@ import { useAssistantSessions } from './preview-session-provider';
 import { buildRecap, type DateRange, monthRange } from './recap-data';
 import { previewDate } from './schedule-data';
 import { formatSessionDate } from './session-format';
-import { assistantTheme as theme } from './theme';
+import {
+  tokens,
+  useThemedStyles,
+  useTheme,
+  type Theme,
+} from '@/theme';
 
-type Props = { initialSessionId?: string; onSchedule: () => void; onDetail: (id: string) => void };
-export default function RecapScreen({ initialSessionId = '', onSchedule, onDetail }: Props) {
+type Props = { initialSessionId?: string; onSchedule: () => void; onDetail: (id: string) => void; onBack?: () => void };
+export default function RecapScreen({ initialSessionId = '', onSchedule, onDetail, onBack }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(gaya);
   const { width } = useWindowDimensions();
   const { sessions, attendance, participants } = useAssistantSessions();
   const initialSession = sessions.find(session => session.id === initialSessionId);
@@ -32,11 +42,16 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
   return (
     <>
       <View style={styles.screen} aria-hidden={dialog !== null} importantForAccessibility={dialog ? 'no-hide-descendants' : 'auto'}>
-        <AssistantScreen edges={['top', 'left', 'right']}>
-          <View style={styles.heading}>
-            <View pointerEvents="none" accessible={false} style={styles.chartWatermark}>
-              <ScheduleIcon name="chartWhite" size={126} />
-            </View>
+        <AssistantScreen
+          header={onBack ? <AssistantTopBar onBack={onBack} title="Rekap" /> : undefined}
+          edges={['top', 'left', 'right']}
+        >
+          <HeroCard
+            backgroundColor={theme.colors.glassHero}
+            watermark={<ScheduleIcon name="chartWhite" size={126} />}
+            padding={20}
+            gap={12}
+          >
             <View style={styles.heroTop}>
               <AssistantText style={styles.eyebrow}>HASIL PRAKTIKUM</AssistantText>
             </View>
@@ -50,21 +65,21 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
                   </View>
                 ))}
             </View>
-          </View>
+          </HeroCard>
           <View style={styles.filters}>
             <Pressable accessibilityRole="button" accessibilityLabel={`Filter tanggal: ${dateLabel}`}
               accessibilityState={{ expanded: dialog === 'date' }} onPress={() => setDialog('date')}
               style={({ pressed }) => [styles.filter, styles.dateFilter, pressed && styles.pressed]}>
-              <ScheduleIcon name="filterCalendar" size={16} />
+              <ScheduleIcon name="filterCalendar" size={16} tintColor={theme.colors.primary} />
               <AssistantText variant="caption" style={styles.filterText}>{range && range.start.slice(0, 7) === range.end.slice(0, 7)
                 ? `${Number(range.start.slice(8))}–${formatSessionDate(range.end)}` : dateLabel}</AssistantText>
-              <ScheduleIcon name="chevron" size={14} />
+              <ScheduleIcon name="chevron" size={14} tintColor={theme.colors.iconMuted} />
             </Pressable>
             <Pressable accessibilityRole="button" accessibilityLabel={`Filter sesi: ${sessionLabel}`}
               accessibilityState={{ expanded: dialog === 'session' }} onPress={() => setDialog('session')}
               style={({ pressed }) => [styles.filter, pressed && styles.pressed]}>
               <AssistantText variant="caption" style={styles.filterText}>{sessionLabel}</AssistantText>
-              <ScheduleIcon name="chevron" size={14} />
+              <ScheduleIcon name="chevron" size={14} tintColor={theme.colors.iconMuted} />
             </Pressable>
           </View>
           {rows.length ? (
@@ -78,7 +93,7 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
             </View>
           ) : (
             <View style={styles.empty}>
-              <View style={styles.emptyIcon}><ScheduleIcon name="chartEmpty" size={34} /></View>
+              <View style={styles.emptyIcon}><ScheduleIcon name="chartEmpty" size={34} tintColor={theme.colors.primary} /></View>
               <AssistantText accessibilityRole="header" style={styles.emptyTitle}>{closedSessions.length ? 'Tidak ada rekap untuk filter ini' : 'Belum ada rekap'}</AssistantText>
               <AssistantText tone="secondary" style={styles.center}>{closedSessions.length
                 ? 'Tidak ada sesi ditutup yang cocok dengan tanggal dan sesi pilihan. Ubah filter untuk melihat rekap lainnya.'
@@ -101,33 +116,31 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
     </>
   );
 }
-const styles = StyleSheet.create({
+const gaya = (theme: Theme) => StyleSheet.create({
   screen: { flex: 1 },
-  heading: { overflow: 'hidden', gap: 12, padding: 20, backgroundColor: theme.colors.glassHero, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', borderRadius: 30 },
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
-  eyebrow: { fontSize: 10, lineHeight: 16, letterSpacing: 1.6, fontFamily: theme.fonts.semibold, color: '#EDF3FF' },
-  chartWatermark: { position: 'absolute', top: -12, right: -16, opacity: 0.12 },
-  title: { fontSize: 28, lineHeight: 35, letterSpacing: -0.8, color: theme.colors.surface },
+  eyebrow: { fontSize: 10, lineHeight: 16, letterSpacing: 1.6, fontFamily: tokens.fonts.semibold, color: theme.colors.heroSoft },
+  title: { fontSize: 28, lineHeight: 35, letterSpacing: -0.8, color: theme.colors.onHero },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  filter: { flexGrow: 1, flexBasis: 140, flexDirection: 'row', alignItems: 'center', gap: 7, minHeight: 44, paddingHorizontal: 11, paddingVertical: 10, borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: theme.radius.control, backgroundColor: theme.colors.glassSurface },
+  filter: { flexGrow: 1, flexBasis: 140, flexDirection: 'row', alignItems: 'center', gap: 7, minHeight: 44, paddingHorizontal: 11, paddingVertical: 10, borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: tokens.radius.control, backgroundColor: theme.colors.glassSurface },
   dateFilter: { flexBasis: 185 },
   filterText: { flex: 1 },
-  metrics: { marginTop: 4, paddingTop: 14, flexDirection: 'row', flexWrap: 'wrap', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)' },
+  metrics: { marginTop: 4, paddingTop: 14, flexDirection: 'row', flexWrap: 'wrap', borderTopWidth: 1, borderTopColor: theme.colors.heroLine },
   metric: { flex: 1, minWidth: 60, gap: 5, paddingHorizontal: 8, paddingVertical: 4 },
-  metricDivider: { marginRight: 8, borderRightWidth: 1, borderRightColor: 'rgba(255,255,255,0.2)' },
-  metricNumber: { fontSize: 20, lineHeight: 28, fontFamily: theme.fonts.bold, color: theme.colors.surface, letterSpacing: -0.7 },
+  metricDivider: { marginRight: 8, borderRightWidth: 1, borderRightColor: theme.colors.heroLine },
+  metricNumber: { fontSize: 20, lineHeight: 28, fontFamily: tokens.fonts.bold, color: theme.colors.onHero, letterSpacing: -0.7 },
   metricNumberCompact: { fontSize: 16, lineHeight: 22, letterSpacing: -0.4 },
-  metricLabel: { fontSize: 10, lineHeight: 16, color: '#EDF3FF' },
+  metricLabel: { fontSize: 10, lineHeight: 16, color: theme.colors.heroSoft },
   small: { fontSize: 11, lineHeight: 16 },
-  sectionTitle: { fontSize: 20, lineHeight: 27, fontFamily: theme.fonts.bold, letterSpacing: -0.4 },
+  sectionTitle: { fontSize: 20, lineHeight: 27, fontFamily: tokens.fonts.bold, letterSpacing: -0.4 },
   list: { gap: 13 },
   listHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   empty: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', gap: 16, paddingVertical: 32 },
-  emptyIcon: { width: 84, height: 84, borderRadius: theme.radius.panel, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
-  emptyTitle: { fontFamily: theme.fonts.bold, fontSize: 20, lineHeight: 27, textAlign: 'center' },
+  emptyIcon: { width: 84, height: 84, borderRadius: tokens.radius.panel, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  emptyTitle: { fontFamily: tokens.fonts.bold, fontSize: 20, lineHeight: 27, textAlign: 'center' },
   center: { textAlign: 'center', paddingHorizontal: 22 },
   reset: { alignItems: 'center', justifyContent: 'center', minHeight: 44, padding: 12 },
-  primary: { alignSelf: 'stretch', flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', minHeight: 50, paddingHorizontal: 18, paddingVertical: 14, backgroundColor: theme.colors.primary, borderRadius: theme.radius.control },
-  white: { color: theme.colors.surface },
+  primary: { alignSelf: 'stretch', flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', minHeight: 50, paddingHorizontal: 18, paddingVertical: 14, backgroundColor: theme.colors.primaryFill, borderRadius: tokens.radius.control },
+  white: { color: theme.colors.onPrimary },
   pressed: { opacity: 0.7 },
 });

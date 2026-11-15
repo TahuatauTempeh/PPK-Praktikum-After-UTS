@@ -7,6 +7,6 @@ export default function SessionRoute() {
   return <SessionScreen id={id}
     onRecap={sessionId => router.navigate({ pathname: '/asisten/rekap', params: { sesi: sessionId } })} onBack={() => {
     if (router.canGoBack()) router.back();
-    else router.replace('/asisten');
+    else router.replace('/asisten/jadwal');
   }} />;
 }

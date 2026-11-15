@@ -1,10 +1,19 @@
-import { router } from 'expo-router';
-
+import { LoadingState } from '@/components/LoadingState';
+import { useAuth } from '@/context/auth-context';
+import { HomeScreen } from '@/screens/asisten/home-screen';
 import { useAssistantSessions } from '@/screens/asisten/preview-session-provider';
-import ScheduleScreen from '@/screens/asisten/schedule-screen';
 
-export default function ScheduleRoute() {
-  const { sessions, attendance, scheduleDate } = useAssistantSessions();
-  return <ScheduleScreen sessions={sessions} attendance={attendance} date={scheduleDate}
-    onManage={id => router.push({ pathname: '/asisten/sesi/[id]', params: { id } })} />;
+export default function HomeRoute() {
+  const { profile } = useAuth();
+  const { sessions, scheduleDate } = useAssistantSessions();
+
+  if (!profile) return <LoadingState message="Memuat profil..." />;
+
+  return (
+    <HomeScreen
+      name={profile.name}
+      scheduleDate={scheduleDate}
+      sessions={sessions}
+    />
+  );
 }
