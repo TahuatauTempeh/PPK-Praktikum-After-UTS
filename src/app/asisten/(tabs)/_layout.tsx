@@ -1,41 +1,61 @@
-import { router, Stack, usePathname } from 'expo-router';
+import { router, Tabs, usePathname } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useWindowDimensions } from 'react-native';
 
+import { TAB_TRANSITION_SPEC, tabSlideInterpolator } from '@/constants/tab-transition';
+import { useAuth } from '@/context/auth-context';
+import { BlurTargetProvider } from '@/context/blur-target';
+import { TabBarInsetProvider } from '@/context/tab-bar-inset';
 import { AssistantNavigation, type AssistantTab } from '@/screens/asisten/components/assistant-navigation';
-import { assistantTheme as theme } from '@/screens/asisten/theme';
+import { useTheme } from '@/theme';
 
 const tabFromPath = (pathname: string): AssistantTab | null => {
-  if (pathname === '/asisten/rekap') return 'recap';
-  if (pathname === '/asisten') return 'schedule';
+  if (pathname === '/asisten/profil') return 'profile';
+  if (pathname === '/asisten/admin') return 'admin';
+  if (pathname === '/asisten' || pathname === '/asisten/jadwal' || pathname === '/asisten/rekap') return 'asisten';
   return null;
 };
 
 export default function TabsLayout() {
+  const theme = useTheme();
+  const { profile } = useAuth();
+  const { width } = useWindowDimensions();
+  const showAdmin = profile?.isAdmin === true;
   const pathname = usePathname();
   const current = tabFromPath(pathname);
-  const [active, setActive] = useState<AssistantTab>(current ?? 'schedule');
-  if (current && current !== active) setActive(current);
+  // Non-admin yang membuka /asisten/admin tetap melihat tab Asisten aktif saat diarahkan keluar.
+  const safeCurrent = current === 'admin' && !showAdmin ? 'asisten' : current;
+  const [active, setActive] = useState<AssistantTab>(safeCurrent ?? 'asisten');
+  if (safeCurrent && safeCurrent !== active) setActive(safeCurrent);
 
   const goTo = (tab: AssistantTab) => {
-    if (tab === 'recap') router.navigate('/asisten/rekap');
-    else router.dismissTo('/asisten');
+    if (tab === 'profile') router.navigate('/asisten/profil');
+    else if (tab === 'admin') router.navigate('/asisten/admin');
+    else router.navigate('/asisten');
   };
 
   return (
-    <View style={styles.container}>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.background } }} />
-      <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.bar}>
-        <AssistantNavigation active={active}
-          onSchedule={() => goTo('schedule')}
-          onRecap={() => goTo('recap')} />
-      </SafeAreaView>
-    </View>
+    <TabBarInsetProvider>
+      <BlurTargetProvider>
+        <Tabs
+          backBehavior="history"
+          tabBar={() => (
+            <AssistantNavigation active={active} showAdmin={showAdmin} onNavigate={goTo} />
+          )}
+          screenOptions={{
+            headerShown: false,
+            sceneStyle: { backgroundColor: theme.colors.background },
+            transitionSpec: TAB_TRANSITION_SPEC,
+            sceneStyleInterpolator: tabSlideInterpolator(width),
+          }}
+        >
+          <Tabs.Screen name="index" />
+          <Tabs.Screen name="jadwal" />
+          <Tabs.Screen name="rekap" />
+          <Tabs.Screen name="admin" />
+          <Tabs.Screen name="profil" />
+        </Tabs>
+      </BlurTargetProvider>
+    </TabBarInsetProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background },
-  bar: { backgroundColor: '#E8EFF9' },
-});

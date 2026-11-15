@@ -7,7 +7,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Ikon, IkonNama } from '@/screens/praktikan/components/ikon';
 import { Tombol } from '@/screens/praktikan/components/tombol';
-import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { typography, useTheme } from '@/theme';
 
 interface KosongProps {
   ikon: IkonNama;
@@ -17,18 +17,18 @@ interface KosongProps {
 }
 
 export function Kosong({ ikon, judul, keterangan, aksi }: KosongProps) {
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
 
   return (
     <View style={styles.wadah}>
-      <View style={[styles.ikon, { backgroundColor: theme.kartu, borderColor: theme.garisKartu }]}>
-        <Ikon nama={ikon} ukuran={34} warna={theme.aksen} />
+      <View style={[styles.ikon, { backgroundColor: theme.colors.glassCard, borderColor: theme.colors.glassBorder }]}>
+        <Ikon nama={ikon} ukuran={34} warna={theme.colors.primary} />
       </View>
-      <Text accessibilityRole="header" style={[Tipe.judulKartu, styles.tengah, { color: theme.teks }]}>
+      <Text accessibilityRole="header" style={[typography.cardTitle, styles.tengah, { color: theme.colors.textPrimary }]}>
         {judul}
       </Text>
       {keterangan ? (
-        <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>{keterangan}</Text>
+        <Text style={[typography.body, styles.tengah, { color: theme.colors.textSecondary }]}>{keterangan}</Text>
       ) : null}
       {aksi ? (
         <View style={styles.aksi}>

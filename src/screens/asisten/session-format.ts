@@ -20,6 +20,17 @@ export function splitSessionTopic(topic: string) {
   };
 }
 
+const offsetWIB = 7 * 60 * 60 * 1000;
+
+/** Sapaan menurut jam WIB; aturannya sama dengan sisi Praktikan. */
+export function sapaanWIB(now: Date = new Date()) {
+  const hour = new Date(now.getTime() + offsetWIB).getUTCHours();
+  if (hour >= 4 && hour < 11) return 'Selamat pagi';
+  if (hour >= 11 && hour < 15) return 'Selamat siang';
+  if (hour >= 15 && hour < 18) return 'Selamat sore';
+  return 'Selamat malam';
+}
+
 /** Nama praktikum: mata kuliah + kode praktikum, mis. "Basis Data C2". */
 export function formatPraktikumName(session: Pick<AssistantSession, 'course' | 'code'>) {
   return `${session.course} ${session.code}`;
