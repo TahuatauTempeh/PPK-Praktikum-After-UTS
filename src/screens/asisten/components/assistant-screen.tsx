@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
+import { useTabBarInset } from '@/context/tab-bar-inset';
 import {
   tokens,
   useThemedStyles,
@@ -37,12 +38,15 @@ export function AssistantSurface({ children, footer, header, edges }: SurfacePro
 export function AssistantScreen({ children, footer, header, scrollRef, edges }: PropsWithChildren<{
   footer?: ReactNode; header?: ReactNode; scrollRef?: Ref<ComponentRef<typeof ScrollView>>; edges?: readonly Edge[];
 }>) {
+  const tabBarInset = useTabBarInset();
   const styles = useThemedStyles(gaya);
 
   return (
     <AssistantSurface header={header} footer={footer} edges={edges}>
       <ScrollView ref={scrollRef} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>{children}</View>
+        <View style={[styles.content, { paddingBottom: tokens.spacing.page + tabBarInset }]}>
+          {children}
+        </View>
       </ScrollView>
     </AssistantSurface>
   );

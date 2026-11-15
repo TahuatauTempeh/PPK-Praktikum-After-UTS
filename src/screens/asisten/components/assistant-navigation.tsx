@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { INDICATOR_SLIDE } from '@/constants/tab-transition';
+import { useReportTabBarInset } from '@/context/tab-bar-inset';
 import { tokens, useTheme } from '@/theme';
 import { AssistantText } from './assistant-text';
 import { ScheduleIcon, type ScheduleIconName } from './schedule-icon';
@@ -23,6 +25,8 @@ const iconFor = (tab: AssistantTab, selected: boolean): ScheduleIconName => {
 
 export function AssistantNavigation({ active, showAdmin, onNavigate }: Props) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const reportHeight = useReportTabBarInset();
   const [tabWidth, setTabWidth] = useState<number | null>(null);
   const [offset] = useState(() => new Animated.Value(0));
   const placed = useRef(false);
@@ -47,52 +51,59 @@ export function AssistantNavigation({ active, showAdmin, onNavigate }: Props) {
 
   return (
     <View
-      style={[
-        styles.navigation,
-        {
-          backgroundColor: theme.colors.navSurface,
-          borderColor: theme.colors.glassBorder,
-          boxShadow: theme.colors.shadow,
-        },
-      ]}
-      accessibilityRole="tablist"
+      pointerEvents="box-none"
+      onLayout={reportHeight}
+      style={[styles.dock, { paddingBottom: insets.bottom }]}
     >
-      <View style={[styles.tabs, { gap: tabGap }]}>
-        {tabWidth !== null && (
-          <Animated.View pointerEvents="none" accessible={false} style={[styles.indicator, {
-            width: tabWidth,
-            backgroundColor: theme.colors.primarySoft,
-            transform: [{ translateX: offset }],
-          }]} />
-        )}
-        {tabs.map(destination => {
-          const selected = active === destination;
-          const tint = selected ? theme.colors.primary : theme.colors.iconMuted;
-          return (
-            <Pressable key={destination} accessibilityRole="tab"
-              accessibilityState={{ selected }}
-              accessibilityLabel={LABEL[destination]}
-              onPress={() => onNavigate(destination)}
-              onLayout={destination === 'asisten'
-                ? event => setTabWidth(event.nativeEvent.layout.width)
-                : undefined}
-              style={({ pressed }) => [styles.tab, pressed && styles.pressed]}>
-              <ScheduleIcon name={iconFor(destination, selected)} size={18} tintColor={tint} />
-              <AssistantText
-                variant="caption"
-                tone={selected ? 'accent' : 'secondary'}
-                style={[styles.tabLabel, { color: tint }, selected && styles.bold]}
-              >
-                {LABEL[destination]}
-              </AssistantText>
-            </Pressable>
-          );
-        })}
+      <View
+        style={[
+          styles.navigation,
+          {
+            backgroundColor: theme.colors.navSurface,
+            borderColor: theme.colors.glassBorder,
+            boxShadow: theme.colors.shadow,
+          },
+        ]}
+        accessibilityRole="tablist"
+      >
+        <View style={[styles.tabs, { gap: tabGap }]}>
+          {tabWidth !== null && (
+            <Animated.View pointerEvents="none" accessible={false} style={[styles.indicator, {
+              width: tabWidth,
+              backgroundColor: theme.colors.primarySoft,
+              transform: [{ translateX: offset }],
+            }]} />
+          )}
+          {tabs.map(destination => {
+            const selected = active === destination;
+            const tint = selected ? theme.colors.primary : theme.colors.iconMuted;
+            return (
+              <Pressable key={destination} accessibilityRole="tab"
+                accessibilityState={{ selected }}
+                accessibilityLabel={LABEL[destination]}
+                onPress={() => onNavigate(destination)}
+                onLayout={destination === 'asisten'
+                  ? event => setTabWidth(event.nativeEvent.layout.width)
+                  : undefined}
+                style={({ pressed }) => [styles.tab, pressed && styles.pressed]}>
+                <ScheduleIcon name={iconFor(destination, selected)} size={18} tintColor={tint} />
+                <AssistantText
+                  variant="caption"
+                  tone={selected ? 'accent' : 'secondary'}
+                  style={[styles.tabLabel, { color: tint }, selected && styles.bold]}
+                >
+                  {LABEL[destination]}
+                </AssistantText>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
 }
 const styles = StyleSheet.create({
+  dock: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   navigation: { paddingHorizontal: navigationPadding, paddingVertical: navigationPadding, marginVertical: 10, borderWidth: 1, borderRadius: navigationRadius, width: '90%', maxWidth: 552, alignSelf: 'center' },
   tabs: { flexDirection: 'row', position: 'relative' },
   indicator: { position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: tabRadius },
