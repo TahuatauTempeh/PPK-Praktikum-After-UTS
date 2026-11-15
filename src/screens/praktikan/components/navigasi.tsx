@@ -8,6 +8,7 @@ import React, { ComponentProps, useEffect, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { INDICATOR_SLIDE } from '@/constants/tab-transition';
+import { useReportTabBarInset } from '@/context/tab-bar-inset';
 import { Ikon, IkonNama } from '@/screens/praktikan/components/ikon';
 import { fonts, typography, useTheme } from '@/theme';
 
@@ -32,6 +33,7 @@ const TAB_RADIUS = BAR_RADIUS - PADDING;
 
 export function NavigasiPraktikan({ state, emitter, insets }: TabBarProps) {
   const theme = useTheme();
+  const laporTinggi = useReportTabBarInset();
   const [lebar, setLebar] = useState<number | null>(null);
   const [geser] = useState(() => new Animated.Value(0));
   const sudahDitaruh = useRef(false);
@@ -57,7 +59,11 @@ export function NavigasiPraktikan({ state, emitter, insets }: TabBarProps) {
   }, [indeks, geser, lebar]);
 
   return (
-    <View style={[styles.dasar, { backgroundColor: theme.colors.background, paddingBottom: insets.bottom }]}>
+    <View
+      pointerEvents="box-none"
+      onLayout={laporTinggi}
+      style={[styles.dasar, { paddingBottom: insets.bottom }]}
+    >
       <View
         accessibilityRole="tablist"
         style={[
@@ -111,7 +117,7 @@ export function NavigasiPraktikan({ state, emitter, insets }: TabBarProps) {
 }
 
 const styles = StyleSheet.create({
-  dasar: { paddingHorizontal: 16 },
+  dasar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 16 },
   bar: {
     padding: PADDING,
     marginVertical: 10,

@@ -2,6 +2,9 @@
  * Layar: kerangka halaman praktikan. Latar gradien, konten digulir dengan lebar maksimum 600.
  * `sembunyikan` menyembunyikan konten dari pembaca layar saat sheet terbuka; `overlay` (sheet)
  * dirender di luar bagian yang disembunyikan.
+ *
+ * Area aman atas tetap dihormati: area gulir berhenti di bawah status bar, lalu konten diberi
+ * jarak desain 14 px. Bottom bar mengapung, jadi padding bawah ikut tinggi bar dari context.
  */
 
 import { useIsFocused } from 'expo-router';
@@ -10,6 +13,7 @@ import React, { PropsWithChildren, ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Edge, SafeAreaView } from 'react-native-safe-area-context';
 
+import { useTabBarInset } from '@/context/tab-bar-inset';
 import { Latar } from '@/screens/praktikan/components/latar';
 import { contentWidth, useTheme } from '@/theme';
 
@@ -28,6 +32,7 @@ export function Layar({
   edges = ['top', 'left', 'right'],
 }: PropsWithChildren<LayarProps>) {
   const theme = useTheme();
+  const tabBarInset = useTabBarInset();
   // bagian atas halaman selalu biru tua, jadi ikon status bar harus terang; hanya saat layar ini aktif
   const fokus = useIsFocused();
 
@@ -41,7 +46,7 @@ export function Layar({
         importantForAccessibility={sembunyikan ? 'no-hide-descendants' : 'auto'}
       >
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.gulir}>
-          <View style={styles.isi}>{children}</View>
+          <View style={[styles.isi, { paddingBottom: 24 + tabBarInset }]}>{children}</View>
         </ScrollView>
         {footer}
       </View>
