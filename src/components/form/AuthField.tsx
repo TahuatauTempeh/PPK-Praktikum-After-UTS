@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import {
   Pressable,
   StyleSheet,
@@ -9,6 +10,11 @@ import {
 } from 'react-native';
 
 import { spacing, useTheme } from '@/theme';
+
+type SymbolName = Extract<SymbolViewProps['name'], object>;
+
+const EYE: SymbolName = { ios: 'eye', android: 'visibility', web: 'visibility' };
+const EYE_OFF: SymbolName = { ios: 'eye.slash', android: 'visibility_off', web: 'visibility_off' };
 
 interface AuthFieldProps
   extends Pick<
@@ -65,10 +71,13 @@ export function AuthField({
             onPress={() => setVisible((value) => !value)}
             accessibilityRole="button"
             accessibilityLabel={visible ? 'Sembunyikan password' : 'Tampilkan password'}
+            style={({ pressed }) => [styles.toggle, pressed && styles.togglePressed]}
           >
-            <Text style={[styles.toggle, { color: theme.colors.primary }]}>
-              {visible ? 'Sembunyikan' : 'Lihat'}
-            </Text>
+            <SymbolView
+              name={visible ? EYE_OFF : EYE}
+              size={20}
+              tintColor={theme.colors.primary}
+            />
           </Pressable>
         ) : null}
       </View>
@@ -100,9 +109,16 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   toggle: {
-    fontSize: 13,
-    fontWeight: '700',
-    paddingLeft: spacing.sm,
+    minWidth: 44,
+    minHeight: 44,
+    marginLeft: spacing.sm,
+    // Geser ke kanan supaya tepi ikon rata dengan padding kanan field.
+    marginRight: -12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  togglePressed: {
+    opacity: 0.6,
   },
   error: {
     fontSize: 12,

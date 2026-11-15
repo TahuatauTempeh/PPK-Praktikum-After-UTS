@@ -8,9 +8,15 @@ import {
 import { AssistantText } from './assistant-text';
 import { ScheduleIcon } from './schedule-icon';
 
+/** Tinggi isi header; padding atas 14 px ditambahkan AssistantSurface. */
+export const ASSISTANT_TOP_BAR_HEIGHT = 44;
+
 type Props = { onBack: () => void; title?: string };
 
-/** Tombol kembali untuk Jadwal dan Rekap, di luar area gulir. */
+/**
+ * Tombol kembali dan judul untuk Jadwal dan Rekap. Latarnya transparan: panah
+ * putih duduk langsung di atas gradien halaman, tanpa kotak kaca sendiri.
+ */
 export function AssistantTopBar({ onBack, title }: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(gaya);
@@ -23,7 +29,7 @@ export function AssistantTopBar({ onBack, title }: Props) {
         onPress={onBack}
         style={({ pressed }) => [styles.back, pressed && styles.pressed]}
       >
-        <ScheduleIcon name="backPrimary" size={20} tintColor={theme.colors.primary} />
+        <ScheduleIcon name="backPrimary" size={20} tintColor={theme.colors.onHero} />
       </Pressable>
       {title ? (
         <AssistantText variant="label" accessibilityRole="header" style={styles.title}>
@@ -35,17 +41,14 @@ export function AssistantTopBar({ onBack, title }: Props) {
 }
 
 const gaya = (theme: Theme) => StyleSheet.create({
-  bar: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  bar: { minHeight: ASSISTANT_TOP_BAR_HEIGHT, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  // 44 px area sentuh; geser -12 supaya panah rata dengan margin konten 24.
   back: {
     minWidth: 44,
     minHeight: 44,
+    marginLeft: -12,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.glassCard,
-    borderWidth: 1,
-    borderColor: theme.colors.glassBorder,
-    borderRadius: 16,
-    boxShadow: theme.colors.shadowSmall,
   },
   title: { flexShrink: 1, color: theme.colors.onHero },
   pressed: { opacity: 0.6 },

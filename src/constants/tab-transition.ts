@@ -5,13 +5,24 @@
 
 import { Easing, type Animated } from 'react-native';
 
+/**
+ * Gerak indikator yang bergeser: bottom tab Asisten/Praktikan dan pemilih tema.
+ * Satu angka supaya kedua kontrol tidak perlahan berbeda rasa gerak.
+ */
+export const INDICATOR_SLIDE = {
+  duration: 240,
+  // Getter supaya Easing hanya dievaluasi di klien, bukan saat modul dimuat.
+  get easing() {
+    return Easing.out(Easing.cubic);
+  },
+} as const;
+
 export const TAB_TRANSITION_SPEC = {
   animation: 'timing',
   config: {
-    duration: 240,
-    // Getter supaya Easing hanya dievaluasi di klien, bukan saat modul dimuat.
+    duration: INDICATOR_SLIDE.duration,
     get easing() {
-      return Easing.out(Easing.cubic);
+      return INDICATOR_SLIDE.easing;
     },
   },
 } as const;

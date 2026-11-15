@@ -56,7 +56,6 @@ export type ThemeColors = {
   iconMuted: string;
   navSurface: string;
   shadow: string;
-  shadowSmall: string;
   scrim: string;
   glassSheenStart: string;
   glassSheenEnd: string;
@@ -103,7 +102,6 @@ export const light: ThemeColors = {
   iconMuted: '#6D7588',
   navSurface: 'rgba(255,255,255,0.85)',
   shadow: '0 8px 28px rgba(30,65,125,0.07)',
-  shadowSmall: '0 4px 16px rgba(30,65,125,0.08)',
   scrim: 'rgba(12,32,70,0.42)',
   glassSheenStart: 'rgba(255,255,255,0.94)',
   glassSheenEnd: 'rgba(247,250,255,0.65)',
@@ -150,7 +148,6 @@ export const dark: ThemeColors = {
   iconMuted: '#9FB0CE',
   navSurface: 'rgba(24,34,66,0.9)',
   shadow: '0 8px 28px rgba(0,0,0,0.35)',
-  shadowSmall: '0 4px 16px rgba(0,0,0,0.3)',
   scrim: 'rgba(2,8,23,0.62)',
   glassSheenStart: 'rgba(42,59,102,0.95)',
   glassSheenEnd: 'rgba(22,33,61,0.7)',
