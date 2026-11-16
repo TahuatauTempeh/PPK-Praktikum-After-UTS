@@ -1,22 +1,38 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ─── Helper Functions ───────────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
     function isAsisten() {
-      return request.auth != null
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'asisten';
+      return isAuthenticated() && getUserData().role == 'asisten';
     }
+
     function isAdmin() {
-      return request.auth != null
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      return isAuthenticated() && getUserData().isAdmin == true;
     }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // ─── 1. Users Collection ────────────────────────────────────────────────
+
     match /users/{uid} {
-      allow read: if request.auth != null && (request.auth.uid == uid || isAsisten());
-      allow create: if request.auth != null
-        && request.auth.uid == uid
+      allow read: if isOwner(uid) || isAsisten();
+      allow create: if isOwner(uid)
         && request.resource.data.role == 'praktikan'
         && request.resource.data.isAdmin == false;
-      allow update: if request.auth != null && (
-        (request.auth.uid == uid
+      allow update: if isAuthenticated() && (
+        (isOwner(uid)
           && request.resource.data.role == resource.data.role
           && request.resource.data.isAdmin == resource.data.isAdmin)
         || (isAdmin()
@@ -26,13 +42,79 @@ service cloud.firestore {
           && request.resource.data.role in ['praktikan', 'asisten']
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'roleUpdatedBy', 'roleUpdatedAt', 'updatedAt']))
       );
+      allow delete: if false;
     }
+
+    // ─── 2. Classes Collection (Dev 2) ──────────────────────────────────────
+
+    match /classes/{classId} {
+      allow read: if isAuthenticated();
+      allow write: if isAsisten();
+    }
+
+    // ─── 3. Enrollments Collection (Dev 2) ──────────────────────────────────
+
+    match /enrollments/{enrollmentId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAsisten());
+      allow write: if isAsisten();
+    }
+
+    // ─── 4. Sessions Collection (Dev 2 & Dev 3) ─────────────────────────────
+    // Hanya asisten yang bisa create, update (buka/tutup sesi), atau delete.
+    // Praktikan hanya bisa read.
+
+    match /sessions/{sessionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAsisten();
+    }
+
+    // ─── 5. Attendance Collection (Dev 3) ───────────────────────────────────
+    // ID dokumen: {sessionId}_{uid}
+    // Aturan pencegahan:
+    //  - Read diperbolehkan untuk semua user yang login (untuk cek kehadiran)
+    //  - userId harus sesuai auth.uid
+    //  - docId harus gabungan sessionId + '_' + uid
+    //  - Praktikan hanya bisa create (update ditolak -> cegah presensi ganda)
+    //  - Hanya asisten yang bisa update/delete catatan presensi
+
+    match /attendance/{attendanceId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && attendanceId == request.resource.data.sessionId + '_' + request.auth.uid;
+      allow update, delete: if isAsisten();
+    }
+
+    // ─── 6. PermissionRequests Collection (Dev 4) ───────────────────────────
+
+    match /permissionRequests/{requestId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAsisten());
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow update: if isAsisten();
+      allow delete: if false;
+    }
+
+    // ─── 7. AuditLogs Collection ────────────────────────────────────────────
+
     match /auditLogs/{logId} {
-      allow create: if request.auth != null
+      allow create: if isAuthenticated()
         && request.resource.data.actorUid == request.auth.uid
         && request.resource.data.timestamp == request.time;
       allow read: if isAsisten();
       allow update, delete: if false;
+    }
+
+    // ─── 8. InvitationCodes Collection (Dev 1) ──────────────────────────────
+
+    match /invitationCodes/{code} {
+      allow read: if isAuthenticated();
+      allow update: if isAuthenticated()
+        && resource.data.used == false
+        && request.resource.data.used == true
+        && request.resource.data.usedBy == request.auth.uid;
+      allow create, delete: if isAdmin();
     }
   }
 }
