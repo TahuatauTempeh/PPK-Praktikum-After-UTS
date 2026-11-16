@@ -66,19 +66,17 @@ export default function DetailSesiScreen() {
   if (!currentUser) return null;
 
   // Jika Firestore: gunakan data realtime; jika tidak, gunakan data dummy SessionContext
-  const session = useFirestore
-    ? (fsSession
-        ? {
-            id: fsSession.id,
-            title: fsSession.title,
-            course: fsSession.title,
-            date: fsSession.date,
-            time: `${fsSession.startTime} - ${fsSession.endTime}`,
-            room: fsSession.room,
-            assistantId: fsSession.assistantId,
-            status: (fsSession.status === 'scheduled' ? 'scheduled' : fsSession.status) as 'scheduled' | 'open' | 'closed',
-          }
-        : null)
+  const session = (useFirestore && fsSession)
+    ? {
+        id: fsSession.id,
+        title: fsSession.title,
+        course: fsSession.title,
+        date: fsSession.date,
+        time: `${fsSession.startTime} - ${fsSession.endTime}`,
+        room: fsSession.room,
+        assistantId: fsSession.assistantId,
+        status: (fsSession.status === 'scheduled' ? 'scheduled' : fsSession.status) as 'scheduled' | 'open' | 'closed',
+      }
     : state.sessions.find((s) => s.id === id);
 
   const record = useFirestore

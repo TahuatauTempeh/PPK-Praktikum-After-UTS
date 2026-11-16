@@ -155,3 +155,16 @@ export function listenSession(
     callback({ id: snap.id, ...snap.data() } as FirestoreSession);
   });
 }
+
+// ─── Realtime listener: seluruh sesi (untuk sinkronisasi jadwal) ─────────────
+
+export function listenAllSessions(
+  callback: (sessions: FirestoreSession[]) => void,
+): Unsubscribe {
+  const q = collection(getDb(), COLLECTIONS.sessions);
+  return onSnapshot(q, (snap) => {
+    const sessions = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as FirestoreSession);
+    callback(sessions);
+  });
+}
+

@@ -71,18 +71,9 @@ function FirestoreSessionScreen({ firestoreId, onBack, onRecap }: { firestoreId:
     <AssistantScreen>{header}<ActivityIndicator style={{ marginTop: 32 }} /></AssistantScreen>
   );
 
-  if (!fsSession) return (
-    <AssistantScreen>
-      {header}
-      <View style={styles.empty}>
-        <AssistantText style={styles.emptyTitle}>Sesi tidak ditemukan</AssistantText>
-        <AssistantText tone="secondary" style={styles.center}>Sesi ini tidak tersedia di Firestore.</AssistantText>
-        <Pressable accessibilityRole="button" onPress={onBack} style={[styles.button, styles.primary]}>
-          <AssistantText variant="label" style={styles.white}>Kembali ke jadwal</AssistantText>
-        </Pressable>
-      </View>
-    </AssistantScreen>
-  );
+  if (!fsSession) {
+    return <PreviewSessionScreen id={firestoreId} onBack={onBack} onRecap={onRecap} />;
+  }
 
   const scheduled = fsSession.status === 'scheduled';
   const open = fsSession.status === 'open';

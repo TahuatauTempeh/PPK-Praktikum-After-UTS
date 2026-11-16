@@ -12,8 +12,25 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { listenMyAttendance, listenSessionAttendance, submitAttendance, type AttendanceDoc } from '@/lib/attendance-service';
-import { closeSession, listenSession, openSession, type ActionResult, type FirestoreSession } from '@/lib/session-actions';
+import { closeSession, listenAllSessions, listenSession, openSession, type ActionResult, type FirestoreSession } from '@/lib/session-actions';
 import type { UserProfile } from '@/types';
+
+// ─── Realtime: Seluruh Sesi (untuk sinkronisasi jadwal Asisten & Praktikan) ───
+
+export function useFirestoreSchedule() {
+  const [firestoreSessions, setFirestoreSessions] = useState<FirestoreSession[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsub = listenAllSessions((data) => {
+      setFirestoreSessions(data);
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
+
+  return { firestoreSessions, loading };
+}
 
 // ─── Asisten: kelola satu sesi ────────────────────────────────────────────────
 
