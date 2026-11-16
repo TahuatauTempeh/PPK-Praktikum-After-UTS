@@ -70,9 +70,13 @@ export async function submitAttendance(
 
     // Guard 2: cek presensi ganda (klien-side, Firestore rules juga mencegah via create-only)
     const attendanceId = `${sessionId}_${profile.id}`;
-    const existingSnap = await getDoc(doc(getDb(), COLLECTIONS.attendance, attendanceId));
-    if (existingSnap.exists()) {
-      return { success: false, message: 'Kamu sudah melakukan presensi di sesi ini.' };
+    try {
+      const existingSnap = await getDoc(doc(getDb(), COLLECTIONS.attendance, attendanceId));
+      if (existingSnap.exists()) {
+        return { success: false, message: 'Kamu sudah melakukan presensi di sesi ini.' };
+      }
+    } catch {
+      // Abaikan jika pengecekan dokumen gagal (misal belum dibuat)
     }
 
     // Tulis dokumen presensi

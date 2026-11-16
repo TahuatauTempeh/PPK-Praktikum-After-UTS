@@ -71,19 +71,17 @@ service cloud.firestore {
     // ─── 5. Attendance Collection (Dev 3) ───────────────────────────────────
     // ID dokumen: {sessionId}_{uid}
     // Aturan pencegahan:
+    //  - Read diperbolehkan untuk semua user yang login (untuk cek kehadiran)
     //  - userId harus sesuai auth.uid
     //  - docId harus gabungan sessionId + '_' + uid
-    //  - Dokumen belum boleh ada (!exists -> cegah presensi ganda di DB level)
-    //  - Sesi terkait harus berstatus 'open'
-    //  - Praktikan tidak boleh update atau delete catatan presensi
+    //  - Praktikan hanya bisa create (update ditolak -> cegah presensi ganda)
+    //  - Hanya asisten yang bisa update/delete catatan presensi
 
     match /attendance/{attendanceId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAsisten());
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated()
         && request.resource.data.userId == request.auth.uid
-        && attendanceId == request.resource.data.sessionId + '_' + request.auth.uid
-        && !exists(/databases/$(database)/documents/attendance/$(attendanceId))
-        && get(/databases/$(database)/documents/sessions/$(request.resource.data.sessionId)).data.status == 'open';
+        && attendanceId == request.resource.data.sessionId + '_' + request.auth.uid;
       allow update, delete: if isAsisten();
     }
 
