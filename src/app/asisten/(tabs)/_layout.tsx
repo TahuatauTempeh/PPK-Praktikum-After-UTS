@@ -1,10 +1,11 @@
 import { router, Tabs, usePathname } from 'expo-router';
 import { useState } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TAB_TRANSITION_SPEC, tabSlideInterpolator } from '@/constants/tab-transition';
 import { useAuth } from '@/context/auth-context';
+import { BlurTargetProvider } from '@/context/blur-target';
+import { TabBarInsetProvider } from '@/context/tab-bar-inset';
 import { AssistantNavigation, type AssistantTab } from '@/screens/asisten/components/assistant-navigation';
 import { useTheme } from '@/theme';
 
@@ -34,25 +35,27 @@ export default function TabsLayout() {
   };
 
   return (
-    <Tabs
-      backBehavior="history"
-      tabBar={() => (
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={{ backgroundColor: theme.colors.background }}>
-          <AssistantNavigation active={active} showAdmin={showAdmin} onNavigate={goTo} />
-        </SafeAreaView>
-      )}
-      screenOptions={{
-        headerShown: false,
-        sceneStyle: { backgroundColor: theme.colors.background },
-        transitionSpec: TAB_TRANSITION_SPEC,
-        sceneStyleInterpolator: tabSlideInterpolator(width),
-      }}
-    >
-      <Tabs.Screen name="index" />
-      <Tabs.Screen name="jadwal" />
-      <Tabs.Screen name="rekap" />
-      <Tabs.Screen name="admin" />
-      <Tabs.Screen name="profil" />
-    </Tabs>
+    <TabBarInsetProvider>
+      <BlurTargetProvider>
+        <Tabs
+          backBehavior="history"
+          tabBar={() => (
+            <AssistantNavigation active={active} showAdmin={showAdmin} onNavigate={goTo} />
+          )}
+          screenOptions={{
+            headerShown: false,
+            sceneStyle: { backgroundColor: theme.colors.background },
+            transitionSpec: TAB_TRANSITION_SPEC,
+            sceneStyleInterpolator: tabSlideInterpolator(width),
+          }}
+        >
+          <Tabs.Screen name="index" />
+          <Tabs.Screen name="jadwal" />
+          <Tabs.Screen name="rekap" />
+          <Tabs.Screen name="admin" />
+          <Tabs.Screen name="profil" />
+        </Tabs>
+      </BlurTargetProvider>
+    </TabBarInsetProvider>
   );
 }

@@ -60,7 +60,7 @@ export default function ReviewIzin({ id, onBack }: Props) {
     <View style={styles.header}>
       <Pressable accessibilityRole="button" accessibilityLabel="Kembali" onPress={onBack}
         style={({ pressed }) => [styles.back, pressed && styles.pressed]}>
-        <ScheduleIcon name="backPrimary" size={20} tintColor={theme.colors.primary} />
+        <ScheduleIcon name="backPrimary" size={20} tintColor={theme.colors.onHero} />
       </Pressable>
       <AssistantText style={styles.headerTitle} accessibilityRole="header">Tinjau izin</AssistantText>
       <View style={styles.headerSpacer} />
@@ -242,7 +242,8 @@ const gaya = (theme: Theme) => StyleSheet.create({
   screen: { flex: 1 },
   flex: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 },
-  back: { minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.glassCard, borderWidth: 1, borderColor: theme.colors.glassBorder, borderRadius: 16, boxShadow: theme.colors.shadowSmall },
+  // Area sentuh 44 px; panah putih duduk langsung di gradien, sama dengan layar sesi.
+  back: { minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, lineHeight: 24, fontFamily: tokens.fonts.bold, color: theme.colors.onHero },
   headerSpacer: { width: 44 },
   card: {

@@ -1,6 +1,7 @@
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -125,6 +126,8 @@ export default function RegisterScreen() {
             onPress={handleSubmit}
             disabled={submitting}
             accessibilityRole="button"
+            accessibilityLabel={submitting ? 'Memproses' : 'Daftar'}
+            accessibilityState={{ busy: submitting, disabled: submitting }}
             style={({ pressed }) => [
               authStyles.button,
               {
@@ -133,9 +136,15 @@ export default function RegisterScreen() {
               },
             ]}
           >
-            <Text style={[authStyles.buttonText, { color: theme.colors.onPrimary }]}>
-              {submitting ? 'Memproses...' : 'Daftar'}
-            </Text>
+            {submitting ? (
+              <View style={authStyles.buttonBusy}>
+                <ActivityIndicator color={theme.colors.onPrimary} />
+              </View>
+            ) : (
+              <Text style={[authStyles.buttonText, { color: theme.colors.onPrimary }]}>
+                Daftar
+              </Text>
+            )}
           </Pressable>
 
           <View style={authStyles.footer}>

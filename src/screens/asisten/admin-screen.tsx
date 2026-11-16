@@ -18,6 +18,7 @@ import {
 } from 'firebase/firestore';
 
 import { useAuth } from '@/context/auth-context';
+import { useTabBarInset } from '@/context/tab-bar-inset';
 import { logActionInBatch } from '@/lib/firebase/audit';
 import { toUserProfile } from '@/lib/firebase/converters';
 import { mapFirebaseError } from '@/lib/firebase/errors';
@@ -48,6 +49,7 @@ const filters: readonly { value: Filter; label: string }[] = [
 export function AdminScreen() {
   const theme = useTheme();
   const styles = useThemedStyles(gaya);
+  const tabBarInset = useTabBarInset();
   const { profile } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -280,7 +282,10 @@ export function AdminScreen() {
               data={screenStatus === 'ready' ? visibleUsers : []}
               keyExtractor={(item) => item.id}
               style={styles.listFlex}
-              contentContainerStyle={styles.list}
+              contentContainerStyle={[
+                styles.list,
+                { paddingBottom: tokens.spacing.page + tabBarInset },
+              ]}
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="on-drag"
               ListHeaderComponent={header}

@@ -8,6 +8,9 @@ const atmosfer = {
   dark: require('../../../../assets/praktikan/atmosfer-gelap.svg'),
 };
 
+/** Tinggi aset atmosfer; dipakai juga oleh latar header yang mengikuti scroll. */
+export const ATMOSPHERE_HEIGHT = 680;
+
 const kilau = {
   light: require('../../../../assets/asisten/session-glass.svg'),
   dark: require('../../../../assets/asisten/session-glass-dark.svg'),
@@ -42,7 +45,7 @@ export function AssistantGlassHighlight() {
 
 const styles = StyleSheet.create({
   background: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
-  gradient: { position: 'absolute', top: 0, left: 0, width: '100%', height: 680 },
+  gradient: { position: 'absolute', top: 0, left: 0, width: '100%', height: ATMOSPHERE_HEIGHT },
   highlight: {
     position: 'absolute',
     top: 0,
