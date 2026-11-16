@@ -15,6 +15,8 @@ const aset = {
   lokasi: require('@/assets/praktikan/lokasi.svg'),
   panah: require('@/assets/praktikan/panah.svg'),
   kembali: require('@/assets/praktikan/kembali.svg'),
+  // memakai ikon info yang sudah ada di sisi asisten; belum ada ikon khusus izin
+  izin: require('@/assets/asisten/info.svg'),
 };
 
 export type IkonNama = keyof typeof aset;

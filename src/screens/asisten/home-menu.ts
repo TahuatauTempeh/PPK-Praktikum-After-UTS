@@ -12,4 +12,5 @@ export type HomeMenuItem = {
 export const homeMenu: HomeMenuItem[] = [
   { id: 'jadwal', title: 'Jadwal', icon: 'calendar', href: '/asisten/jadwal' },
   { id: 'rekap', title: 'Rekap', icon: 'chartPrimary', href: '/asisten/rekap' },
+  { id: 'izin', title: 'Izin', icon: 'formInfo', href: '/asisten/izin' },
 ];
