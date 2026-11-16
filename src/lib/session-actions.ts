@@ -135,10 +135,16 @@ export function listenSessionsByClass(
     orderBy('date', 'asc'),
     orderBy('startTime', 'asc'),
   );
-  return onSnapshot(q, (snap) => {
-    const sessions = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as FirestoreSession);
-    callback(sessions);
-  });
+  return onSnapshot(
+    q,
+    (snap) => {
+      const sessions = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as FirestoreSession);
+      callback(sessions);
+    },
+    (err) => {
+      console.warn('[listenSessionsByClass] error:', err);
+    },
+  );
 }
 
 // ─── Realtime listener: satu sesi (untuk status updates) ─────────────────────
@@ -147,13 +153,19 @@ export function listenSession(
   sessionId: string,
   callback: (session: FirestoreSession | null) => void,
 ): Unsubscribe {
-  return onSnapshot(doc(getDb(), COLLECTIONS.sessions, sessionId), (snap) => {
-    if (!snap.exists()) {
-      callback(null);
-      return;
-    }
-    callback({ id: snap.id, ...snap.data() } as FirestoreSession);
-  });
+  return onSnapshot(
+    doc(getDb(), COLLECTIONS.sessions, sessionId),
+    (snap) => {
+      if (!snap.exists()) {
+        callback(null);
+        return;
+      }
+      callback({ id: snap.id, ...snap.data() } as FirestoreSession);
+    },
+    (err) => {
+      console.warn('[listenSession] error:', err);
+    },
+  );
 }
 
 // ─── Realtime listener: seluruh sesi (untuk sinkronisasi jadwal) ─────────────
@@ -162,9 +174,15 @@ export function listenAllSessions(
   callback: (sessions: FirestoreSession[]) => void,
 ): Unsubscribe {
   const q = collection(getDb(), COLLECTIONS.sessions);
-  return onSnapshot(q, (snap) => {
-    const sessions = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as FirestoreSession);
-    callback(sessions);
-  });
+  return onSnapshot(
+    q,
+    (snap) => {
+      const sessions = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as FirestoreSession);
+      callback(sessions);
+    },
+    (err) => {
+      console.warn('[listenAllSessions] error:', err);
+    },
+  );
 }
 

@@ -117,6 +117,16 @@ export function useMyAttendance(
     setSubmitResult(null);
     const result = await submitAttendance(sessionId, profile);
     setSubmitResult(result);
+    if (result.success) {
+      setMyRecord({
+        id: `${sessionId}_${profile.id}`,
+        sessionId,
+        userId: profile.id,
+        userName: profile.name,
+        userNim: profile.nim,
+        recordedAt: new Date().toISOString(),
+      });
+    }
     setSubmitting(false);
   }, [profile, sessionId, submitting]);
 

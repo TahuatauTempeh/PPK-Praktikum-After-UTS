@@ -88,7 +88,9 @@ export default function DetailSesiScreen() {
             userName: fsRecord.userName,
             timestamp: typeof fsRecord.recordedAt === 'string'
               ? fsRecord.recordedAt
-              : new Date().toISOString(),
+              : (fsRecord.recordedAt && typeof (fsRecord.recordedAt as { toDate?: () => Date }).toDate === 'function')
+                ? (fsRecord.recordedAt as { toDate: () => Date }).toDate().toISOString()
+                : new Date().toISOString(),
           }
         : undefined)
     : (session ? findOwnAttendance(state.attendance, session.id, currentUser.id) : undefined);
