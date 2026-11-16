@@ -2,6 +2,7 @@
  * Form izin (task 4.1): pilih sesi lewat BottomSheet, tulis alasan, kirim.
  * Sesi yang sudah ditutup tetap bisa dipilih (task 4.8). Sesi yang sudah punya izin ditandai
  * dan tidak bisa dipilih lagi; service tetap mengecek ulang ke Firestore sebelum menyimpan.
+ * Saat offline izin tetap disimpan sebagai pending dan terkirim otomatis begitu online (task 4.8).
  */
 
 import React, { useRef, useState } from 'react';
@@ -59,14 +60,21 @@ export function FormIzin({ user, sessions, sesiBerizin }: FormIzinProps) {
     sedangKirim.current = true;
     setMengirim(true);
     try {
-      const izin = await ajukanIzin({ sessionId, userId: user.id, userName: user.name, reason: alasan });
+      const { izin, tertunda } = await ajukanIzin({
+        sessionId,
+        userId: user.id,
+        userName: user.name,
+        reason: alasan,
+        sesiBerizin,
+      });
       setSessionId('');
       setAlasan('');
+      const status = tertunda
+        ? 'Kamu sedang offline. Izin disimpan di perangkat dan terkirim otomatis saat koneksi kembali.'
+        : 'Izin terkirim dan menunggu tinjauan asisten.';
       setHasil({
         jenis: 'sukses',
-        pesan: izin.aiLabel
-          ? 'Izin terkirim dan menunggu tinjauan asisten.'
-          : 'Izin terkirim dan menunggu tinjauan asisten. Hasil AI tidak tersedia untuk alasan ini.',
+        pesan: izin.aiLabel ? status : `${status} Hasil AI tidak tersedia untuk alasan ini.`,
       });
     } catch (error) {
       setHasil({ jenis: 'galat', pesan: pesanGalatIzin(error) });

@@ -142,7 +142,9 @@ function KartuIzin({ izin, session }: { izin: PermissionRequest; session?: Sessi
           {namaSesi(session)}
         </Text>
         <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>
-          Diajukan {formatWaktuIzin(izin.createdAt)}
+          {izin.menungguServer
+            ? 'Menunggu koneksi, terkirim otomatis saat online'
+            : `Diajukan ${formatWaktuIzin(izin.createdAt)}`}
         </Text>
       </View>
 

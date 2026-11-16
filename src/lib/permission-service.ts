@@ -39,10 +39,18 @@ export interface PermissionRequest {
   reviewedAt: Timestamp | null;
   reviewNote: string | null;
   createdAt: Timestamp | null;
+  /** true selama izin baru tersimpan di perangkat dan belum diterima server (offline). */
+  menungguServer: boolean;
 }
 
 export const ALASAN_MIN = 10;
 export const ALASAN_MAKS = 500;
+
+/**
+ * Batas tunggu jawaban server sebelum dianggap offline. Firestore tidak menolak saat offline,
+ * ia menunggu koneksi, jadi tanpa batas ini tombol kirim akan berputar terus.
+ */
+const BATAS_SERVER_MS = 5_000;
 
 const KODE = {
   duplikat: 'izin/duplikat',
@@ -64,8 +72,7 @@ function galat(code: string) {
 
 /** Pesan yang aman ditampilkan, untuk galat izin maupun galat Firebase. */
 export function pesanGalatIzin(error: unknown): string {
-  const code = typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : '';
-  return PESAN[code] ?? mapFirebaseError(error).message;
+  return PESAN[kodeGalat(error)] ?? mapFirebaseError(error).message;
 }
 
 const AI_LABELS: readonly AiLabel[] = ['negatif', 'netral', 'positif'];
@@ -98,6 +105,7 @@ export function toPermissionRequest(snapshot: DocumentSnapshot<DocumentData>): P
     reviewedAt: waktu(data.reviewedAt),
     reviewNote: teksAtauNull(data.reviewNote),
     createdAt: waktu(data.createdAt),
+    menungguServer: snapshot.metadata.hasPendingWrites,
   };
 }
 
@@ -120,19 +128,55 @@ export async function sudahAdaIzin(userId: string, sessionId: string): Promise<b
   return !hasil.empty;
 }
 
+function tunggu<T>(ms: number, nilai: T): Promise<T> {
+  return new Promise((resolve) => setTimeout(() => resolve(nilai), ms));
+}
+
+function kodeGalat(error: unknown): string {
+  return typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : '';
+}
+
+/**
+ * true/false dari server, atau null bila server tidak terjangkau (offline atau terlalu lama).
+ * Galat lain seperti permission-denied tetap dilempar.
+ */
+async function cekGandaDiServer(userId: string, sessionId: string): Promise<boolean | null> {
+  const permintaan = sudahAdaIzin(userId, sessionId);
+  try {
+    return await Promise.race([permintaan, tunggu(BATAS_SERVER_MS, null)]);
+  } catch (error) {
+    if (kodeGalat(error) === 'unavailable') return null;
+    throw error;
+  } finally {
+    // query yang kalah balapan tetap berjalan; galatnya jangan sampai jadi unhandled rejection
+    permintaan.catch(() => undefined);
+  }
+}
+
 interface AjukanIzinInput {
   sessionId: string;
   userId: string;
   userName: string;
   reason: string;
+  /** Sesi yang izinnya sudah ada di riwayat perangkat; dipakai saat server tidak terjangkau. */
+  sesiBerizin: ReadonlySet<string>;
 }
 
-export async function ajukanIzin(input: AjukanIzinInput): Promise<PermissionRequest> {
+export interface HasilAjukan {
+  izin: PermissionRequest;
+  /** true bila izin tersimpan di perangkat dan baru terkirim ke server saat online lagi. */
+  tertunda: boolean;
+}
+
+export async function ajukanIzin(input: AjukanIzinInput): Promise<HasilAjukan> {
   const reason = input.reason.trim();
   if (!input.sessionId || reason.length < ALASAN_MIN || reason.length > ALASAN_MAKS) {
     throw galat(KODE.tidakValid);
   }
-  if (await sudahAdaIzin(input.userId, input.sessionId)) throw galat(KODE.duplikat);
+  // Cek di perangkat dulu (bisa offline), lalu cek server seperti query di rencana sprint (task 4.4).
+  if (input.sesiBerizin.has(input.sessionId)) throw galat(KODE.duplikat);
+  const gandaDiServer = await cekGandaDiServer(input.userId, input.sessionId);
+  if (gandaDiServer) throw galat(KODE.duplikat);
 
   const ai = await analisisAlasan(reason);
   const ref = doc(collection(getDb(), COLLECTIONS.permissionRequests));
@@ -152,9 +196,18 @@ export async function ajukanIzin(input: AjukanIzinInput): Promise<PermissionRequ
   const batch = writeBatch(getDb());
   batch.set(ref, { ...data, createdAt: serverTimestamp() });
   logActionInBatch(batch, 'CREATE', COLLECTIONS.permissionRequests, ref.id, null, data);
-  await batch.commit();
 
-  return { id: ref.id, ...data, createdAt: null };
+  // Offline: Firestore menyimpan tulisan di perangkat, langsung tampil di riwayat lewat
+  // onSnapshot, lalu mengirimnya otomatis saat koneksi kembali (task 4.8).
+  const kirim = batch.commit();
+  const tertunda =
+    gandaDiServer === null ||
+    (await Promise.race([kirim.then(() => false), tunggu(BATAS_SERVER_MS, true)]));
+  if (tertunda) {
+    kirim.catch((error) => console.warn('[izin] izin tertunda gagal terkirim', error));
+  }
+
+  return { izin: { id: ref.id, ...data, createdAt: null, menungguServer: tertunda }, tertunda };
 }
 
 interface TinjauIzinInput {
@@ -199,6 +252,8 @@ export function pantauIzinSaya(
 ): Berhenti {
   return onSnapshot(
     query(collection(getDb(), COLLECTIONS.permissionRequests), where('userId', '==', userId)),
+    // metadata ikut dipantau supaya penanda "menunggu koneksi" hilang begitu server menerima izin
+    { includeMetadataChanges: true },
     (hasil) => onData(urutkanTerbaru(hasil.docs.map(toPermissionRequest))),
     (error) => onError(pesanGalatIzin(error))
   );
