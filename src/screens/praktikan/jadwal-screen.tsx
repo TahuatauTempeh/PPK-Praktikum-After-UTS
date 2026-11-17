@@ -18,15 +18,15 @@ import { formatTanggalPendek, sapaanWIB, tanggalHariIniWIB } from '@/screens/pra
 import { useUserPraktikan } from '@/screens/praktikan/guard';
 import { bukaDetailSesi, bukaRiwayat } from '@/screens/praktikan/navigasi';
 import { findOwnAttendance, tanggalAktif, urutkanSesi } from '@/screens/praktikan/selectors';
-import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
 import { usePraktikanSchedule } from '@/screens/praktikan/use-praktikan-schedule';
+import { fonts, typography, useTheme } from '@/theme';
 import { SessionStatus } from '@/types';
 
 type Saring = 'semua' | SessionStatus;
 const DAFTAR_SARING: Saring[] = ['semua', 'scheduled', 'open', 'closed'];
 
 export default function JadwalScreen() {
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
   const currentUser = useUserPraktikan();
   const { attendance } = useSession().state;
   const { sessions, loading, error, refresh } = usePraktikanSchedule(currentUser?.id ?? '');
@@ -52,8 +52,8 @@ export default function JadwalScreen() {
   return (
     <Layar>
       <Hero
-        sapaan={`${sapaan}, ${currentUser.name.split(' ')[0]}`}
-        judul="Jadwal praktikum"
+        sapaan="Jadwal Praktikum"
+        judul={`${sapaan}, ${currentUser.name.split(' ')[0]}`}
         keterangan={`${currentUser.name} · ${currentUser.nim}`}
         watermark="jadwal"
         statistik={[
@@ -69,10 +69,10 @@ export default function JadwalScreen() {
       ) : null}
 
       <View style={styles.judulBaris}>
-        <Text accessibilityRole="header" style={[Tipe.judulBagian, { color: theme.teks }]}>
+        <Text accessibilityRole="header" style={[typography.sectionHeading, { color: theme.colors.textPrimary }]}>
           Daftar sesi
         </Text>
-        <Text style={[Tipe.caption, { color: theme.teksSekunder }]}>{tampil.length} sesi</Text>
+        <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>{tampil.length} sesi</Text>
       </View>
 
       <ScrollView
@@ -95,18 +95,18 @@ export default function JadwalScreen() {
               style={({ pressed }) => [
                 styles.chipTombol,
                 {
-                  backgroundColor: terpilih ? theme.isiAksen : theme.kartu,
-                  borderColor: terpilih ? theme.isiAksen : theme.garisKartu,
+                  backgroundColor: terpilih ? theme.colors.primaryFill : theme.colors.glassCard,
+                  borderColor: terpilih ? theme.colors.primaryFill : theme.colors.glassBorder,
                   opacity: pressed ? 0.7 : 1,
                 },
               ]}
             >
               <Text
-                style={[Tipe.caption, styles.tebal, { color: terpilih ? theme.diAtasAksen : theme.teksSekunder }]}
+                style={[typography.caption, styles.tebal, { color: terpilih ? theme.colors.onPrimary : theme.colors.textSecondary }]}
               >
                 {label}
               </Text>
-              <Text style={[Tipe.kecil, styles.tebal, { color: terpilih ? theme.diAtasAksen : theme.teksSekunder }]}>
+              <Text style={[typography.tiny, styles.tebal, { color: terpilih ? theme.colors.onPrimary : theme.colors.textSecondary }]}>
                 {jumlah(nilai)}
               </Text>
             </Pressable>
@@ -117,8 +117,8 @@ export default function JadwalScreen() {
       <View style={styles.daftar} accessibilityLiveRegion="polite">
         {loading ? (
           <View style={styles.muat}>
-            <ActivityIndicator size="large" color={theme.aksen} />
-            <Text style={[Tipe.caption, { color: theme.teksSekunder }]}>Memuat jadwal praktikum...</Text>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>Memuat jadwal praktikum...</Text>
           </View>
         ) : error ? (
           <Kosong
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 999,
   },
-  tebal: { fontWeight: '600' },
+  tebal: { fontFamily: fonts.semibold },
   daftar: { gap: 14 },
   muat: { paddingVertical: 40, alignItems: 'center', gap: 12 },
 });

@@ -8,16 +8,17 @@ import {
   removeEnrollment,
 } from '@/lib/enrollment-service';
 import { formatShortDate } from '@/lib/praktikum-helpers';
+import { tokens, useTheme, useThemedStyles, type Theme } from '@/theme';
 import { type Enrollment, type PracticumClass, type User } from '@/types';
 
 import { AssistantScreen } from '../components/assistant-screen';
 import { AssistantText } from '../components/assistant-text';
+import { AssistantTopBar } from '../components/assistant-top-bar';
 import { ScheduleIcon } from '../components/schedule-icon';
-import { assistantTheme as theme } from '../theme';
 import { ParticipantAddSheet } from './participant-add-sheet';
 import { ParticipantRemoveSheet } from './participant-remove-sheet';
 
-// TODO (Sprint 2 - Integrasi Auth): Ganti default 'a1' dengan uid dari `useAuth()` setelah Dev 1 selesai.
+// Fallback sementara saat data mock masih memakai assistantId 'a1'.
 const DEFAULT_ASSISTANT_ID = 'a1';
 
 type Props = {
@@ -32,6 +33,8 @@ export default function ParticipantListScreen({
   assistantId = DEFAULT_ASSISTANT_ID,
   onBack,
 }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(gaya);
   const [classes, setClasses] = useState<PracticumClass[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(initialClassId ?? null);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -150,19 +153,16 @@ export default function ParticipantListScreen({
   }
 
   return (
-    <AssistantScreen edges={['top', 'bottom', 'left', 'right']}>
-      <View style={styles.topBar}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Kembali"
-          onPress={onBack}
-          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
-          <ScheduleIcon name="back" size={20} />
-        </Pressable>
-
+    <AssistantScreen
+      header={onBack ? <AssistantTopBar onBack={onBack} title="Peserta Kelas" /> : undefined}
+      edges={['top', 'bottom', 'left', 'right']}
+    >
+      <View style={styles.topRow}>
         <View style={styles.titleBlock}>
-          <AssistantText variant="pageTitle" accessibilityRole="header">Peserta Kelas</AssistantText>
-          <AssistantText variant="caption" tone="secondary">
+          <AssistantText variant="pageTitle" accessibilityRole="header" style={styles.heroTitle}>
+            Peserta Kelas
+          </AssistantText>
+          <AssistantText variant="caption" style={styles.heroSubtitle}>
             {selectedClass ? `${enrollments.length} praktikan terdaftar` : 'Belum ada kelas'}
           </AssistantText>
         </View>
@@ -180,7 +180,7 @@ export default function ParticipantListScreen({
             !selectedClass && styles.disabled,
             pressed && selectedClass && styles.pressed,
           ]}>
-          <ScheduleIcon name="plus" size={16} />
+          <ScheduleIcon name="plus" size={16} tintColor={theme.colors.onPrimary} />
           <AssistantText variant="label" style={styles.addLabel}>Tambah</AssistantText>
         </Pressable>
       </View>
@@ -251,7 +251,7 @@ export default function ParticipantListScreen({
       {!loading && !loadError && !selectedClass && (
         <View style={styles.stateCard}>
           <View style={styles.emptyIcon}>
-            <ScheduleIcon name="users" size={32} />
+            <ScheduleIcon name="users" size={32} tintColor={theme.colors.primary} />
           </View>
           <AssistantText style={styles.stateTitle}>Belum ada kelas</AssistantText>
           <AssistantText tone="secondary" style={styles.centerText}>
@@ -263,7 +263,7 @@ export default function ParticipantListScreen({
       {!loading && !loadError && selectedClass && enrollments.length === 0 && (
         <View style={styles.stateCard}>
           <View style={styles.emptyIcon}>
-            <ScheduleIcon name="users" size={32} />
+            <ScheduleIcon name="users" size={32} tintColor={theme.colors.primary} />
           </View>
           <AssistantText style={styles.stateTitle}>Belum ada peserta</AssistantText>
           <AssistantText tone="secondary" style={styles.centerText}>
@@ -324,45 +324,37 @@ export default function ParticipantListScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  topBar: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 16,
-    backgroundColor: theme.colors.glassSurface,
-    borderWidth: 1,
-    borderColor: theme.colors.glassBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+const gaya = (theme: Theme) => StyleSheet.create({
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   titleBlock: { flex: 1, gap: 2 },
+  heroTitle: { color: theme.colors.onHero },
+  heroSubtitle: { color: theme.colors.heroSoft },
   addButton: {
     minHeight: 44,
     paddingHorizontal: 14,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.primary,
+    borderRadius: tokens.radius.pill,
+    backgroundColor: theme.colors.primaryFill,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  addLabel: { color: theme.colors.surface, fontSize: 13 },
+  addLabel: { color: theme.colors.onPrimary, fontSize: 13 },
   disabled: { opacity: 0.5 },
-  classTabsViewport: { marginHorizontal: -theme.spacing.page },
-  classTabs: { flexDirection: 'row', gap: 8, paddingHorizontal: theme.spacing.page, paddingBottom: 2 },
+  classTabsViewport: { marginHorizontal: -tokens.spacing.page, flexGrow: 0 },
+  classTabs: { flexDirection: 'row', gap: 8, paddingHorizontal: tokens.spacing.page, paddingBottom: 2 },
   classTab: {
     minHeight: 40,
     paddingHorizontal: 14,
-    borderRadius: theme.radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.65)',
+    borderRadius: tokens.radius.pill,
+    backgroundColor: theme.colors.glassMuted,
     borderWidth: 1,
     borderColor: theme.colors.glassBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  classTabActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
-  classTabText: { fontSize: 13, fontFamily: theme.fonts.semibold, color: theme.colors.textSecondary },
-  white: { color: theme.colors.surface },
+  classTabActive: { backgroundColor: theme.colors.primaryFill, borderColor: theme.colors.primaryFill },
+  classTabText: { fontSize: 13, fontFamily: tokens.fonts.semibold, color: theme.colors.textSecondary },
+  white: { color: theme.colors.onPrimary },
   notice: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -373,15 +365,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
   },
-  noticeSuccess: { backgroundColor: '#EAF6F0', borderColor: '#B8DEC9' },
-  noticeError: { backgroundColor: theme.colors.errorSoft, borderColor: '#F3C7CD' },
-  noticeText: { flex: 1, fontFamily: theme.fonts.medium },
+  noticeSuccess: { backgroundColor: theme.colors.successSoft, borderColor: theme.colors.success },
+  noticeError: { backgroundColor: theme.colors.errorSoft, borderColor: theme.colors.error },
+  noticeText: { flex: 1, fontFamily: tokens.fonts.medium },
   successText: { color: theme.colors.success },
   errorText: { color: theme.colors.error },
   centerBox: { paddingVertical: 48, alignItems: 'center', gap: 12 },
   stateCard: {
     padding: 24,
-    borderRadius: theme.radius.card,
+    borderRadius: tokens.radius.card,
     backgroundColor: theme.colors.glassSurface,
     borderWidth: 1,
     borderColor: theme.colors.glassBorder,
@@ -396,14 +388,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stateTitle: { fontSize: 19, lineHeight: 25, fontFamily: theme.fonts.bold, textAlign: 'center' },
+  stateTitle: { fontSize: 19, lineHeight: 25, fontFamily: tokens.fonts.bold, textAlign: 'center' },
   centerText: { textAlign: 'center' },
   primaryButton: {
     minHeight: 48,
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: theme.radius.control,
-    backgroundColor: theme.colors.primary,
+    borderRadius: tokens.radius.control,
+    backgroundColor: theme.colors.primaryFill,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
@@ -415,21 +407,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
     padding: 16,
-    borderRadius: theme.radius.card,
+    borderRadius: tokens.radius.card,
     backgroundColor: theme.colors.glassSurface,
     borderWidth: 1,
     borderColor: theme.colors.glassBorder,
   },
   cardInfo: { flex: 1, gap: 3 },
-  cardTitle: { fontSize: 16, lineHeight: 22, fontFamily: theme.fonts.semibold },
+  cardTitle: { fontSize: 16, lineHeight: 22, fontFamily: tokens.fonts.semibold },
   removeButton: {
     minHeight: 36,
     paddingHorizontal: 12,
-    borderRadius: theme.radius.pill,
+    borderRadius: tokens.radius.pill,
     backgroundColor: theme.colors.errorSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  removeText: { fontFamily: theme.fonts.semibold, color: theme.colors.error },
+  removeText: { fontFamily: tokens.fonts.semibold, color: theme.colors.error },
   pressed: { opacity: 0.7 },
 });

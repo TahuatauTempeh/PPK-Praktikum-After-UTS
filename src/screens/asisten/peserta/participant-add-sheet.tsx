@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { getPraktikanCandidates } from '@/lib/enrollment-service';
+import { tokens, useTheme, useThemedStyles, type Theme } from '@/theme';
 import { type User } from '@/types';
 
 import { AssistantSheet } from '../components/assistant-sheet';
 import { AssistantText } from '../components/assistant-text';
 import { ScheduleIcon } from '../components/schedule-icon';
-import { assistantTheme as theme } from '../theme';
 
 type Props = {
   className: string;
@@ -18,6 +18,8 @@ type Props = {
 
 /** Bottom sheet untuk memilih dan menambahkan praktikan ke dalam kelas. */
 export function ParticipantAddSheet({ className, enrolledUserIds, onCancel, onSubmit }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(gaya);
   const [candidates, setCandidates] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -82,7 +84,7 @@ export function ParticipantAddSheet({ className, enrolledUserIds, onCancel, onSu
         <View style={styles.dialog} role="dialog" accessibilityViewIsModal accessibilityLabel="Tambah peserta">
           <View style={styles.header}>
             <View style={styles.icon}>
-              <ScheduleIcon name="users" size={22} />
+              <ScheduleIcon name="users" size={22} tintColor={theme.colors.primary} />
             </View>
             <View style={styles.heading}>
               <AssistantText style={styles.title} accessibilityRole="header">Tambah Peserta</AssistantText>
@@ -188,7 +190,7 @@ export function ParticipantAddSheet({ className, enrolledUserIds, onCancel, onSu
   );
 }
 
-const styles = StyleSheet.create({
+const gaya = (theme: Theme) => StyleSheet.create({
   dialog: { width: '100%', padding: 24, gap: 16 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   icon: {
@@ -200,7 +202,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   heading: { flex: 1, gap: 3 },
-  title: { fontSize: 21, lineHeight: 28, fontFamily: theme.fonts.bold },
+  title: { fontSize: 21, lineHeight: 28, fontFamily: tokens.fonts.bold },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -209,9 +211,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: theme.colors.errorSoft,
     borderWidth: 1,
-    borderColor: '#F3C7CD',
+    borderColor: theme.colors.error,
   },
-  errorText: { flex: 1, color: theme.colors.error, fontFamily: theme.fonts.medium },
+  errorText: { flex: 1, color: theme.colors.error, fontFamily: tokens.fonts.medium },
   searchInput: {
     minHeight: 46,
     paddingHorizontal: 14,
@@ -220,7 +222,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    fontFamily: theme.fonts.regular,
+    fontFamily: tokens.fonts.regular,
     fontSize: 14,
     color: theme.colors.textPrimary,
   },
@@ -252,21 +254,21 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.primary,
   },
   candidateInfo: { flex: 1, gap: 2 },
-  candidateName: { fontFamily: theme.fonts.semibold },
+  candidateName: { fontFamily: tokens.fonts.semibold },
   selectedText: { color: theme.colors.primary },
   actions: { gap: 10, marginTop: 4 },
   button: {
     minHeight: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.radius.control,
+    borderRadius: tokens.radius.control,
     borderWidth: 1,
     paddingHorizontal: 18,
     paddingVertical: 14,
   },
-  primary: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+  primary: { backgroundColor: theme.colors.primaryFill, borderColor: theme.colors.primaryFill },
   cancel: { backgroundColor: theme.colors.glassSurface, borderColor: theme.colors.glassBorder },
   disabled: { opacity: 0.55 },
-  white: { color: theme.colors.surface },
+  white: { color: theme.colors.onPrimary },
   pressed: { opacity: 0.7 },
 });

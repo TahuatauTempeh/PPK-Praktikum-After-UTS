@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { tokens, useTheme, useThemedStyles, type Theme } from '@/theme';
 import { type PracticumClass } from '@/types';
 
 import { AssistantSheet } from '../components/assistant-sheet';
 import { AssistantText } from '../components/assistant-text';
 import { ScheduleIcon } from '../components/schedule-icon';
-import { assistantTheme as theme } from '../theme';
 
 type Props = {
   initialClass: PracticumClass | null;
@@ -16,6 +16,8 @@ type Props = {
 
 /** Bottom sheet untuk menambah atau mengubah data kelas praktikum. */
 export function ClassFormSheet({ initialClass, onCancel, onSubmit }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(gaya);
   const isEditing = initialClass !== null;
   const [name, setName] = useState(initialClass?.name ?? '');
   const [description, setDescription] = useState(initialClass?.description ?? '');
@@ -49,7 +51,7 @@ export function ClassFormSheet({ initialClass, onCancel, onSubmit }: Props) {
         <View style={styles.dialog} role="dialog" accessibilityViewIsModal accessibilityLabel={title}>
           <View style={styles.header}>
             <View style={styles.icon}>
-              <ScheduleIcon name="calendarPlus" size={22} />
+              <ScheduleIcon name="calendarPlus" size={22} tintColor={theme.colors.primary} />
             </View>
             <View style={styles.heading}>
               <AssistantText style={styles.title} accessibilityRole="header">{title}</AssistantText>
@@ -134,7 +136,7 @@ export function ClassFormSheet({ initialClass, onCancel, onSubmit }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const gaya = (theme: Theme) => StyleSheet.create({
   dialog: { width: '100%', padding: 24, gap: 18 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   icon: {
@@ -146,7 +148,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   heading: { flex: 1, gap: 4 },
-  title: { fontSize: 21, lineHeight: 28, fontFamily: theme.fonts.bold },
+  title: { fontSize: 21, lineHeight: 28, fontFamily: tokens.fonts.bold },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -155,9 +157,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: theme.colors.errorSoft,
     borderWidth: 1,
-    borderColor: '#F3C7CD',
+    borderColor: theme.colors.error,
   },
-  errorText: { flex: 1, color: theme.colors.error, fontFamily: theme.fonts.medium },
+  errorText: { flex: 1, color: theme.colors.error, fontFamily: tokens.fonts.medium },
   fields: { gap: 14 },
   field: { gap: 6 },
   fieldLabel: { fontSize: 13, lineHeight: 18 },
@@ -169,7 +171,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    fontFamily: theme.fonts.regular,
+    fontFamily: tokens.fonts.regular,
     fontSize: 14,
     color: theme.colors.textPrimary,
   },
@@ -180,14 +182,14 @@ const styles = StyleSheet.create({
     minHeight: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.radius.control,
+    borderRadius: tokens.radius.control,
     borderWidth: 1,
     paddingHorizontal: 18,
     paddingVertical: 14,
   },
-  primary: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+  primary: { backgroundColor: theme.colors.primaryFill, borderColor: theme.colors.primaryFill },
   cancel: { backgroundColor: theme.colors.glassSurface, borderColor: theme.colors.glassBorder },
   disabled: { opacity: 0.6 },
-  white: { color: theme.colors.surface },
+  white: { color: theme.colors.onPrimary },
   pressed: { opacity: 0.7 },
 });

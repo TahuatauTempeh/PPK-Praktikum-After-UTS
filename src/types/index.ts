@@ -3,6 +3,8 @@
  * Digunakan oleh semua programmer.
  */
 
+import type { Timestamp } from 'firebase/firestore';
+
 /** Peran pengguna dalam aplikasi */
 export type Role = 'praktikan' | 'asisten';
 
@@ -15,6 +17,38 @@ export interface User {
   name: string;
   nim: string; // NIM untuk praktikan, kode/NIP untuk asisten
   role: Role;
+}
+
+/** Profil lengkap pengguna di koleksi `users` */
+export interface UserProfile extends User {
+  email: string;
+  isAdmin: boolean;
+  roleUpdatedBy?: string;
+  roleUpdatedAt?: Timestamp | null;
+  createdAt: Timestamp | null;
+  updatedAt: Timestamp | null;
+}
+
+/** Input form registrasi praktikan */
+export interface RegisterInput {
+  name: string;
+  nim: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+/** Catatan audit perubahan data */
+export interface AuditLog {
+  id: string;
+  action: string;
+  collection: string;
+  docId: string;
+  actorUid: string;
+  actorRole: Role | null;
+  before: unknown | null;
+  after: unknown | null;
+  timestamp: Timestamp | null;
 }
 
 /** Data sesi praktikum */

@@ -7,12 +7,12 @@ import {
   toDateInputValue,
   validateTimeRange,
 } from '@/lib/praktikum-helpers';
+import { tokens, useTheme, useThemedStyles, type Theme } from '@/theme';
 import { type PracticumClass, type PraktikumSession } from '@/types';
 
 import { AssistantSheet } from '../components/assistant-sheet';
 import { AssistantText } from '../components/assistant-text';
 import { ScheduleIcon } from '../components/schedule-icon';
-import { assistantTheme as theme } from '../theme';
 
 export type SessionFormValues = {
   classId: string;
@@ -39,6 +39,8 @@ export function SessionFormSheet({
   onCancel,
   onSubmit,
 }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(gaya);
   const isEditing = initialSession !== null;
   const defaultClassId =
     initialSession?.classId ??
@@ -90,7 +92,7 @@ export function SessionFormSheet({
         <View style={styles.dialog} role="dialog" accessibilityViewIsModal accessibilityLabel={heading}>
           <View style={styles.header}>
             <View style={styles.icon}>
-              <ScheduleIcon name="calendarPlus" size={22} />
+              <ScheduleIcon name="calendarPlus" size={22} tintColor={theme.colors.primary} />
             </View>
             <View style={styles.headingBlock}>
               <AssistantText style={styles.title} accessibilityRole="header">{heading}</AssistantText>
@@ -263,7 +265,7 @@ export function SessionFormSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const gaya = (theme: Theme) => StyleSheet.create({
   dialog: { width: '100%', padding: 24, gap: 16 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   icon: {
@@ -275,7 +277,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headingBlock: { flex: 1, gap: 3 },
-  title: { fontSize: 21, lineHeight: 28, fontFamily: theme.fonts.bold },
+  title: { fontSize: 21, lineHeight: 28, fontFamily: tokens.fonts.bold },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -284,9 +286,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: theme.colors.errorSoft,
     borderWidth: 1,
-    borderColor: '#F3C7CD',
+    borderColor: theme.colors.error,
   },
-  errorText: { flex: 1, color: theme.colors.error, fontFamily: theme.fonts.medium },
+  errorText: { flex: 1, color: theme.colors.error, fontFamily: tokens.fonts.medium },
   fields: { gap: 12 },
   field: { gap: 6 },
   fieldLabel: { fontSize: 13, lineHeight: 18 },
@@ -294,15 +296,15 @@ const styles = StyleSheet.create({
   classChip: {
     minHeight: 38,
     paddingHorizontal: 14,
-    borderRadius: theme.radius.pill,
+    borderRadius: tokens.radius.pill,
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  classChipActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
-  classChipText: { fontSize: 13, fontFamily: theme.fonts.semibold, color: theme.colors.textSecondary },
+  classChipActive: { backgroundColor: theme.colors.primaryFill, borderColor: theme.colors.primaryFill },
+  classChipText: { fontSize: 13, fontFamily: tokens.fonts.semibold, color: theme.colors.textSecondary },
   timeRow: { flexDirection: 'row', gap: 10 },
   timeField: { flex: 1 },
   input: {
@@ -313,7 +315,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    fontFamily: theme.fonts.regular,
+    fontFamily: tokens.fonts.regular,
     fontSize: 14,
     color: theme.colors.textPrimary,
   },
@@ -322,14 +324,14 @@ const styles = StyleSheet.create({
     minHeight: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.radius.control,
+    borderRadius: tokens.radius.control,
     borderWidth: 1,
     paddingHorizontal: 18,
     paddingVertical: 14,
   },
-  primary: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+  primary: { backgroundColor: theme.colors.primaryFill, borderColor: theme.colors.primaryFill },
   cancel: { backgroundColor: theme.colors.glassSurface, borderColor: theme.colors.glassBorder },
   disabled: { opacity: 0.6 },
-  white: { color: theme.colors.surface },
+  white: { color: theme.colors.onPrimary },
   pressed: { opacity: 0.7 },
 });

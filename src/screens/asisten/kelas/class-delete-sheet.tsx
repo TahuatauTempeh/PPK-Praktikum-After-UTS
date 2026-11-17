@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { tokens, useThemedStyles, type Theme } from '@/theme';
 import { type PracticumClass } from '@/types';
 
 import { AssistantSheet } from '../components/assistant-sheet';
 import { AssistantText } from '../components/assistant-text';
 import { ScheduleIcon } from '../components/schedule-icon';
-import { assistantTheme as theme } from '../theme';
 
 type Props = {
   targetClass: PracticumClass;
@@ -16,6 +16,7 @@ type Props = {
 
 /** Bottom sheet konfirmasi sebelum menghapus kelas praktikum. */
 export function ClassDeleteSheet({ targetClass, onCancel, onConfirm }: Props) {
+  const styles = useThemedStyles(gaya);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,9 +55,7 @@ export function ClassDeleteSheet({ targetClass, onCancel, onConfirm }: Props) {
             </AssistantText>
           </View>
 
-          {error && (
-            <AssistantText variant="caption" style={styles.errorText}>{error}</AssistantText>
-          )}
+          {error && <AssistantText variant="caption" style={styles.errorText}>{error}</AssistantText>}
 
           <View style={styles.actions}>
             <Pressable
@@ -88,7 +87,7 @@ export function ClassDeleteSheet({ targetClass, onCancel, onConfirm }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const gaya = (theme: Theme) => StyleSheet.create({
   dialog: { width: '100%', padding: 24, gap: 18 },
   icon: {
     width: 48,
@@ -99,30 +98,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   message: { gap: 8 },
-  title: { fontSize: 22, lineHeight: 29, fontFamily: theme.fonts.bold },
+  title: { fontSize: 22, lineHeight: 29, fontFamily: tokens.fonts.bold },
   summary: {
     padding: 14,
     gap: 6,
     backgroundColor: theme.colors.glassSurface,
     borderWidth: 1,
     borderColor: theme.colors.glassBorder,
-    borderRadius: theme.radius.control,
+    borderRadius: tokens.radius.control,
   },
-  className: { fontFamily: theme.fonts.semibold },
-  errorText: { color: theme.colors.error, fontFamily: theme.fonts.medium },
+  className: { fontFamily: tokens.fonts.semibold },
+  errorText: { color: theme.colors.error, fontFamily: tokens.fonts.medium },
   actions: { gap: 10 },
   button: {
     minHeight: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.radius.control,
+    borderRadius: tokens.radius.control,
     borderWidth: 1,
     paddingHorizontal: 18,
     paddingVertical: 14,
   },
-  danger: { backgroundColor: theme.colors.error, borderColor: theme.colors.error },
+  danger: { backgroundColor: theme.colors.errorFill, borderColor: theme.colors.errorFill },
   cancel: { backgroundColor: theme.colors.glassSurface, borderColor: theme.colors.glassBorder },
   disabled: { opacity: 0.6 },
-  white: { color: theme.colors.surface },
+  white: { color: theme.colors.onError },
   pressed: { opacity: 0.7 },
 });

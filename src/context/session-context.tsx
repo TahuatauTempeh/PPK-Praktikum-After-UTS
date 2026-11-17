@@ -3,7 +3,7 @@
  *
  * Menyediakan:
  * - currentUser, sessions, attendance
- * - setUser, logout
+ * - logout (didelegasikan ke auth)
  * - addSession, openSession, closeSession
  * - submitAttendance (dengan business rules)
  * - showToast (untuk feedback ke user)
@@ -11,6 +11,7 @@
 
 import React, { createContext, useCallback, useContext, useMemo, useReducer, useState } from 'react';
 
+import { useAuth } from '@/context/auth-context';
 import { dummyAttendance, dummySessions } from '@/data/dummy';
 import { AttendanceRecord, Session, SessionStatus, User } from '@/types';
 
@@ -39,8 +40,6 @@ const initialState: SessionState = {
 // ─── Actions ─────────────────────────────────────────────────────────────────
 
 type SessionAction =
-  | { type: 'SET_USER'; payload: User }
-  | { type: 'LOGOUT' }
   | { type: 'ADD_SESSION'; payload: Omit<Session, 'id' | 'status'> }
   | { type: 'OPEN_SESSION'; payload: string }
   | { type: 'CLOSE_SESSION'; payload: string }
@@ -50,12 +49,6 @@ type SessionAction =
 
 function sessionReducer(state: SessionState, action: SessionAction): SessionState {
   switch (action.type) {
-    case 'SET_USER':
-      return { ...state, currentUser: action.payload };
-
-    case 'LOGOUT':
-      return { ...state, currentUser: null };
-
     case 'ADD_SESSION': {
       const newSession: Session = {
         ...action.payload,
@@ -96,7 +89,6 @@ function sessionReducer(state: SessionState, action: SessionAction): SessionStat
 
 interface SessionContextValue {
   state: SessionState;
-  setUser: (user: User) => void;
   logout: () => void;
   addSession: (session: Omit<Session, 'id' | 'status'>) => void;
   openSession: (sessionId: string) => { success: boolean; message: string };
@@ -115,6 +107,26 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(sessionReducer, initialState);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
+  const { profile, signOut } = useAuth();
+
+  const currentUser = useMemo<User | null>(
+    () =>
+      profile
+        ? {
+            id: profile.id,
+            name: profile.name,
+            nim: profile.nim,
+            role: profile.role,
+          }
+        : null,
+    [profile]
+  );
+
+  const stateWithUser = useMemo<SessionState>(
+    () => ({ ...state, currentUser }),
+    [state, currentUser]
+  );
+
   const showToast = useCallback((type: ToastMessage['type'], message: string) => {
     const id = `toast-${Date.now()}`;
     setToast({ id, type, message });
@@ -124,13 +136,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setToast(null);
   }, []);
 
-  const setUser = useCallback((user: User) => {
-    dispatch({ type: 'SET_USER', payload: user });
-  }, []);
-
   const logout = useCallback(() => {
-    dispatch({ type: 'LOGOUT' });
-  }, []);
+    void signOut();
+  }, [signOut]);
 
   const addSession = useCallback(
     (session: Omit<Session, 'id' | 'status'>) => {
@@ -182,7 +190,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const submitAttendance = useCallback(
     (sessionId: string): { success: boolean; message: string } => {
-      const { currentUser, sessions, attendance } = state;
+      const { sessions, attendance } = state;
 
       if (!currentUser) {
         const msg = 'User belum login';
@@ -237,13 +245,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       showToast('success', `Presensi berhasil dicatat pukul ${timeStr}`);
       return { success: true, message: `Presensi tercatat pukul ${timeStr}` };
     },
-    [state, showToast]
+    [currentUser, state, showToast]
   );
 
   const value = useMemo<SessionContextValue>(
     () => ({
-      state,
-      setUser,
+      state: stateWithUser,
       logout,
       addSession,
       openSession,
@@ -253,7 +260,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       showToast,
       dismissToast,
     }),
-    [state, setUser, logout, addSession, openSession, closeSession, submitAttendance, toast, showToast, dismissToast]
+    [stateWithUser, logout, addSession, openSession, closeSession, submitAttendance, toast, showToast, dismissToast]
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

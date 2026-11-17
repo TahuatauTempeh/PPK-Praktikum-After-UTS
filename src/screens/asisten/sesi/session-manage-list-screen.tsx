@@ -10,16 +10,17 @@ import {
   getSessionsByClass,
   updateSession,
 } from '@/lib/session-service';
+import { tokens, useTheme, useThemedStyles, type Theme } from '@/theme';
 import { type PracticumClass, type PraktikumSession, type SessionStatus } from '@/types';
 
 import { AssistantScreen } from '../components/assistant-screen';
 import { AssistantText } from '../components/assistant-text';
+import { AssistantTopBar } from '../components/assistant-top-bar';
 import { ScheduleIcon } from '../components/schedule-icon';
-import { assistantTheme as theme } from '../theme';
 import { SessionDeleteSheet } from './session-delete-sheet';
 import { SessionFormSheet, type SessionFormValues } from './session-form-sheet';
 
-// TODO (Sprint 2 - Integrasi Auth): Ganti default 'a1' dengan uid dari `useAuth()` setelah Dev 1 selesai.
+// Fallback sementara saat data mock masih memakai assistantId 'a1'.
 const DEFAULT_ASSISTANT_ID = 'a1';
 const ALL_CLASSES_FILTER = 'all';
 
@@ -46,6 +47,8 @@ export default function SessionManageListScreen({
   assistantId = DEFAULT_ASSISTANT_ID,
   onBack,
 }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(gaya);
   const [classes, setClasses] = useState<PracticumClass[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string>(initialClassId ?? ALL_CLASSES_FILTER);
   const [sessions, setSessions] = useState<PraktikumSession[]>([]);
@@ -130,19 +133,16 @@ export default function SessionManageListScreen({
   }
 
   return (
-    <AssistantScreen edges={['top', 'bottom', 'left', 'right']}>
-      <View style={styles.topBar}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Kembali"
-          onPress={onBack}
-          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
-          <ScheduleIcon name="back" size={20} />
-        </Pressable>
-
+    <AssistantScreen
+      header={onBack ? <AssistantTopBar onBack={onBack} title="Atur Jadwal Sesi" /> : undefined}
+      edges={['top', 'bottom', 'left', 'right']}
+    >
+      <View style={styles.topRow}>
         <View style={styles.titleBlock}>
-          <AssistantText variant="pageTitle" accessibilityRole="header">Atur Jadwal Sesi</AssistantText>
-          <AssistantText variant="caption" tone="secondary">
+          <AssistantText variant="pageTitle" accessibilityRole="header" style={styles.heroTitle}>
+            Atur Jadwal Sesi
+          </AssistantText>
+          <AssistantText variant="caption" style={styles.heroSubtitle}>
             {sessions.length} sesi terdaftar
           </AssistantText>
         </View>
@@ -160,7 +160,7 @@ export default function SessionManageListScreen({
             classes.length === 0 && styles.disabled,
             pressed && classes.length > 0 && styles.pressed,
           ]}>
-          <ScheduleIcon name="plus" size={16} />
+          <ScheduleIcon name="plus" size={16} tintColor={theme.colors.onPrimary} />
           <AssistantText variant="label" style={styles.addLabel}>Tambah</AssistantText>
         </Pressable>
       </View>
@@ -255,7 +255,7 @@ export default function SessionManageListScreen({
       {!loading && !loadError && classes.length === 0 && (
         <View style={styles.stateCard}>
           <View style={styles.emptyIcon}>
-            <ScheduleIcon name="calendarPlus" size={32} />
+            <ScheduleIcon name="calendarPlus" size={32} tintColor={theme.colors.primary} />
           </View>
           <AssistantText style={styles.stateTitle}>Belum ada kelas</AssistantText>
           <AssistantText tone="secondary" style={styles.centerText}>
@@ -267,7 +267,7 @@ export default function SessionManageListScreen({
       {!loading && !loadError && classes.length > 0 && sessions.length === 0 && (
         <View style={styles.stateCard}>
           <View style={styles.emptyIcon}>
-            <ScheduleIcon name="calendarPlus" size={32} />
+            <ScheduleIcon name="calendarPlus" size={32} tintColor={theme.colors.primary} />
           </View>
           <AssistantText style={styles.stateTitle}>Belum ada sesi</AssistantText>
           <AssistantText tone="secondary" style={styles.centerText}>
@@ -373,45 +373,37 @@ export default function SessionManageListScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  topBar: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 16,
-    backgroundColor: theme.colors.glassSurface,
-    borderWidth: 1,
-    borderColor: theme.colors.glassBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+const gaya = (theme: Theme) => StyleSheet.create({
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   titleBlock: { flex: 1, gap: 2 },
+  heroTitle: { color: theme.colors.onHero },
+  heroSubtitle: { color: theme.colors.heroSoft },
   addButton: {
     minHeight: 44,
     paddingHorizontal: 14,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.primary,
+    borderRadius: tokens.radius.pill,
+    backgroundColor: theme.colors.primaryFill,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  addLabel: { color: theme.colors.surface, fontSize: 13 },
+  addLabel: { color: theme.colors.onPrimary, fontSize: 13 },
   disabled: { opacity: 0.5 },
-  filterViewport: { marginHorizontal: -theme.spacing.page },
-  filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: theme.spacing.page, paddingBottom: 2 },
+  filterViewport: { marginHorizontal: -tokens.spacing.page, flexGrow: 0 },
+  filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: tokens.spacing.page, paddingBottom: 2 },
   filterChip: {
     minHeight: 40,
     paddingHorizontal: 14,
-    borderRadius: theme.radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.65)',
+    borderRadius: tokens.radius.pill,
+    backgroundColor: theme.colors.glassMuted,
     borderWidth: 1,
     borderColor: theme.colors.glassBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  filterChipActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
-  filterChipText: { fontSize: 13, fontFamily: theme.fonts.semibold, color: theme.colors.textSecondary },
-  white: { color: theme.colors.surface },
+  filterChipActive: { backgroundColor: theme.colors.primaryFill, borderColor: theme.colors.primaryFill },
+  filterChipText: { fontSize: 13, fontFamily: tokens.fonts.semibold, color: theme.colors.textSecondary },
+  white: { color: theme.colors.onPrimary },
   notice: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -422,15 +414,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
   },
-  noticeSuccess: { backgroundColor: '#EAF6F0', borderColor: '#B8DEC9' },
-  noticeError: { backgroundColor: theme.colors.errorSoft, borderColor: '#F3C7CD' },
-  noticeText: { flex: 1, fontFamily: theme.fonts.medium },
+  noticeSuccess: { backgroundColor: theme.colors.successSoft, borderColor: theme.colors.success },
+  noticeError: { backgroundColor: theme.colors.errorSoft, borderColor: theme.colors.error },
+  noticeText: { flex: 1, fontFamily: tokens.fonts.medium },
   successText: { color: theme.colors.success },
   errorText: { color: theme.colors.error },
   centerBox: { paddingVertical: 48, alignItems: 'center', gap: 12 },
   stateCard: {
     padding: 24,
-    borderRadius: theme.radius.card,
+    borderRadius: tokens.radius.card,
     backgroundColor: theme.colors.glassSurface,
     borderWidth: 1,
     borderColor: theme.colors.glassBorder,
@@ -445,14 +437,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stateTitle: { fontSize: 19, lineHeight: 25, fontFamily: theme.fonts.bold, textAlign: 'center' },
+  stateTitle: { fontSize: 19, lineHeight: 25, fontFamily: tokens.fonts.bold, textAlign: 'center' },
   centerText: { textAlign: 'center' },
   primaryButton: {
     minHeight: 48,
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: theme.radius.control,
-    backgroundColor: theme.colors.primary,
+    borderRadius: tokens.radius.control,
+    backgroundColor: theme.colors.primaryFill,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
@@ -460,28 +452,28 @@ const styles = StyleSheet.create({
   list: { gap: 14 },
   card: {
     padding: 18,
-    borderRadius: theme.radius.card,
+    borderRadius: tokens.radius.card,
     backgroundColor: theme.colors.glassSurface,
     borderWidth: 1,
     borderColor: theme.colors.glassBorder,
     gap: 10,
   },
-  openCard: { backgroundColor: 'rgba(235,243,255,0.8)', borderColor: '#FFFFFF' },
+  openCard: { backgroundColor: theme.colors.cardOpen, borderColor: theme.colors.glassBorder },
   cardTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  classBadgeText: { fontFamily: theme.fonts.semibold },
+  classBadgeText: { fontFamily: tokens.fonts.semibold },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
     paddingHorizontal: 9,
     paddingVertical: 4,
-    borderRadius: theme.radius.pill,
-    backgroundColor: 'rgba(222,232,248,0.65)',
+    borderRadius: tokens.radius.pill,
+    backgroundColor: theme.colors.neutralSoft,
   },
   openBadge: { backgroundColor: theme.colors.lime },
-  statusText: { fontSize: 11, fontFamily: theme.fonts.semibold },
-  openStatusText: { color: '#35501A' },
-  cardTitle: { fontSize: 17, lineHeight: 23, fontFamily: theme.fonts.bold },
+  statusText: { fontSize: 11, fontFamily: tokens.fonts.semibold },
+  openStatusText: { color: theme.colors.onLime },
+  cardTitle: { fontSize: 17, lineHeight: 23, fontFamily: tokens.fonts.bold },
   metaList: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   cardActions: {
@@ -490,18 +482,18 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(203,216,234,0.6)',
+    borderTopColor: theme.colors.hairline,
   },
   chipButton: {
     minHeight: 36,
     paddingHorizontal: 14,
-    borderRadius: theme.radius.pill,
+    borderRadius: tokens.radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
   chipNeutral: { backgroundColor: theme.colors.neutralSoft },
-  chipNeutralText: { fontFamily: theme.fonts.semibold, color: theme.colors.textPrimary },
+  chipNeutralText: { fontFamily: tokens.fonts.semibold, color: theme.colors.textPrimary },
   chipDanger: { backgroundColor: theme.colors.errorSoft },
-  chipDangerText: { fontFamily: theme.fonts.semibold, color: theme.colors.error },
+  chipDangerText: { fontFamily: tokens.fonts.semibold, color: theme.colors.error },
   pressed: { opacity: 0.7 },
 });

@@ -5,7 +5,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { fonts, typography, useTheme } from '@/theme';
 import { SessionStatus } from '@/types';
 
 export const STATUS_LABEL: Record<SessionStatus, string> = {
@@ -15,14 +15,14 @@ export const STATUS_LABEL: Record<SessionStatus, string> = {
 };
 
 export function StatusLabel({ status }: { status: SessionStatus }) {
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
   const aktif = status === 'open';
-  const warnaTeks = aktif ? theme.teksLencanaBuka : theme.teksSekunder;
+  const warnaTeks = aktif ? theme.colors.onLime : theme.colors.textSecondary;
 
   return (
-    <View style={[styles.label, { backgroundColor: aktif ? theme.lencanaBuka : theme.isiLembut }]}>
+    <View style={[styles.label, { backgroundColor: aktif ? theme.colors.lime : theme.colors.softSurface }]}>
       <View style={[styles.titik, { backgroundColor: warnaTeks }]} />
-      <Text style={[Tipe.kecil, styles.teks, { color: warnaTeks }]}>{STATUS_LABEL[status]}</Text>
+      <Text style={[typography.tiny, styles.teks, { color: warnaTeks }]}>{STATUS_LABEL[status]}</Text>
     </View>
   );
 }
@@ -38,5 +38,5 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   titik: { width: 5, height: 5, borderRadius: 3 },
-  teks: { fontWeight: '600' },
+  teks: { fontFamily: fonts.semibold },
 });
