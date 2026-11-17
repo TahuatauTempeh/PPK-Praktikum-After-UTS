@@ -3,8 +3,15 @@
  * Semua fungsi murni, state tetap dimiliki context.
  */
 
+import { toDateInputValue } from '@/lib/praktikum-helpers';
 import { formatJamWIB } from '@/screens/praktikan/format';
-import { AttendanceRecord, Session } from '@/types';
+import {
+  AttendanceRecord,
+  Enrollment,
+  PracticumClass,
+  PraktikumSession,
+  Session,
+} from '@/types';
 
 export function findOwnAttendance(
   attendance: AttendanceRecord[],
@@ -21,8 +28,39 @@ export function urutkanSesi(sessions: Session[]): Session[] {
 
 /** "Praktikum Basis Data - Pertemuan 2" menjadi mata kuliah dan nomor sesi */
 export function pecahJudul(session: Session) {
-  const [, sesi = ''] = session.title.split(' - ');
+  const parts = session.title.split(' - ');
+  const sesi = parts.length > 1 ? parts.slice(1).join(' - ') : session.title;
   return { mataKuliah: session.course, sesi };
+}
+
+/** Menyaring sesi praktikum berdasarkan kelas yang diikuti praktikan. */
+export function filterSessionsByEnrollments(
+  sessions: readonly PraktikumSession[],
+  enrollments: readonly Enrollment[],
+  userId: string
+): PraktikumSession[] {
+  const enrolledClassIds = new Set(
+    enrollments.filter((item) => item.userId === userId).map((item) => item.classId)
+  );
+  return sessions.filter((item) => enrolledClassIds.has(item.classId));
+}
+
+/** Mengadaptasi PraktikumSession (skema Sprint 2) ke bentuk Session untuk komponen UI praktikan. */
+export function toPraktikanSession(
+  session: PraktikumSession,
+  classMap: ReadonlyMap<string, PracticumClass>
+): Session {
+  const matchedClass = classMap.get(session.classId);
+  return {
+    id: session.id,
+    title: session.title,
+    course: matchedClass?.name ?? 'Praktikum',
+    date: toDateInputValue(session.date),
+    time: `${session.startTime} - ${session.endTime}`,
+    room: session.room,
+    assistantId: session.assistantId,
+    status: session.status,
+  };
 }
 
 /** Tanggal sesi yang sedang dibuka, atau tanggal sesi terdekat dengan hari ini bila tidak ada */

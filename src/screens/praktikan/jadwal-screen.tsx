@@ -5,7 +5,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useSession } from '@/context/session-context';
 import { useFirestoreSchedule } from '@/lib/useSessionFirestore';
@@ -19,6 +19,7 @@ import { formatTanggalPendek, sapaanWIB, tanggalHariIniWIB } from '@/screens/pra
 import { useUserPraktikan } from '@/screens/praktikan/guard';
 import { bukaDetailSesi, bukaRiwayat } from '@/screens/praktikan/navigasi';
 import { findOwnAttendance, tanggalAktif, urutkanSesi } from '@/screens/praktikan/selectors';
+import { usePraktikanSchedule } from '@/screens/praktikan/use-praktikan-schedule';
 import { fonts, typography, useTheme } from '@/theme';
 import { SessionStatus } from '@/types';
 
@@ -28,8 +29,8 @@ const DAFTAR_SARING: Saring[] = ['semua', 'scheduled', 'open', 'closed'];
 export default function JadwalScreen() {
   const theme = useTheme();
   const currentUser = useUserPraktikan();
-  const { firestoreSessions } = useFirestoreSchedule();
-  const { sessions: dummySessions, attendance } = useSession().state;
+  const { attendance } = useSession().state;
+  const { sessions, loading, error, refresh } = usePraktikanSchedule(currentUser?.id ?? '');
   const [saring, setSaring] = useState<Saring>('semua');
 
   const sessions = useMemo(() => {
@@ -130,30 +131,46 @@ export default function JadwalScreen() {
       </ScrollView>
 
       <View style={styles.daftar} accessibilityLiveRegion="polite">
-        {tampil.map((session) => (
-          <SesiCard
-            key={session.id}
-            session={session}
-            record={findOwnAttendance(attendance, session.id, currentUser.id)}
-            onPress={() => bukaDetailSesi(session.id)}
+        {loading ? (
+          <View style={styles.muat}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>Memuat jadwal praktikum...</Text>
+          </View>
+        ) : error ? (
+          <Kosong
+            ikon="jadwal"
+            judul="Gagal memuat jadwal"
+            keterangan={error}
+            aksi={{ label: 'Coba lagi', onPress: () => void refresh() }}
           />
-        ))}
-        {tampil.length === 0 ? (
-          urut.length === 0 ? (
-            <Kosong
-              ikon="jadwal"
-              judul="Belum ada jadwal"
-              keterangan="Belum ada sesi praktikum yang dijadwalkan."
-              aksi={{ label: 'Lihat riwayat kehadiran', onPress: bukaRiwayat }}
-            />
-          ) : (
-            <Kosong
-              ikon="jadwal"
-              judul="Tidak ada sesi untuk filter ini"
-              aksi={{ label: 'Tampilkan semua sesi', onPress: () => setSaring('semua') }}
-            />
-          )
-        ) : null}
+        ) : (
+          <>
+            {tampil.map((session) => (
+              <SesiCard
+                key={session.id}
+                session={session}
+                record={findOwnAttendance(attendance, session.id, currentUser.id)}
+                onPress={() => bukaDetailSesi(session.id)}
+              />
+            ))}
+            {tampil.length === 0 ? (
+              urut.length === 0 ? (
+                <Kosong
+                  ikon="jadwal"
+                  judul="Belum ada jadwal"
+                  keterangan="Kamu belum terdaftar di kelas praktikum mana pun."
+                  aksi={{ label: 'Lihat riwayat kehadiran', onPress: bukaRiwayat }}
+                />
+              ) : (
+                <Kosong
+                  ikon="jadwal"
+                  judul="Tidak ada sesi untuk filter ini"
+                  aksi={{ label: 'Tampilkan semua sesi', onPress: () => setSaring('semua') }}
+                />
+              )
+            ) : null}
+          </>
+        )}
       </View>
     </Layar>
   );
@@ -175,4 +192,5 @@ const styles = StyleSheet.create({
   },
   tebal: { fontFamily: fonts.semibold },
   daftar: { gap: 14 },
+  muat: { paddingVertical: 40, alignItems: 'center', gap: 12 },
 });

@@ -125,6 +125,9 @@ function RootNavigator() {
       >
         <Stack.Screen name="asisten/(tabs)" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="asisten/sesi/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="asisten/kelas/index" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="asisten/peserta/index" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="asisten/atur-sesi/index" options={{ animation: 'slide_from_right' }} />
       </Stack.Protected>
 
       <Stack.Screen name="index" />

@@ -5,7 +5,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { useSession } from '@/context/session-context';
 import { Hero } from '@/screens/praktikan/components/hero';
@@ -15,10 +15,14 @@ import { SesiCard } from '@/screens/praktikan/components/sesi-card';
 import { useUserPraktikan } from '@/screens/praktikan/guard';
 import { bukaDetailSesi, bukaJadwal } from '@/screens/praktikan/navigasi';
 import { ringkasRiwayat } from '@/screens/praktikan/selectors';
+import { usePraktikanSchedule } from '@/screens/praktikan/use-praktikan-schedule';
+import { typography, useTheme } from '@/theme';
 
 export default function RiwayatScreen() {
+  const theme = useTheme();
   const currentUser = useUserPraktikan();
-  const { sessions, attendance } = useSession().state;
+  const { attendance } = useSession().state;
+  const { sessions, loading, error, refresh } = usePraktikanSchedule(currentUser?.id ?? '');
 
   const ringkas = useMemo(
     () => ringkasRiwayat(sessions, attendance, currentUser?.id ?? ''),
@@ -40,22 +44,40 @@ export default function RiwayatScreen() {
       />
 
       <View style={styles.daftar}>
-        {ringkas.baris.map(({ session, record }) => (
-          <SesiCard
-            key={session.id}
-            session={session}
-            record={record}
-            onPress={() => bukaDetailSesi(session.id)}
-          />
-        ))}
-        {ringkas.baris.length === 0 ? (
+        {loading ? (
+          <View style={styles.muat}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>
+              Memuat riwayat kehadiran...
+            </Text>
+          </View>
+        ) : error ? (
           <Kosong
             ikon="riwayat"
-            judul="Belum ada catatan kehadiran"
-            keterangan="Catatan muncul setelah sesi pertama dibuka."
-            aksi={{ label: 'Kembali ke jadwal', onPress: bukaJadwal }}
+            judul="Gagal memuat riwayat"
+            keterangan={error}
+            aksi={{ label: 'Coba lagi', onPress: () => void refresh() }}
           />
-        ) : null}
+        ) : (
+          <>
+            {ringkas.baris.map(({ session, record }) => (
+              <SesiCard
+                key={session.id}
+                session={session}
+                record={record}
+                onPress={() => bukaDetailSesi(session.id)}
+              />
+            ))}
+            {ringkas.baris.length === 0 ? (
+              <Kosong
+                ikon="riwayat"
+                judul="Belum ada catatan kehadiran"
+                keterangan="Catatan muncul setelah sesi kelasmu dibuka."
+                aksi={{ label: 'Kembali ke jadwal', onPress: bukaJadwal }}
+              />
+            ) : null}
+          </>
+        )}
       </View>
     </Layar>
   );
@@ -63,4 +85,5 @@ export default function RiwayatScreen() {
 
 const styles = StyleSheet.create({
   daftar: { gap: 14 },
+  muat: { paddingVertical: 40, alignItems: 'center', gap: 12 },
 });
