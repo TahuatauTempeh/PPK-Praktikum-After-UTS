@@ -6,7 +6,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
-import { useSession } from '@/context/session-context';
 import { pantauSemuaIzin, type PermissionRequest, type PermissionStatus } from '@/lib/permission-service';
 import { HeroCard } from '@/screens/shared/components/hero-card';
 import { AI_TIDAK_TERSEDIA, STATUS_IZIN, formatWaktuIzin, namaSesi, ringkasAi } from '@/screens/shared/izin';
@@ -16,6 +15,8 @@ import { AssistantScreen } from '../components/assistant-screen';
 import { AssistantText } from '../components/assistant-text';
 import { AssistantTopBar } from '../components/assistant-top-bar';
 import { ScheduleIcon } from '../components/schedule-icon';
+
+import { useSesiIzin } from './use-sesi-izin';
 
 type Filter = PermissionStatus | 'all';
 
@@ -38,7 +39,7 @@ type Props = { onBack: () => void; onOpen: (id: string) => void };
 export default function DaftarIzin({ onBack, onOpen }: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(gaya);
-  const { sessions } = useSession().state;
+  const { sessions, keadaan: keadaanSesi } = useSesiIzin();
   const [requests, setRequests] = useState<PermissionRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -170,7 +171,7 @@ export default function DaftarIzin({ onBack, onOpen }: Props) {
             <IzinCard
               key={item.id}
               item={item}
-              sessionName={namaSesi(sessions.find((session) => session.id === item.sessionId))}
+              sessionName={namaSesi(sessions.find((session) => session.id === item.sessionId), keadaanSesi)}
               onOpen={() => onOpen(item.id)}
             />
           ))

@@ -1,20 +1,28 @@
 /**
  * Tab Izin praktikan (task 4.1, 4.5): form izin di atas, riwayat izin realtime di bawah.
- * Daftar sesi dibaca dari SessionContext, sumber yang sama dengan Jadwal, sehingga ikut
- * berpindah ke Firestore saat data Dev 2 masuk.
+ * Daftar sesi memakai usePraktikanSchedule, sumber yang sama dengan Jadwal: sesi Firestore
+ * dari kelas yang diikuti praktikan.
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
-import { useSession } from '@/context/session-context';
 import { pantauIzinSaya, type PermissionRequest, type PermissionStatus } from '@/lib/permission-service';
 import { Hero } from '@/screens/praktikan/components/hero';
 import { Kosong } from '@/screens/praktikan/components/kosong';
 import { Layar } from '@/screens/praktikan/components/layar';
 import { useUserPraktikan } from '@/screens/praktikan/guard';
 import { urutkanSesi } from '@/screens/praktikan/selectors';
-import { AI_TIDAK_TERSEDIA, KETERANGAN_AI, STATUS_IZIN, formatWaktuIzin, namaSesi, ringkasAi } from '@/screens/shared/izin';
+import { usePraktikanSchedule } from '@/screens/praktikan/use-praktikan-schedule';
+import {
+  AI_TIDAK_TERSEDIA,
+  KETERANGAN_AI,
+  STATUS_IZIN,
+  formatWaktuIzin,
+  namaSesi,
+  ringkasAi,
+  type KeadaanSesi,
+} from '@/screens/shared/izin';
 import { fonts, typography, useTheme } from '@/theme';
 import type { Session } from '@/types';
 
@@ -23,7 +31,9 @@ import { FormIzin } from './form-izin';
 export default function IzinScreen() {
   const theme = useTheme();
   const currentUser = useUserPraktikan();
-  const { sessions } = useSession().state;
+  const jadwal = usePraktikanSchedule(currentUser?.id ?? '');
+  const sessions = jadwal.sessions;
+  const keadaanSesi: KeadaanSesi = jadwal.loading ? 'memuat' : jadwal.error ? 'galat' : 'siap';
   const [daftar, setDaftar] = useState<PermissionRequest[]>([]);
   const [memuat, setMemuat] = useState(true);
   const [galat, setGalat] = useState<string | null>(null);
@@ -66,7 +76,14 @@ export default function IzinScreen() {
         ]}
       />
 
-      <FormIzin user={currentUser} sessions={urut} sesiBerizin={sesiBerizin} />
+      <FormIzin
+        user={currentUser}
+        sessions={urut}
+        sesiBerizin={sesiBerizin}
+        memuatSesi={jadwal.loading}
+        galatSesi={jadwal.error}
+        muatUlangSesi={jadwal.refresh}
+      />
 
       <View style={styles.judulBaris}>
         <Text accessibilityRole="header" style={[typography.sectionHeading, { color: theme.colors.textPrimary }]}>
@@ -105,7 +122,12 @@ export default function IzinScreen() {
           />
         ) : (
           daftar.map((izin) => (
-            <KartuIzin key={izin.id} izin={izin} session={sessions.find((s) => s.id === izin.sessionId)} />
+            <KartuIzin
+              key={izin.id}
+              izin={izin}
+              session={sessions.find((s) => s.id === izin.sessionId)}
+              keadaanSesi={keadaanSesi}
+            />
           ))
         )}
       </View>
@@ -113,7 +135,7 @@ export default function IzinScreen() {
   );
 }
 
-function KartuIzin({ izin, session }: { izin: PermissionRequest; session?: Session }) {
+function KartuIzin({ izin, session, keadaanSesi }: { izin: PermissionRequest; session?: Session; keadaanSesi: KeadaanSesi }) {
   const theme = useTheme();
   const ai = ringkasAi(izin);
   const warna = {
@@ -139,7 +161,7 @@ function KartuIzin({ izin, session }: { izin: PermissionRequest; session?: Sessi
 
       <View style={styles.materi}>
         <Text accessibilityRole="header" style={[typography.cardTitle, { color: theme.colors.textPrimary }]}>
-          {namaSesi(session)}
+          {namaSesi(session, keadaanSesi)}
         </Text>
         <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>
           {izin.menungguServer

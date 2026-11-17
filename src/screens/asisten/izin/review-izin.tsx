@@ -8,7 +8,6 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { useAuth } from '@/context/auth-context';
-import { useSession } from '@/context/session-context';
 import { pantauIzin, pesanGalatIzin, tinjauIzin, type PermissionRequest } from '@/lib/permission-service';
 import { AI_TIDAK_TERSEDIA, KETERANGAN_AI, formatWaktuIzin, namaSesi, ringkasAi } from '@/screens/shared/izin';
 import { tokens, useThemedStyles, useTheme, type Theme } from '@/theme';
@@ -19,6 +18,7 @@ import { ScheduleIcon } from '../components/schedule-icon';
 import { formatSessionDate } from '../session-format';
 import { StatusBadge } from './daftar-izin';
 import { ReviewConfirmation } from './review-confirmation';
+import { useSesiIzin } from './use-sesi-izin';
 
 const NOTE_MAX = 300;
 
@@ -28,7 +28,7 @@ export default function ReviewIzin({ id, onBack }: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(gaya);
   const { profile } = useAuth();
-  const { sessions } = useSession().state;
+  const { sessions, keadaan: keadaanSesi } = useSesiIzin();
   const [request, setRequest] = useState<PermissionRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +94,7 @@ export default function ReviewIzin({ id, onBack }: Props) {
   }
 
   const session = sessions.find(item => item.id === request.sessionId);
-  const sessionName = namaSesi(session);
+  const sessionName = namaSesi(session, keadaanSesi);
   const pending = request.status === 'pending';
   const ai = ringkasAi(request);
   const reviewer = request.reviewedBy && request.reviewedBy === profile?.id ? 'kamu' : 'asisten';

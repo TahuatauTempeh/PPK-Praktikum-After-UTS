@@ -22,11 +22,14 @@ interface FormIzinProps {
   user: User;
   sessions: Session[];
   sesiBerizin: ReadonlySet<string>;
+  memuatSesi: boolean;
+  galatSesi: string | null;
+  muatUlangSesi: () => void;
 }
 
 type Hasil = { jenis: 'sukses' | 'galat'; pesan: string } | null;
 
-export function FormIzin({ user, sessions, sesiBerizin }: FormIzinProps) {
+export function FormIzin({ user, sessions, sesiBerizin, memuatSesi, galatSesi: galatJadwal, muatUlangSesi }: FormIzinProps) {
   const theme = useTheme();
   const [sessionId, setSessionId] = useState('');
   const [alasan, setAlasan] = useState('');
@@ -189,9 +192,20 @@ export function FormIzin({ user, sessions, sesiBerizin }: FormIzinProps) {
 
       <BottomSheet visible={pemilihTampil} title="Pilih sesi" onClose={() => setPemilihTampil(false)}>
         <ScrollView style={styles.daftarSesi} contentContainerStyle={styles.isiDaftar}>
-          {sessions.length === 0 ? (
+          {memuatSesi ? (
             <Text style={[typography.body, styles.tengah, { color: theme.colors.textSecondary }]}>
-              Belum ada sesi di jadwal.
+              Memuat sesi...
+            </Text>
+          ) : galatJadwal ? (
+            <View style={styles.galatJadwal}>
+              <Text accessibilityRole="alert" style={[typography.body, styles.tengah, { color: theme.colors.error }]}>
+                {galatJadwal}
+              </Text>
+              <Tombol label="Coba lagi" varian="lembut" onPress={muatUlangSesi} />
+            </View>
+          ) : sessions.length === 0 ? (
+            <Text style={[typography.body, styles.tengah, { color: theme.colors.textSecondary }]}>
+              Belum ada sesi. Sesi muncul setelah asisten menambahkanmu ke kelas.
             </Text>
           ) : null}
           {sessions.map((s) => {
@@ -257,4 +271,5 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   tengah: { textAlign: 'center' },
+  galatJadwal: { gap: 12 },
 });

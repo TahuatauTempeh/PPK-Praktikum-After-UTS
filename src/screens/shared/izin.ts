@@ -30,11 +30,22 @@ export function ringkasAi(izin: Pick<PermissionRequest, 'aiLabel' | 'aiConfidenc
 export const AI_TIDAK_TERSEDIA = 'Hasil AI tidak tersedia';
 export const KETERANGAN_AI = 'Perkiraan nada kalimat dari model sentimen, bukan penilaian alasan.';
 
-/** "Basis Data, Pertemuan 2", atau penanda bila sesinya tidak ada di jadwal. */
-export function namaSesi(session: Session | undefined): string {
-  if (!session) return 'Sesi tidak ditemukan';
-  const [, sesi] = session.title.split(' - ');
-  return sesi ? `${session.course}, ${sesi}` : session.course;
+export type KeadaanSesi = 'memuat' | 'siap' | 'galat';
+
+const SESI_KOSONG: Record<KeadaanSesi, string> = {
+  memuat: 'Memuat sesi...',
+  siap: 'Sesi tidak ditemukan',
+  galat: 'Sesi gagal dimuat',
+};
+
+/**
+ * "Basis Data, Pertemuan 3: JOIN & Subquery": nama kelas lalu judul sesi dari Firestore.
+ * Bila sesinya belum ada, keadaan daftar sesi menentukan penandanya.
+ */
+export function namaSesi(session: Session | undefined, keadaan: KeadaanSesi = 'siap'): string {
+  if (!session) return SESI_KOSONG[keadaan];
+  const judul = session.title.trim();
+  return judul && judul !== session.course ? `${session.course}, ${judul}` : session.course;
 }
 
 const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
