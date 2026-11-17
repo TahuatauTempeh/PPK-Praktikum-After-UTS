@@ -17,7 +17,7 @@ import { COLLECTIONS, getDb } from '@/lib/firebase/firestore';
 import {
   requireNonEmpty,
   rethrowServiceError,
-  toFirestoreTimestamp,
+  toDateInputValue,
   toMillis,
   validateTimeRange,
 } from '@/lib/praktikum-helpers';
@@ -41,7 +41,9 @@ function toPraktikumSession(snapshot: DocumentSnapshot<DocumentData>): Praktikum
     id: snapshot.id,
     classId: typeof data.classId === 'string' ? data.classId : '',
     title: typeof data.title === 'string' ? data.title : '',
-    date: data.date ?? '',
+    // Tanggal disimpan sebagai string 'YYYY-MM-DD' (WIB), sama seperti session-actions.ts.
+    // Dokumen lama yang berisi Timestamp tetap terbaca dan dinormalkan ke string.
+    date: toDateInputValue(data.date),
     startTime: typeof data.startTime === 'string' ? data.startTime : '00:00',
     endTime: typeof data.endTime === 'string' ? data.endTime : '00:00',
     room: typeof data.room === 'string' ? data.room : '',
@@ -64,10 +66,10 @@ export async function getSessionsByClass(classId: string): Promise<PraktikumSess
   const cleanClassId = requireNonEmpty(classId, 'ID kelas');
   try {
     const snapshot = await getDocs(
-      query(
-        collection(getDb(), COLLECTIONS.sessions),
-        where('classId', '==', cleanClassId)
-      )
+        query(
+            collection(getDb(), COLLECTIONS.sessions),
+            where('classId', '==', cleanClassId)
+        )
     );
     return sortSessionsChronologically(snapshot.docs.map(toPraktikumSession));
   } catch (error) {
@@ -80,10 +82,10 @@ export async function getSessionsByAssistant(assistantId: string): Promise<Prakt
   const cleanAssistantId = requireNonEmpty(assistantId, 'ID asisten');
   try {
     const snapshot = await getDocs(
-      query(
-        collection(getDb(), COLLECTIONS.sessions),
-        where('assistantId', '==', cleanAssistantId)
-      )
+        query(
+            collection(getDb(), COLLECTIONS.sessions),
+            where('assistantId', '==', cleanAssistantId)
+        )
     );
     return sortSessionsChronologically(snapshot.docs.map(toPraktikumSession));
   } catch (error) {
@@ -96,7 +98,7 @@ export async function getSessionsForPraktikan(userId: string): Promise<Praktikum
   try {
     const enrollments = await getEnrollmentsByUser(userId);
     const enrolledClassIds = Array.from(new Set(enrollments.map((item) => item.classId))).filter(
-      Boolean
+        Boolean
     );
     if (enrolledClassIds.length === 0) return [];
 
@@ -107,9 +109,9 @@ export async function getSessionsForPraktikan(userId: string): Promise<Praktikum
     }
 
     const snapshots = await Promise.all(
-      chunks.map((chunk) =>
-        getDocs(query(collection(db, COLLECTIONS.sessions), where('classId', 'in', chunk)))
-      )
+        chunks.map((chunk) =>
+            getDocs(query(collection(db, COLLECTIONS.sessions), where('classId', 'in', chunk)))
+        )
     );
 
     const combined = snapshots.flatMap((snap) => snap.docs.map(toPraktikumSession));
@@ -136,7 +138,8 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
   const room = requireNonEmpty(input.room, 'Ruangan');
   const assistantId = requireNonEmpty(input.assistantId, 'ID asisten');
   const { startTime, endTime } = validateTimeRange(input.startTime, input.endTime);
-  const dateTimestamp = toFirestoreTimestamp(input.date);
+  const dateValue = toDateInputValue(input.date);
+  if (!dateValue) throw new Error('Tanggal tidak valid.');
 
   try {
     const db = getDb();
@@ -144,7 +147,7 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
     const payload = {
       classId,
       title,
-      date: dateTimestamp,
+      date: dateValue,
       startTime,
       endTime,
       room,
@@ -156,23 +159,23 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
     const batch = writeBatch(db);
     batch.set(sessionRef, payload);
     logActionInBatch(
-      batch,
-      'CREATE',
-      COLLECTIONS.sessions,
-      sessionRef.id,
-      null,
-      { classId, title, date: dateTimestamp, startTime, endTime, room, assistantId, status: 'scheduled' }
+        batch,
+        'CREATE',
+        COLLECTIONS.sessions,
+        sessionRef.id,
+        null,
+        { classId, title, date: dateValue, startTime, endTime, room, assistantId, status: 'scheduled' }
     );
     await batch.commit();
 
     const createdSnap = await getDoc(sessionRef);
     return createdSnap.exists()
-      ? toPraktikumSession(createdSnap)
-      : {
+        ? toPraktikumSession(createdSnap)
+        : {
           id: sessionRef.id,
           classId,
           title,
-          date: dateTimestamp,
+          date: dateValue,
           startTime,
           endTime,
           room,
@@ -187,9 +190,9 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
 
 /** Memperbarui data sesi praktikum dan mencatat audit log. */
 export async function updateSession(
-  sessionId: string,
-  input: UpdateSessionInput,
-  _performedBy?: string
+    sessionId: string,
+    input: UpdateSessionInput,
+    _performedBy?: string
 ): Promise<PraktikumSession> {
   const cleanId = requireNonEmpty(sessionId, 'ID sesi');
 
@@ -203,18 +206,16 @@ export async function updateSession(
 
     const current = toPraktikumSession(currentSnap);
     const nextClassId =
-      input.classId !== undefined ? requireNonEmpty(input.classId, 'Kelas') : current.classId;
+        input.classId !== undefined ? requireNonEmpty(input.classId, 'Kelas') : current.classId;
     const nextTitle =
-      input.title !== undefined ? requireNonEmpty(input.title, 'Judul sesi') : current.title;
+        input.title !== undefined ? requireNonEmpty(input.title, 'Judul sesi') : current.title;
     const nextRoom =
-      input.room !== undefined ? requireNonEmpty(input.room, 'Ruangan') : current.room;
-    const nextDate =
-      input.date !== undefined
-        ? toFirestoreTimestamp(input.date)
-        : toFirestoreTimestamp(current.date);
+        input.room !== undefined ? requireNonEmpty(input.room, 'Ruangan') : current.room;
+    const nextDate = input.date !== undefined ? toDateInputValue(input.date) : current.date;
+    if (!nextDate) throw new Error('Tanggal tidak valid.');
     const { startTime, endTime } = validateTimeRange(
-      input.startTime ?? current.startTime,
-      input.endTime ?? current.endTime
+        input.startTime ?? current.startTime,
+        input.endTime ?? current.endTime
     );
 
     const batch = writeBatch(db);
@@ -227,26 +228,26 @@ export async function updateSession(
       room: nextRoom,
     });
     logActionInBatch(
-      batch,
-      'UPDATE',
-      COLLECTIONS.sessions,
-      cleanId,
-      {
-        classId: current.classId,
-        title: current.title,
-        date: current.date,
-        startTime: current.startTime,
-        endTime: current.endTime,
-        room: current.room,
-      },
-      {
-        classId: nextClassId,
-        title: nextTitle,
-        date: nextDate,
-        startTime,
-        endTime,
-        room: nextRoom,
-      }
+        batch,
+        'UPDATE',
+        COLLECTIONS.sessions,
+        cleanId,
+        {
+          classId: current.classId,
+          title: current.title,
+          date: current.date,
+          startTime: current.startTime,
+          endTime: current.endTime,
+          room: current.room,
+        },
+        {
+          classId: nextClassId,
+          title: nextTitle,
+          date: nextDate,
+          startTime,
+          endTime,
+          room: nextRoom,
+        }
     );
     await batch.commit();
 
@@ -280,20 +281,20 @@ export async function deleteSession(sessionId: string, _performedBy?: string): P
     const batch = writeBatch(db);
     batch.delete(sessionRef);
     logActionInBatch(
-      batch,
-      'DELETE',
-      COLLECTIONS.sessions,
-      cleanId,
-      {
-        classId: current.classId,
-        title: current.title,
-        date: current.date,
-        startTime: current.startTime,
-        endTime: current.endTime,
-        room: current.room,
-        status: current.status,
-      },
-      null
+        batch,
+        'DELETE',
+        COLLECTIONS.sessions,
+        cleanId,
+        {
+          classId: current.classId,
+          title: current.title,
+          date: current.date,
+          startTime: current.startTime,
+          endTime: current.endTime,
+          room: current.room,
+          status: current.status,
+        },
+        null
     );
     await batch.commit();
   } catch (error) {
