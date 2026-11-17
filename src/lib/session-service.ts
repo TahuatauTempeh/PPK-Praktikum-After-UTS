@@ -17,7 +17,7 @@ import { COLLECTIONS, getDb } from '@/lib/firebase/firestore';
 import {
   requireNonEmpty,
   rethrowServiceError,
-  toFirestoreTimestamp,
+  toDateInputValue,
   toMillis,
   validateTimeRange,
 } from '@/lib/praktikum-helpers';
@@ -41,7 +41,9 @@ function toPraktikumSession(snapshot: DocumentSnapshot<DocumentData>): Praktikum
     id: snapshot.id,
     classId: typeof data.classId === 'string' ? data.classId : '',
     title: typeof data.title === 'string' ? data.title : '',
-    date: data.date ?? '',
+    // Tanggal disimpan sebagai string 'YYYY-MM-DD' (WIB), sama seperti session-actions.ts.
+    // Dokumen lama yang berisi Timestamp tetap terbaca dan dinormalkan ke string.
+    date: toDateInputValue(data.date),
     startTime: typeof data.startTime === 'string' ? data.startTime : '00:00',
     endTime: typeof data.endTime === 'string' ? data.endTime : '00:00',
     room: typeof data.room === 'string' ? data.room : '',
@@ -136,7 +138,8 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
   const room = requireNonEmpty(input.room, 'Ruangan');
   const assistantId = requireNonEmpty(input.assistantId, 'ID asisten');
   const { startTime, endTime } = validateTimeRange(input.startTime, input.endTime);
-  const dateTimestamp = toFirestoreTimestamp(input.date);
+  const dateValue = toDateInputValue(input.date);
+  if (!dateValue) throw new Error('Tanggal tidak valid.');
 
   try {
     const db = getDb();
@@ -144,7 +147,7 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
     const payload = {
       classId,
       title,
-      date: dateTimestamp,
+      date: dateValue,
       startTime,
       endTime,
       room,
@@ -161,7 +164,7 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
       COLLECTIONS.sessions,
       sessionRef.id,
       null,
-      { classId, title, date: dateTimestamp, startTime, endTime, room, assistantId, status: 'scheduled' }
+      { classId, title, date: dateValue, startTime, endTime, room, assistantId, status: 'scheduled' }
     );
     await batch.commit();
 
@@ -172,7 +175,7 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
           id: sessionRef.id,
           classId,
           title,
-          date: dateTimestamp,
+          date: dateValue,
           startTime,
           endTime,
           room,
@@ -208,10 +211,8 @@ export async function updateSession(
       input.title !== undefined ? requireNonEmpty(input.title, 'Judul sesi') : current.title;
     const nextRoom =
       input.room !== undefined ? requireNonEmpty(input.room, 'Ruangan') : current.room;
-    const nextDate =
-      input.date !== undefined
-        ? toFirestoreTimestamp(input.date)
-        : toFirestoreTimestamp(current.date);
+    const nextDate = input.date !== undefined ? toDateInputValue(input.date) : current.date;
+    if (!nextDate) throw new Error('Tanggal tidak valid.');
     const { startTime, endTime } = validateTimeRange(
       input.startTime ?? current.startTime,
       input.endTime ?? current.endTime
