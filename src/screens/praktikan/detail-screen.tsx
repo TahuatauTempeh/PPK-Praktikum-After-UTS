@@ -1,6 +1,10 @@
 /**
  * Detail Sesi: info lengkap sesi dan aksi presensi (UC-03, UC-04, DESIGN.md bagian 10 dan 11).
  * Perubahan data hanya lewat submitAttendance dari context, tampilan dibaca dari state.
+ *
+ * Dev 3: Jika user sudah login via Firebase Auth (useAuth().profile tersedia),
+ * screen menggunakan Firestore realtime (useMyAttendance hook) untuk data presensi
+ * dan session status. Jika belum, fallback ke data dummy dari SessionContext.
  */
 
 import { router, useLocalSearchParams } from 'expo-router';
@@ -8,8 +12,10 @@ import React, { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BottomSheet } from '@/components/BottomSheet';
+import { useAuth } from '@/context/auth-context';
 import { useSession } from '@/context/session-context';
 import { allUsers } from '@/data/dummy';
+import { useMyAttendance } from '@/lib/useSessionFirestore';
 import { Ikon, IkonNama } from '@/screens/praktikan/components/ikon';
 import { Kosong } from '@/screens/praktikan/components/kosong';
 import { KilauKaca } from '@/screens/praktikan/components/latar';
@@ -31,25 +37,63 @@ import {
   pecahJudul,
   presensiStatus,
 } from '@/screens/praktikan/selectors';
-import { Tipe, usePraktikanTheme } from '@/screens/praktikan/theme';
+import { fonts, typography, useTheme } from '@/theme';
 
 const SEMUA_TEPI = ['top', 'left', 'right', 'bottom'] as const;
 
 export default function DetailSesiScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const theme = usePraktikanTheme();
+  const theme = useTheme();
   const { state, submitAttendance } = useSession();
+  const { profile } = useAuth();
   const [sheetTampil, setSheetTampil] = useState(false);
   const [sedangProses, setSedangProses] = useState(false);
   const [galat, setGalat] = useState<{ pesan: string; tutup: boolean } | null>(null);
   // state di callback bisa basi sampai render ulang, jadi ketukan ganda dicegah di sini
   const sedangKirim = useRef(false);
 
+  // ── Firestore realtime (Dev 3) ──────────────────────────────────────────────
+  // Hook selalu dipanggil (Rules of Hooks), tapi hasilnya hanya dipakai jika profile ada.
+  const {
+    session: fsSession,
+    myRecord: fsRecord,
+    handleSubmitAttendance: fsSubmit,
+  } = useMyAttendance(id ?? '', profile);
+
+  const useFirestore = profile !== null && id !== undefined;
+
   const currentUser = useUserPraktikan();
   if (!currentUser) return null;
 
-  const session = state.sessions.find((s) => s.id === id);
-  const record = session ? findOwnAttendance(state.attendance, session.id, currentUser.id) : undefined;
+  // Jika Firestore: gunakan data realtime; jika tidak, gunakan data dummy SessionContext
+  const session = (useFirestore && fsSession)
+    ? {
+        id: fsSession.id,
+        title: fsSession.title,
+        course: fsSession.title,
+        date: fsSession.date,
+        time: `${fsSession.startTime} - ${fsSession.endTime}`,
+        room: fsSession.room,
+        assistantId: fsSession.assistantId,
+        status: (fsSession.status === 'scheduled' ? 'scheduled' : fsSession.status) as 'scheduled' | 'open' | 'closed',
+      }
+    : state.sessions.find((s) => s.id === id);
+
+  const record = useFirestore
+    ? (fsRecord
+        ? {
+            id: fsRecord.id,
+            sessionId: fsRecord.sessionId,
+            userId: fsRecord.userId,
+            userName: fsRecord.userName,
+            timestamp: typeof fsRecord.recordedAt === 'string'
+              ? fsRecord.recordedAt
+              : (fsRecord.recordedAt && typeof (fsRecord.recordedAt as { toDate?: () => Date }).toDate === 'function')
+                ? (fsRecord.recordedAt as { toDate: () => Date }).toDate().toISOString()
+                : new Date().toISOString(),
+          }
+        : undefined)
+    : (session ? findOwnAttendance(state.attendance, session.id, currentUser.id) : undefined);
 
   const kembali = () => {
     if (router.canGoBack()) router.back();
@@ -66,7 +110,7 @@ export default function DetailSesiScreen() {
       >
         <Ikon nama="kembali" ukuran={20} warna="#FFFFFF" />
       </Pressable>
-      <Text accessibilityRole="header" style={[Tipe.sectionTitle, styles.judulHeader]}>
+      <Text accessibilityRole="header" style={[typography.sectionTitle, styles.judulHeader]}>
         Detail sesi
       </Text>
       <View style={styles.penyeimbang} />
@@ -100,10 +144,22 @@ export default function DetailSesiScreen() {
     setSheetTampil(true);
   };
 
-  const konfirmasi = () => {
+  const konfirmasi = async () => {
     if (sedangKirim.current) return;
     sedangKirim.current = true;
     setSedangProses(true);
+
+    if (useFirestore) {
+      // Firestore path
+      await fsSubmit();
+      // fsResult akan diupdate dari hook; tutup sheet jika berhasil
+      setSheetTampil(false);
+      sedangKirim.current = false;
+      setSedangProses(false);
+      return;
+    }
+
+    // Dummy/legacy path
     const hasil = submitAttendance(session.id);
     if (hasil.success) {
       setSheetTampil(false);
@@ -136,7 +192,7 @@ export default function DetailSesiScreen() {
               petunjuk="Menunggu sesi dibuka"
               onPress={bukaSheet}
             />
-            <Text style={[Tipe.caption, styles.tengah, { color: theme.teksSekunder }]}>
+            <Text style={[typography.caption, styles.tengah, { color: theme.colors.textSecondary }]}>
               Menunggu sesi dibuka
             </Text>
           </>
@@ -155,21 +211,21 @@ export default function DetailSesiScreen() {
       overlay={
         <BottomSheet visible={sheetTampil} title="Konfirmasi presensi" onClose={() => setSheetTampil(false)}>
           <View style={styles.sheet}>
-            <Text style={[Tipe.label, styles.tengah, { color: theme.teks }]}>{mataKuliah}</Text>
-            {sesi ? <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>{sesi}</Text> : null}
-            <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>
+            <Text style={[typography.label, styles.tengah, { color: theme.colors.textPrimary }]}>{mataKuliah}</Text>
+            {sesi ? <Text style={[typography.body, styles.tengah, { color: theme.colors.textSecondary }]}>{sesi}</Text> : null}
+            <Text style={[typography.body, styles.tengah, { color: theme.colors.textSecondary }]}>
               {formatTanggal(session.date)}, {formatRentangWIB(session.time)}
             </Text>
-            <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>{session.room}</Text>
-            <Text style={[Tipe.label, styles.tengah, { color: theme.teks }]}>
+            <Text style={[typography.body, styles.tengah, { color: theme.colors.textSecondary }]}>{session.room}</Text>
+            <Text style={[typography.label, styles.tengah, { color: theme.colors.textPrimary }]}>
               Presensi sebagai {currentUser.name} · {currentUser.nim}
             </Text>
-            <Text style={[Tipe.body, styles.tengah, { color: theme.teksSekunder }]}>
+            <Text style={[typography.body, styles.tengah, { color: theme.colors.textSecondary }]}>
               Waktu presensi dicatat saat kamu menekan tombol di bawah.
             </Text>
             {galat ? (
-              <View accessibilityRole="alert" style={[styles.notice, { backgroundColor: theme.galatLembut }]}>
-                <Text style={[Tipe.body, { color: theme.galat }]}>{galat.pesan}</Text>
+              <View accessibilityRole="alert" style={[styles.notice, { backgroundColor: theme.colors.errorSoft }]}>
+                <Text style={[typography.body, { color: theme.colors.error }]}>{galat.pesan}</Text>
               </View>
             ) : null}
             <View style={styles.aksi}>
@@ -191,36 +247,36 @@ export default function DetailSesiScreen() {
       <View
         style={[
           styles.kartuUtama,
-          { backgroundColor: theme.kartuSorot, borderColor: theme.garisKartu, boxShadow: theme.bayang },
+          { backgroundColor: theme.colors.cardOpen, borderColor: theme.colors.glassBorder, boxShadow: theme.colors.shadow },
         ]}
       >
         <KilauKaca />
         <View style={styles.baris}>
-          <Text style={[Tipe.kecil, styles.tanggal, { color: theme.teksSekunder }]}>
+          <Text style={[typography.tiny, styles.tanggal, { color: theme.colors.textSecondary }]}>
             {formatTanggalPendek(session.date).toUpperCase()}
           </Text>
           <StatusLabel status={session.status} />
         </View>
         <View style={styles.materi}>
-          <Text accessibilityRole="header" style={[Tipe.detailTitle, { color: theme.teks }]}>
+          <Text accessibilityRole="header" style={[typography.detailTitle, { color: theme.colors.textPrimary }]}>
             {mataKuliah}
           </Text>
-          {sesi ? <Text style={[Tipe.body, { color: theme.teksSekunder }]}>{sesi}</Text> : null}
+          {sesi ? <Text style={[typography.body, { color: theme.colors.textSecondary }]}>{sesi}</Text> : null}
         </View>
       </View>
 
       <View
         style={[
           styles.kapsul,
-          bentuk === 'aksen' && { backgroundColor: theme.isiAksen },
-          bentuk === 'sukses' && { backgroundColor: theme.suksesLembut },
-          bentuk === 'galat' && { backgroundColor: theme.kartu, borderWidth: 1, borderColor: theme.garisKartu },
+          bentuk === 'aksen' && { backgroundColor: theme.colors.primaryFill },
+          bentuk === 'sukses' && { backgroundColor: theme.colors.successSoft },
+          bentuk === 'galat' && { backgroundColor: theme.colors.glassCard, borderWidth: 1, borderColor: theme.colors.glassBorder },
         ]}
       >
         <Text
           style={[
-            Tipe.caption,
-            { color: bentuk === 'aksen' ? theme.diAtasAksen : theme.teksSekunder },
+            typography.caption,
+            { color: bentuk === 'aksen' ? theme.colors.onPrimary : theme.colors.textSecondary },
           ]}
         >
           Presensi kamu
@@ -228,42 +284,42 @@ export default function DetailSesiScreen() {
         <Text
           accessibilityRole="header"
           style={[
-            record ? Tipe.sectionTitle : Tipe.angka,
-            { color: bentuk === 'aksen' ? theme.diAtasAksen : bentuk === 'sukses' ? theme.sukses : theme.galat },
+            record ? typography.sectionTitle : typography.numeric,
+            { color: bentuk === 'aksen' ? theme.colors.onPrimary : bentuk === 'sukses' ? theme.colors.success : theme.colors.error },
           ]}
         >
           {info.ringkas}
         </Text>
         {record ? (
           <>
-            <Text style={[Tipe.waktuHadir, { color: theme.sukses }]}>{formatJamWIB(record.timestamp)} WIB</Text>
-            <Text style={[Tipe.body, { color: theme.teksSekunder }]}>
+            <Text style={[typography.timeDisplay, { color: theme.colors.success }]}>{formatJamWIB(record.timestamp)} WIB</Text>
+            <Text style={[typography.body, { color: theme.colors.textSecondary }]}>
               {info.note ? `${info.note}. ` : ''}
               {formatTanggal(session.date)}
             </Text>
           </>
         ) : (
-          <Text style={[Tipe.body, { color: bentuk === 'aksen' ? theme.diAtasAksen : theme.teksSekunder }]}>
+          <Text style={[typography.body, { color: bentuk === 'aksen' ? theme.colors.onPrimary : theme.colors.textSecondary }]}>
             {info.note}
           </Text>
         )}
       </View>
 
-      <Text accessibilityRole="header" style={[Tipe.judulBagian, { color: theme.teks }]}>
+      <Text accessibilityRole="header" style={[typography.sectionHeading, { color: theme.colors.textPrimary }]}>
         Informasi sesi
       </Text>
-      <View style={[styles.daftar, { backgroundColor: theme.kartu, borderColor: theme.garisKartu }]}>
+      <View style={[styles.daftar, { backgroundColor: theme.colors.glassCard, borderColor: theme.colors.glassBorder }]}>
         {rincian.map((item, index) => (
           <View
             key={item.label}
-            style={[styles.rincian, index > 0 && { borderTopWidth: 1, borderTopColor: theme.pemisah }]}
+            style={[styles.rincian, index > 0 && { borderTopWidth: 1, borderTopColor: theme.colors.hairline }]}
           >
-            <View style={[styles.ikonBulat, { backgroundColor: theme.isiLembut }]}>
-              <Ikon nama={item.ikon} ukuran={18} warna={theme.aksen} />
+            <View style={[styles.ikonBulat, { backgroundColor: theme.colors.softSurface }]}>
+              <Ikon nama={item.ikon} ukuran={18} warna={theme.colors.primary} />
             </View>
             <View style={styles.teksRincian}>
-              <Text style={[Tipe.kecil, { color: theme.teksSekunder }]}>{item.label}</Text>
-              <Text style={[Tipe.label, { color: theme.teks }]}>{item.nilai}</Text>
+              <Text style={[typography.tiny, { color: theme.colors.textSecondary }]}>{item.label}</Text>
+              <Text style={[typography.label, { color: theme.colors.textPrimary }]}>{item.nilai}</Text>
             </View>
           </View>
         ))}
@@ -274,21 +330,18 @@ export default function DetailSesiScreen() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  // Area sentuh 44 px; panah duduk langsung di gradien halaman tanpa kotak kaca.
   kembali: {
     width: 44,
     height: 44,
-    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
   },
   judulHeader: { flex: 1, textAlign: 'center', color: '#FFFFFF' },
   penyeimbang: { width: 44 },
   kartuUtama: { overflow: 'hidden', padding: 20, gap: 14, borderRadius: 28, borderWidth: 1 },
   baris: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  tanggal: { fontWeight: '600', letterSpacing: 0.6 },
+  tanggal: { fontFamily: fonts.semibold, letterSpacing: 0.6 },
   materi: { gap: 6 },
   kapsul: { borderRadius: 24, padding: 18, gap: 4 },
   notice: { borderRadius: 16, padding: 14 },

@@ -2,7 +2,12 @@ import { useState, type PropsWithChildren } from 'react';
 import { Platform, StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { ClipPath, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
-import { assistantTheme as theme } from '../theme';
+import {
+  tokens,
+  useThemedStyles,
+  useTheme,
+  type Theme,
+} from '@/theme';
 
 /** Ukuran kapsul ringkasan kehadiran dan jarak cekungan tempat kapsul itu duduk. */
 export const summaryDock = { width: 172, height: 58, radius: 22, gap: 12 } as const;
@@ -16,7 +21,7 @@ const decorativeSvgAccessibility = Platform.OS === 'web'
 
 /** Siluet kartu: persegi membulat dengan cekungan inverse radius di sudut kanan bawah. */
 function surfacePath(width: number, height: number) {
-  const radius = theme.radius.card;
+  const radius = tokens.radius.card;
   const top = height - summaryDock.height - NOTCH_GAP;
   const left = width - summaryDock.width - NOTCH_GAP;
   return [
@@ -41,6 +46,8 @@ type Props = { style?: StyleProp<ViewStyle> };
 
 /** Latar kartu sesi bercekung; anak-anaknya digambar di atas siluet ini. */
 export function SessionCardSurface({ style, children }: PropsWithChildren<Props>) {
+  const theme = useTheme();
+  const styles = useThemedStyles(gaya);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   const path = size ? surfacePath(size.width, size.height) : null;
 
@@ -55,16 +62,16 @@ export function SessionCardSurface({ style, children }: PropsWithChildren<Props>
         <Svg {...decorativeSvgAccessibility} style={StyleSheet.absoluteFill} width="100%" height="100%" pointerEvents="none">
           <Defs>
             <LinearGradient id="sessionGlass" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.94} />
-              <Stop offset="1" stopColor="#F7FAFF" stopOpacity={0.65} />
+              <Stop offset="0" stopColor={theme.colors.glassSheenStart} />
+              <Stop offset="1" stopColor={theme.colors.glassSheenEnd} />
             </LinearGradient>
             <RadialGradient id="sessionGlassBlue">
-              <Stop offset="0" stopColor="#A7C7FF" stopOpacity={0.55} />
-              <Stop offset="1" stopColor="#A7C7FF" stopOpacity={0} />
+              <Stop offset="0" stopColor={theme.colors.glassGlowBlue} />
+              <Stop offset="1" stopColor={theme.colors.glassGlowBlue} stopOpacity={0} />
             </RadialGradient>
             <RadialGradient id="sessionGlassLime">
-              <Stop offset="0" stopColor="#E3EFA8" stopOpacity={0.4} />
-              <Stop offset="1" stopColor="#E3EFA8" stopOpacity={0} />
+              <Stop offset="0" stopColor={theme.colors.glassGlowLime} />
+              <Stop offset="1" stopColor={theme.colors.glassGlowLime} stopOpacity={0} />
             </RadialGradient>
             <ClipPath id="sessionSurface"><Path d={path} /></ClipPath>
           </Defs>
@@ -83,7 +90,11 @@ export function SessionCardSurface({ style, children }: PropsWithChildren<Props>
   );
 }
 
-const styles = StyleSheet.create({
-  surface: { position: 'relative', borderRadius: theme.radius.card },
-  fallback: { backgroundColor: theme.colors.glassSurface, borderWidth: 1, borderColor: theme.colors.glassBorder },
+const gaya = (theme: Theme) => StyleSheet.create({
+  surface: { position: 'relative', borderRadius: tokens.radius.card },
+  fallback: {
+    backgroundColor: theme.colors.glassSurface,
+    borderWidth: 1,
+    borderColor: theme.colors.glassBorder,
+  },
 });

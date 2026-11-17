@@ -15,8 +15,7 @@ import {
   View,
 } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { spacing, useTheme } from '@/theme';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -107,7 +106,7 @@ export function BottomSheet({ visible, title, onClose, children }: BottomSheetPr
           style={[
             styles.sheet,
             {
-              backgroundColor: theme.card,
+              backgroundColor: theme.colors.surface,
               transform: [{ translateY: slideAnim }],
             },
           ]}
@@ -115,11 +114,11 @@ export function BottomSheet({ visible, title, onClose, children }: BottomSheetPr
         >
           {/* Handle */}
           <View style={styles.handleContainer}>
-            <View style={[styles.handle, { backgroundColor: theme.border }]} />
+            <View style={[styles.handle, { backgroundColor: theme.colors.border }]} />
           </View>
 
           {title ? (
-            <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
+            <Text style={[styles.title, { color: theme.colors.textPrimary }]}>{title}</Text>
           ) : null}
 
           <View style={styles.content}>{children}</View>
@@ -145,7 +144,7 @@ const styles = StyleSheet.create({
   sheet: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingBottom: Spacing.five,
+    paddingBottom: spacing.lg,
     maxHeight: SCREEN_HEIGHT * 0.7,
     elevation: 16,
     shadowColor: '#000',
@@ -167,11 +166,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     textAlign: 'center',
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: spacing.page,
     marginBottom: 4,
   },
   content: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
+    paddingHorizontal: spacing.page,
+    paddingTop: spacing.sm,
   },
 });

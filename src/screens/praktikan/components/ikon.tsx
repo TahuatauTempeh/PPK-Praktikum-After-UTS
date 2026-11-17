@@ -10,10 +10,13 @@ const aset = {
   jadwal: require('@/assets/praktikan/jadwal.svg'),
   riwayat: require('@/assets/praktikan/riwayat.svg'),
   profil: require('@/assets/praktikan/profil.svg'),
+  keluar: require('@/assets/praktikan/keluar.svg'),
   jam: require('@/assets/praktikan/jam.svg'),
   lokasi: require('@/assets/praktikan/lokasi.svg'),
   panah: require('@/assets/praktikan/panah.svg'),
   kembali: require('@/assets/praktikan/kembali.svg'),
+  // memakai ikon info yang sudah ada di sisi asisten; belum ada ikon khusus izin
+  izin: require('@/assets/asisten/info.svg'),
 };
 
 export type IkonNama = keyof typeof aset;
