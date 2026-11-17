@@ -1,52 +1,55 @@
-import { getEnrollmentsByUser } from '@/lib/enrollment-service';
 import {
-  createMockId,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  serverTimestamp,
+  where,
+  writeBatch,
+  type DocumentData,
+  type DocumentSnapshot,
+} from 'firebase/firestore';
+
+import { getEnrollmentsByUser } from '@/lib/enrollment-service';
+import { logActionInBatch } from '@/lib/firebase/audit';
+import { COLLECTIONS, getDb } from '@/lib/firebase/firestore';
+import {
   requireNonEmpty,
+  rethrowServiceError,
+  toFirestoreTimestamp,
   toMillis,
   validateTimeRange,
 } from '@/lib/praktikum-helpers';
-import { CreateSessionInput, PraktikumSession, UpdateSessionInput } from '@/types';
+import {
+  CreateSessionInput,
+  PraktikumSession,
+  SessionStatus,
+  UpdateSessionInput,
+} from '@/types';
 
-// TODO (Sprint 2 - Firestore): Ganti store in-memory ini dengan koleksi `sessions`
-// dan panggil `logAction` dari `@/lib/audit` di setiap create/update/delete.
-let mockSessions: PraktikumSession[] = [
-  {
-    id: 'ses-1',
-    classId: 'class-basis-data',
-    title: 'Pertemuan 1: Pengenalan SQL',
-    date: '2026-11-10T00:00:00+07:00',
-    startTime: '08:00',
-    endTime: '10:00',
-    room: 'Lab Komputer A',
-    assistantId: 'a1',
-    status: 'closed',
-    createdAt: '2026-11-01T08:00:00+07:00',
-  },
-  {
-    id: 'ses-2',
-    classId: 'class-basis-data',
-    title: 'Pertemuan 2: JOIN & Subquery',
-    date: '2026-11-15T00:00:00+07:00',
-    startTime: '08:00',
-    endTime: '10:00',
-    room: 'Lab Komputer A',
-    assistantId: 'a1',
-    status: 'open',
-    createdAt: '2026-11-05T08:00:00+07:00',
-  },
-  {
-    id: 'ses-3',
-    classId: 'class-pemweb',
-    title: 'Pertemuan 3: Validasi Formulir',
-    date: '2026-11-18T00:00:00+07:00',
-    startTime: '10:00',
-    endTime: '12:00',
-    room: 'Lab Komputer B',
-    assistantId: 'a1',
-    status: 'scheduled',
-    createdAt: '2026-11-06T08:00:00+07:00',
-  },
-];
+const IN_QUERY_LIMIT = 30;
+
+function normalizeStatus(value: unknown): SessionStatus {
+  if (value === 'open' || value === 'closed') return value;
+  return 'scheduled';
+}
+
+function toPraktikumSession(snapshot: DocumentSnapshot<DocumentData>): PraktikumSession {
+  const data = snapshot.data() ?? {};
+  return {
+    id: snapshot.id,
+    classId: typeof data.classId === 'string' ? data.classId : '',
+    title: typeof data.title === 'string' ? data.title : '',
+    date: data.date ?? '',
+    startTime: typeof data.startTime === 'string' ? data.startTime : '00:00',
+    endTime: typeof data.endTime === 'string' ? data.endTime : '00:00',
+    room: typeof data.room === 'string' ? data.room : '',
+    assistantId: typeof data.assistantId === 'string' ? data.assistantId : '',
+    status: normalizeStatus(data.status),
+    createdAt: data.createdAt ?? '',
+  };
+}
 
 function sortSessionsChronologically(items: PraktikumSession[]): PraktikumSession[] {
   return [...items].sort((a, b) => {
@@ -59,112 +62,241 @@ function sortSessionsChronologically(items: PraktikumSession[]): PraktikumSessio
 /** Mengambil daftar sesi pada kelas tertentu, urut tanggal & jam mulai. */
 export async function getSessionsByClass(classId: string): Promise<PraktikumSession[]> {
   const cleanClassId = requireNonEmpty(classId, 'ID kelas');
-  return sortSessionsChronologically(
-    mockSessions.filter((item) => item.classId === cleanClassId)
-  );
+  try {
+    const snapshot = await getDocs(
+      query(
+        collection(getDb(), COLLECTIONS.sessions),
+        where('classId', '==', cleanClassId)
+      )
+    );
+    return sortSessionsChronologically(snapshot.docs.map(toPraktikumSession));
+  } catch (error) {
+    rethrowServiceError(error);
+  }
 }
 
 /** Mengambil semua sesi yang dikelola oleh asisten tertentu. */
 export async function getSessionsByAssistant(assistantId: string): Promise<PraktikumSession[]> {
   const cleanAssistantId = requireNonEmpty(assistantId, 'ID asisten');
-  return sortSessionsChronologically(
-    mockSessions.filter((item) => item.assistantId === cleanAssistantId)
-  );
+  try {
+    const snapshot = await getDocs(
+      query(
+        collection(getDb(), COLLECTIONS.sessions),
+        where('assistantId', '==', cleanAssistantId)
+      )
+    );
+    return sortSessionsChronologically(snapshot.docs.map(toPraktikumSession));
+  } catch (error) {
+    rethrowServiceError(error);
+  }
 }
 
 /** Mengambil sesi praktikum milik praktikan berdasarkan kelas yang di-enroll. */
 export async function getSessionsForPraktikan(userId: string): Promise<PraktikumSession[]> {
-  const enrollments = await getEnrollmentsByUser(userId);
-  const enrolledClassIds = new Set(enrollments.map((item) => item.classId));
-  return sortSessionsChronologically(
-    mockSessions.filter((item) => enrolledClassIds.has(item.classId))
-  );
+  try {
+    const enrollments = await getEnrollmentsByUser(userId);
+    const enrolledClassIds = Array.from(new Set(enrollments.map((item) => item.classId))).filter(
+      Boolean
+    );
+    if (enrolledClassIds.length === 0) return [];
+
+    const db = getDb();
+    const chunks: string[][] = [];
+    for (let i = 0; i < enrolledClassIds.length; i += IN_QUERY_LIMIT) {
+      chunks.push(enrolledClassIds.slice(i, i + IN_QUERY_LIMIT));
+    }
+
+    const snapshots = await Promise.all(
+      chunks.map((chunk) =>
+        getDocs(query(collection(db, COLLECTIONS.sessions), where('classId', 'in', chunk)))
+      )
+    );
+
+    const combined = snapshots.flatMap((snap) => snap.docs.map(toPraktikumSession));
+    return sortSessionsChronologically(combined);
+  } catch (error) {
+    rethrowServiceError(error);
+  }
 }
 
 /** Mengambil detail satu sesi berdasarkan ID. */
 export async function getSessionById(sessionId: string): Promise<PraktikumSession | null> {
-  const found = mockSessions.find((item) => item.id === sessionId);
-  return found ? { ...found } : null;
+  try {
+    const snapshot = await getDoc(doc(getDb(), COLLECTIONS.sessions, sessionId));
+    return snapshot.exists() ? toPraktikumSession(snapshot) : null;
+  } catch (error) {
+    rethrowServiceError(error);
+  }
 }
 
-/** Membuat sesi praktikum baru dengan status awal `scheduled`. */
+/** Membuat sesi praktikum baru dengan status awal `scheduled` dan mencatat audit log. */
 export async function createSession(input: CreateSessionInput): Promise<PraktikumSession> {
   const classId = requireNonEmpty(input.classId, 'Kelas');
   const title = requireNonEmpty(input.title, 'Judul sesi');
   const room = requireNonEmpty(input.room, 'Ruangan');
   const assistantId = requireNonEmpty(input.assistantId, 'ID asisten');
   const { startTime, endTime } = validateTimeRange(input.startTime, input.endTime);
+  const dateTimestamp = toFirestoreTimestamp(input.date);
 
-  if (toMillis(input.date) === 0) {
-    throw new Error('Tanggal sesi tidak valid.');
+  try {
+    const db = getDb();
+    const sessionRef = doc(collection(db, COLLECTIONS.sessions));
+    const payload = {
+      classId,
+      title,
+      date: dateTimestamp,
+      startTime,
+      endTime,
+      room,
+      assistantId,
+      status: 'scheduled' as SessionStatus,
+      createdAt: serverTimestamp(),
+    };
+
+    const batch = writeBatch(db);
+    batch.set(sessionRef, payload);
+    logActionInBatch(
+      batch,
+      'CREATE',
+      COLLECTIONS.sessions,
+      sessionRef.id,
+      null,
+      { classId, title, date: dateTimestamp, startTime, endTime, room, assistantId, status: 'scheduled' }
+    );
+    await batch.commit();
+
+    const createdSnap = await getDoc(sessionRef);
+    return createdSnap.exists()
+      ? toPraktikumSession(createdSnap)
+      : {
+          id: sessionRef.id,
+          classId,
+          title,
+          date: dateTimestamp,
+          startTime,
+          endTime,
+          room,
+          assistantId,
+          status: 'scheduled',
+          createdAt: new Date().toISOString(),
+        };
+  } catch (error) {
+    rethrowServiceError(error);
   }
-
-  const created: PraktikumSession = {
-    id: createMockId('ses'),
-    classId,
-    title,
-    date: input.date,
-    startTime,
-    endTime,
-    room,
-    assistantId,
-    status: 'scheduled',
-    createdAt: new Date().toISOString(),
-  };
-
-  mockSessions = [...mockSessions, created];
-  return { ...created };
 }
 
-/** Memperbarui data sesi praktikum yang sudah ada. */
+/** Memperbarui data sesi praktikum dan mencatat audit log. */
 export async function updateSession(
   sessionId: string,
   input: UpdateSessionInput,
   _performedBy?: string
 ): Promise<PraktikumSession> {
-  const index = mockSessions.findIndex((item) => item.id === sessionId);
-  if (index === -1) {
-    throw new Error('Sesi tidak ditemukan.');
+  const cleanId = requireNonEmpty(sessionId, 'ID sesi');
+
+  try {
+    const db = getDb();
+    const sessionRef = doc(db, COLLECTIONS.sessions, cleanId);
+    const currentSnap = await getDoc(sessionRef);
+    if (!currentSnap.exists()) {
+      throw new Error('Sesi tidak ditemukan.');
+    }
+
+    const current = toPraktikumSession(currentSnap);
+    const nextClassId =
+      input.classId !== undefined ? requireNonEmpty(input.classId, 'Kelas') : current.classId;
+    const nextTitle =
+      input.title !== undefined ? requireNonEmpty(input.title, 'Judul sesi') : current.title;
+    const nextRoom =
+      input.room !== undefined ? requireNonEmpty(input.room, 'Ruangan') : current.room;
+    const nextDate =
+      input.date !== undefined
+        ? toFirestoreTimestamp(input.date)
+        : toFirestoreTimestamp(current.date);
+    const { startTime, endTime } = validateTimeRange(
+      input.startTime ?? current.startTime,
+      input.endTime ?? current.endTime
+    );
+
+    const batch = writeBatch(db);
+    batch.update(sessionRef, {
+      classId: nextClassId,
+      title: nextTitle,
+      date: nextDate,
+      startTime,
+      endTime,
+      room: nextRoom,
+    });
+    logActionInBatch(
+      batch,
+      'UPDATE',
+      COLLECTIONS.sessions,
+      cleanId,
+      {
+        classId: current.classId,
+        title: current.title,
+        date: current.date,
+        startTime: current.startTime,
+        endTime: current.endTime,
+        room: current.room,
+      },
+      {
+        classId: nextClassId,
+        title: nextTitle,
+        date: nextDate,
+        startTime,
+        endTime,
+        room: nextRoom,
+      }
+    );
+    await batch.commit();
+
+    return {
+      ...current,
+      classId: nextClassId,
+      title: nextTitle,
+      date: nextDate,
+      startTime,
+      endTime,
+      room: nextRoom,
+    };
+  } catch (error) {
+    rethrowServiceError(error);
   }
-
-  const current = mockSessions[index];
-  const nextClassId =
-    input.classId !== undefined ? requireNonEmpty(input.classId, 'Kelas') : current.classId;
-  const nextTitle =
-    input.title !== undefined ? requireNonEmpty(input.title, 'Judul sesi') : current.title;
-  const nextRoom =
-    input.room !== undefined ? requireNonEmpty(input.room, 'Ruangan') : current.room;
-  const nextDate = input.date !== undefined ? input.date : current.date;
-
-  if (toMillis(nextDate) === 0) {
-    throw new Error('Tanggal sesi tidak valid.');
-  }
-
-  const { startTime, endTime } = validateTimeRange(
-    input.startTime ?? current.startTime,
-    input.endTime ?? current.endTime
-  );
-
-  const updated: PraktikumSession = {
-    ...current,
-    classId: nextClassId,
-    title: nextTitle,
-    date: nextDate,
-    startTime,
-    endTime,
-    room: nextRoom,
-  };
-
-  mockSessions = mockSessions.map((item) => (item.id === sessionId ? updated : item));
-  return { ...updated };
 }
 
-/** Menghapus sesi praktikum berdasarkan ID. */
+/** Menghapus sesi praktikum dan mencatat audit log. */
 export async function deleteSession(sessionId: string, _performedBy?: string): Promise<void> {
-  const exists = mockSessions.some((item) => item.id === sessionId);
-  if (!exists) {
-    throw new Error('Sesi tidak ditemukan.');
-  }
+  const cleanId = requireNonEmpty(sessionId, 'ID sesi');
 
-  mockSessions = mockSessions.filter((item) => item.id !== sessionId);
+  try {
+    const db = getDb();
+    const sessionRef = doc(db, COLLECTIONS.sessions, cleanId);
+    const currentSnap = await getDoc(sessionRef);
+    if (!currentSnap.exists()) {
+      throw new Error('Sesi tidak ditemukan.');
+    }
+
+    const current = toPraktikumSession(currentSnap);
+    const batch = writeBatch(db);
+    batch.delete(sessionRef);
+    logActionInBatch(
+      batch,
+      'DELETE',
+      COLLECTIONS.sessions,
+      cleanId,
+      {
+        classId: current.classId,
+        title: current.title,
+        date: current.date,
+        startTime: current.startTime,
+        endTime: current.endTime,
+        room: current.room,
+        status: current.status,
+      },
+      null
+    );
+    await batch.commit();
+  } catch (error) {
+    rethrowServiceError(error);
+  }
 }

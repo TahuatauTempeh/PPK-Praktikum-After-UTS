@@ -1,3 +1,6 @@
+import { Timestamp } from 'firebase/firestore';
+
+import { mapFirebaseError } from '@/lib/firebase/errors';
 import { TimestampValue } from '@/types';
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -12,21 +15,32 @@ export function requireNonEmpty(value: string, fieldLabel: string): string {
   return trimmed;
 }
 
-/** Mengonversi TimestampValue menjadi objek Date. */
-export function toDate(value: TimestampValue): Date {
+/** Mengonversi TimestampValue menjadi objek Date (aman untuk nilai null/undefined). */
+export function toDate(value: TimestampValue | null | undefined): Date {
+  if (!value) return new Date(NaN);
   if (value instanceof Date) return value;
   if (typeof value === 'string') return new Date(value);
   return value.toDate();
 }
 
 /** Mengonversi TimestampValue menjadi epoch milidetik untuk pengurutan. */
-export function toMillis(value: TimestampValue): number {
+export function toMillis(value: TimestampValue | null | undefined): number {
   const ms = toDate(value).getTime();
   return Number.isNaN(ms) ? 0 : ms;
 }
 
+/** Mengonversi TimestampValue menjadi Firestore Timestamp. */
+export function toFirestoreTimestamp(value: TimestampValue): Timestamp {
+  if (value instanceof Timestamp) return value;
+  const date = toDate(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error('Tanggal tidak valid.');
+  }
+  return Timestamp.fromDate(date);
+}
+
 /** Memformat TimestampValue ke tanggal ringkas Indonesia (WIB). */
-export function formatShortDate(value: TimestampValue): string {
+export function formatShortDate(value: TimestampValue | null | undefined): string {
   const date = toDate(value);
   if (Number.isNaN(date.getTime())) return '-';
   return new Intl.DateTimeFormat('id-ID', {
@@ -61,7 +75,7 @@ export function parseDateInput(value: string): string {
 }
 
 /** Mengubah TimestampValue menjadi string YYYY-MM-DD (WIB) untuk input form. */
-export function toDateInputValue(value: TimestampValue): string {
+export function toDateInputValue(value: TimestampValue | null | undefined): string {
   const date = toDate(value);
   if (Number.isNaN(date.getTime())) return '';
   return new Intl.DateTimeFormat('en-CA', {
@@ -98,7 +112,11 @@ export function validateTimeRange(startTime: string, endTime: string): {
   return { startTime: start, endTime: end };
 }
 
-/** Membuat ID unik sementara untuk data mock in-memory. */
-export function createMockId(prefix: string): string {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+/** Memetakan error Firebase ke pesan jelas sambil mempertahankan pesan validasi lokal. */
+export function rethrowServiceError(error: unknown): never {
+  if (typeof error === 'object' && error !== null && 'code' in error) {
+    throw new Error(mapFirebaseError(error).message);
+  }
+  if (error instanceof Error) throw error;
+  throw new Error('Terjadi kesalahan. Coba lagi.');
 }
