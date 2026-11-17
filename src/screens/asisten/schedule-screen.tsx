@@ -39,7 +39,8 @@ export default function ScheduleScreen({
   const theme = useTheme();
   const styles = useThemedStyles(gaya);
   const [filter, setFilter] = useState<Filter>('all');
-  const daySessions = sessions.filter(session => session.date === date)
+  const hasDateMatch = sessions.some(session => session.date === date);
+  const daySessions = (hasDateMatch ? sessions.filter(session => session.date === date) : [...sessions])
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
   const visible = daySessions.filter(session => filter === 'all' || session.status === filter);
   // A date-only value is interpreted at midnight WIB, never in the device timezone.

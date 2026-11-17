@@ -1,6 +1,10 @@
 /**
  * Detail Sesi: info lengkap sesi dan aksi presensi (UC-03, UC-04, DESIGN.md bagian 10 dan 11).
  * Perubahan data hanya lewat submitAttendance dari context, tampilan dibaca dari state.
+ *
+ * Dev 3: Jika user sudah login via Firebase Auth (useAuth().profile tersedia),
+ * screen menggunakan Firestore realtime (useMyAttendance hook) untuk data presensi
+ * dan session status. Jika belum, fallback ke data dummy dari SessionContext.
  */
 
 import { router, useLocalSearchParams } from 'expo-router';
@@ -8,8 +12,10 @@ import React, { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BottomSheet } from '@/components/BottomSheet';
+import { useAuth } from '@/context/auth-context';
 import { useSession } from '@/context/session-context';
 import { allUsers } from '@/data/dummy';
+import { useMyAttendance } from '@/lib/useSessionFirestore';
 import { Ikon, IkonNama } from '@/screens/praktikan/components/ikon';
 import { Kosong } from '@/screens/praktikan/components/kosong';
 import { KilauKaca } from '@/screens/praktikan/components/latar';
@@ -39,17 +45,55 @@ export default function DetailSesiScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
   const { state, submitAttendance } = useSession();
+  const { profile } = useAuth();
   const [sheetTampil, setSheetTampil] = useState(false);
   const [sedangProses, setSedangProses] = useState(false);
   const [galat, setGalat] = useState<{ pesan: string; tutup: boolean } | null>(null);
   // state di callback bisa basi sampai render ulang, jadi ketukan ganda dicegah di sini
   const sedangKirim = useRef(false);
 
+  // ── Firestore realtime (Dev 3) ──────────────────────────────────────────────
+  // Hook selalu dipanggil (Rules of Hooks), tapi hasilnya hanya dipakai jika profile ada.
+  const {
+    session: fsSession,
+    myRecord: fsRecord,
+    handleSubmitAttendance: fsSubmit,
+  } = useMyAttendance(id ?? '', profile);
+
+  const useFirestore = profile !== null && id !== undefined;
+
   const currentUser = useUserPraktikan();
   if (!currentUser) return null;
 
-  const session = state.sessions.find((s) => s.id === id);
-  const record = session ? findOwnAttendance(state.attendance, session.id, currentUser.id) : undefined;
+  // Jika Firestore: gunakan data realtime; jika tidak, gunakan data dummy SessionContext
+  const session = (useFirestore && fsSession)
+    ? {
+        id: fsSession.id,
+        title: fsSession.title,
+        course: fsSession.title,
+        date: fsSession.date,
+        time: `${fsSession.startTime} - ${fsSession.endTime}`,
+        room: fsSession.room,
+        assistantId: fsSession.assistantId,
+        status: (fsSession.status === 'scheduled' ? 'scheduled' : fsSession.status) as 'scheduled' | 'open' | 'closed',
+      }
+    : state.sessions.find((s) => s.id === id);
+
+  const record = useFirestore
+    ? (fsRecord
+        ? {
+            id: fsRecord.id,
+            sessionId: fsRecord.sessionId,
+            userId: fsRecord.userId,
+            userName: fsRecord.userName,
+            timestamp: typeof fsRecord.recordedAt === 'string'
+              ? fsRecord.recordedAt
+              : (fsRecord.recordedAt && typeof (fsRecord.recordedAt as { toDate?: () => Date }).toDate === 'function')
+                ? (fsRecord.recordedAt as { toDate: () => Date }).toDate().toISOString()
+                : new Date().toISOString(),
+          }
+        : undefined)
+    : (session ? findOwnAttendance(state.attendance, session.id, currentUser.id) : undefined);
 
   const kembali = () => {
     if (router.canGoBack()) router.back();
@@ -100,10 +144,22 @@ export default function DetailSesiScreen() {
     setSheetTampil(true);
   };
 
-  const konfirmasi = () => {
+  const konfirmasi = async () => {
     if (sedangKirim.current) return;
     sedangKirim.current = true;
     setSedangProses(true);
+
+    if (useFirestore) {
+      // Firestore path
+      await fsSubmit();
+      // fsResult akan diupdate dari hook; tutup sheet jika berhasil
+      setSheetTampil(false);
+      sedangKirim.current = false;
+      setSedangProses(false);
+      return;
+    }
+
+    // Dummy/legacy path
     const hasil = submitAttendance(session.id);
     if (hasil.success) {
       setSheetTampil(false);

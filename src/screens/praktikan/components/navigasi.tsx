@@ -19,12 +19,14 @@ type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>
 const TAB: Record<string, { label: string; ikon: IkonNama }> = {
   index: { label: 'Jadwal', ikon: 'jadwal' },
   riwayat: { label: 'Riwayat', ikon: 'riwayat' },
+  izin: { label: 'Izin', ikon: 'izin' },
   profil: { label: 'Profil', ikon: 'profil' },
 };
 
-const RUTE: Record<string, '/(praktikan)' | '/(praktikan)/riwayat' | '/(praktikan)/profil'> = {
+const RUTE: Record<string, '/(praktikan)' | '/(praktikan)/riwayat' | '/(praktikan)/izin' | '/(praktikan)/profil'> = {
   index: '/(praktikan)',
   riwayat: '/(praktikan)/riwayat',
+  izin: '/(praktikan)/izin',
   profil: '/(praktikan)/profil',
 };
 

@@ -8,6 +8,7 @@ import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useSession } from '@/context/session-context';
+import { useFirestoreSchedule } from '@/lib/useSessionFirestore';
 import { Hero } from '@/screens/praktikan/components/hero';
 import { Kosong } from '@/screens/praktikan/components/kosong';
 import { Layar } from '@/screens/praktikan/components/layar';
@@ -31,6 +32,21 @@ export default function JadwalScreen() {
   const { attendance } = useSession().state;
   const { sessions, loading, error, refresh } = usePraktikanSchedule(currentUser?.id ?? '');
   const [saring, setSaring] = useState<Saring>('semua');
+
+  const sessions = useMemo(() => {
+    if (firestoreSessions.length === 0) return dummySessions;
+    const fsMapped = firestoreSessions.map((s) => ({
+      id: s.id,
+      title: s.title,
+      course: s.title,
+      date: s.date,
+      time: `${s.startTime} - ${s.endTime}`,
+      room: s.room,
+      assistantId: s.assistantId,
+      status: s.status,
+    }));
+    return fsMapped;
+  }, [firestoreSessions, dummySessions]);
 
   const urut = useMemo(() => urutkanSesi(sessions), [sessions]);
   const sapaan = useMemo(() => sapaanWIB(), []);
