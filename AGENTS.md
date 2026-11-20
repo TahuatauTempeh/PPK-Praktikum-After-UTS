@@ -1,41 +1,374 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+# Presensi Praktikum
+
+Mobile-first attendance app for lab practicums. Built with Expo SDK 58, React
+Native 0.88, React 19.3, TypeScript strict, Expo Router, and the Firebase JS SDK
+(Authentication + Cloud Firestore). Android is the primary target; web is a
+development and demo target. The package manager is npm (`package-lock.json`).
+
+Sources of truth:
+
+- `README.md` — setup, routes, Firestore collections, current behavior, known
+  limitations.
+- `PRD.md` — Sprint 3 scope, SRS, UAT, and four-developer ownership. Sprint 3 is
+  still a plan; see “Sprint boundaries” below.
+- `DESIGN.md` — visual system, tokens, component patterns, accessibility.
+- `SPRINT-2-PLAN.md` and `rancangan-pembagian-tugas.md` — Sprint 2 task split and
+  the SessionContext contract.
+
+When a document and the code disagree, inspect the code first. Do not implement
+Sprint 3 features unless the task explicitly asks for them.
+
+## Sprint boundaries
+
+The repository implements Sprint 2: Firebase auth, role-based navigation, class
+and enrollment CRUD, session CRUD, attendance, recap, permissions, and the local
+sentiment model.
+
+Sprint 3 in `PRD.md` is **not implemented**. It plans `laboratories`,
+`notificationLogs`, location-based attendance through callable Cloud Functions,
+`expo-location`, `react-native-maps`, and `expo-notifications`. Do not assume
+those APIs, collections, or packages exist. Do not add callable attendance or
+rules that reject direct writes before the Cloud Functions side exists.
 
 ## Expo has changed — do not trust your training data
 
-Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
+Expo ships breaking changes every SDK release. APIs you remember may be renamed,
+moved, or removed. Before writing code that touches an Expo, EAS, or React Native
+API:
 
-1. Read the major version of the `expo` package in `package.json`.
-2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
-3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
+1. Read the major version of `expo` in `package.json` (currently SDK 58).
+2. Fetch the matching docs: `https://docs.expo.dev/versions/v58.0.0/`.
+3. For anything else, start at `https://docs.expo.dev/llms.txt` and follow the
+   link to the specific page. Do not answer from memory.
 
-## Commands
+Install Expo packages with `npx expo install <package>`, never with a bare
+`npm install <package>`, so versions stay compatible with the SDK.
 
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
+## Setup
+
+### Fresh clone
 
 ```bash
-npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
-npx expo start              # start the dev server
-npx expo lint               # lint
-npx tsc --noEmit            # typecheck
-npx expo-doctor             # diagnose dependency and config issues
-npx expo install --fix      # fix incompatible package versions
+cp .env.example .env
+npm install
+npm start
 ```
 
-Run lint and typecheck before declaring any task done.
+Fill all six values in `.env` from the team Firebase project’s Web App config:
+`EXPO_PUBLIC_FIREBASE_API_KEY`, `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`,
+`EXPO_PUBLIC_FIREBASE_PROJECT_ID`, `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET`,
+`EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`, and `EXPO_PUBLIC_FIREBASE_APP_ID`.
 
-## Navigation & Routing
+- Metro reads `.env` at startup. After changing it, restart with
+  `npx expo start -c`.
+- If any key is empty, the app renders “Konfigurasi Firebase belum lengkap”
+  instead of the navigator.
+- In Firebase Console, enable Email/Password under Authentication and create a
+  Firestore database. Add a Web App, not a native app config, for Auth/Firestore.
+- Deploy security rules after changing `firestore.rules`:
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
+```bash
+npx firebase-tools login
+npx firebase-tools deploy --only firestore:rules --project <PROJECT_ID>
+```
 
-## Building with EAS
+### Running
 
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
-Docs: https://docs.expo.dev/eas/index.md
+```bash
+npm run web          # browser, easiest for UI work
+npm start            # Expo menu: Android, iOS, or web
+npm run android      # local development build
+npm run ios          # local development build; macOS only
+```
 
-## Rules
+The app uses native modules (`@expo/ui`, `expo-blur`, `expo-glass-effect`,
+`expo-symbols`, and others). Expo Go may fail with a missing native module;
+use a development build. `android/` and `ios/` are generated by Continuous
+Native Generation and are ignored by Git. Never edit them by hand; configure
+native behavior in `app.json` and config plugins. Rebuild the development client
+after adding a package with native code; Fast Refresh is not enough.
 
-- If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
-- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+### First admin
+
+Registration always creates a `praktikan`. To bootstrap the first admin:
+
+1. Register through the app.
+2. In Firestore, edit `users/{uid}` and set `role` to `asisten` and `isAdmin` to
+   `true`.
+3. Sign out and sign in again.
+
+Later promotions go through the Admin screen and are recorded in `auditLogs`.
+`invitationCodes` exists in `firestore.rules` but is not used by application code.
+
+## Verification
+
+CI runs the following steps; reproduce them locally before opening a pull
+request:
+
+```bash
+npm run lint
+npm run typecheck
+npm run test:ci
+git diff --check
+```
+
+`npm run verify` runs lint, typecheck, and `test:ci` in order. CI uses `npm ci`
+and Node 24 (Expo SDK 58 accepts `^22.13.0 || ^24.3.0`).
+
+Test stack:
+
+- Jest 30 with the `jest-expo` preset.
+- `@testing-library/react-native` 14.
+- Tests are co-located as `*.test.ts(x)` next to the file under test.
+- Firebase is mocked at the module boundary; unit tests never need credentials
+  or a Firestore emulator.
+- `jest.setup.ts` locks the color scheme to light and `test/style-mock.js` stubs
+  the `global.css` import in `src/theme`.
+- RNTL 14 renders asynchronously: use `await render(...)` and
+  `await fireEvent.press(...)` or `await user.press(...)`.
+
+There is no browser/native end-to-end suite. Firestore rules are not covered by
+Jest; changes to `firestore.rules` must be reviewed and deployed against a test
+project manually. `npx expo-doctor` is advisory: this checkout currently has
+known patch/minor drift from the SDK’s expected package versions, and it requires
+network access. Do not make it a merge gate without fixing the versions first.
+
+## Architecture
+
+Keep routes, screens, services, and presentation separate. Do not create a
+`/views` directory.
+
+- **Routes:** `src/app/` only. Every file is a screen; `_layout.tsx` defines
+  navigators. The root `src/app/_layout.tsx` mounts providers and
+  `Stack.Protected` role guards.
+- **Screens:** `src/screens/` contains the UI implementation, grouped by area
+  (`asisten/`, `praktikan/`, `shared/`).
+- **Shared UI:** `src/components/` for Toast, ConfirmModal, LoadingState,
+  ErrorState, BottomSheet, and form primitives.
+- **State:** `src/context/` for auth, session, theme, blur target, and tab-bar
+  inset.
+- **Data access:** `src/lib/*-service.ts` for Firestore CRUD and domain guards;
+  `src/lib/useSessionFirestore.ts` and service listeners for realtime data.
+- **Pure helpers:** `src/lib/praktikum-helpers.ts`,
+  `src/screens/praktikan/format.ts`, `src/screens/asisten/recap-data.ts`.
+- **Firebase boundary:** `src/lib/firebase/` for app initialization, auth,
+  Firestore singleton, converters, error mapping, and audit logging.
+- **Theme:** `src/theme/` is the single source for colors, typography, spacing,
+  and radius.
+- **Types:** `src/types/index.ts` for shared domain types.
+
+Import from `@/` (maps to `src/`) and `@/assets/` (maps to `assets/`). Do not use
+long relative paths across areas.
+
+### Routing
+
+Use Expo Router for all navigation. Import `Link`, `router`, and
+`useLocalSearchParams` from `expo-router`. Route groups such as `(auth)` and
+`(tabs)` do not add URL segments. Every route must be registered in the nearest
+layout, and role-specific routes must stay inside the matching `Stack.Protected`
+group. Docs: `https://docs.expo.dev/router/introduction/`.
+
+Prefer Expo-maintained modules over third-party libraries. Install them with
+`npx expo install` so the version matches the SDK.
+
+### Data access rules
+
+Screens should not import `firebase/firestore` directly. Go through a service or
+hook. The current exceptions are `src/screens/asisten/admin-screen.tsx`,
+`src/screens/asisten/izin/use-sesi-izin.ts`, and
+`src/screens/shared/izin.ts`; move them to services when you touch those files.
+`src/context/auth-context.tsx` is the auth boundary and may use Firebase Auth and
+the `users` document directly.
+
+Use `getDb()` from `src/lib/firebase/firestore.ts`; never initialize another
+Firebase app. Map service errors with `mapFirebaseError` or
+`rethrowServiceError`; do not show raw Firebase codes in the UI.
+
+### Platform-specific modules
+
+`src/lib/firebase/auth.ts` re-exports the web implementation. Metro resolves
+`auth.native.ts` on Android/iOS and `auth.web.ts` on web. Import
+`getFirebaseAuth` from `@/lib/firebase/auth` and let Metro choose the file. The
+native implementation initializes Auth with AsyncStorage persistence; the web
+implementation uses `getAuth`. Do not import `auth.native.ts` or `auth.web.ts`
+directly from screens.
+
+### Role guards
+
+`Stack.Protected` in `src/app/_layout.tsx` gates the `(auth)`, `(praktikan)`, and
+`asisten` route groups by profile role. Role changes require a fresh profile load
+(sign out and sign in). Never render an assistant-only screen without the guard.
+
+## Domain rules
+
+### Roles and registration
+
+- Roles are `praktikan` and `asisten`. `isAdmin` marks an assistant who may manage
+  other users.
+- Registration always creates a `praktikan`; Firestore rules reject other roles
+  at create time.
+- Only an admin can change a role, and never their own. Changes go through the
+  Admin screen and are recorded in `auditLogs`.
+- Users cannot be deleted through the app.
+
+### Sessions
+
+- Firestore status values are `scheduled`, `open`, and `closed`. The only valid
+  transitions are `scheduled → open` and `open → closed`.
+- `openSession` and `closeSession` in `src/lib/session-actions.ts` enforce the
+  transition and write an audit log.
+- New sessions from the Atur Sesi screen always start as `scheduled`.
+- Required fields: class, title, date (`YYYY-MM-DD`), start time, end time,
+  room, and assistant ID. Validate calendar dates and require `endTime >
+  startTime` with the helpers in `src/lib/praktikum-helpers.ts`.
+- Only assistants may write sessions; Firestore rules allow all authenticated
+  users to read them, so per-class filtering in the app is not a security
+  boundary.
+
+### Attendance
+
+- Attendance is accepted only while the session is `open`.
+- A praktikan can have one record per session. The document ID is
+  `{sessionId}_{uid}`; `submitAttendance` and Firestore rules both prevent a
+  second create.
+- The app filters sessions by `enrollments`, but current Firestore rules do not
+  verify enrollment on attendance create. Do not claim server-side enrollment
+  enforcement until the Sprint 3 callable replaces direct writes.
+- Closing a session does not delete attendance records. Attendance cannot be
+  undone by a praktikan; only an assistant may update or delete a record.
+- Recorded times use `serverTimestamp()` and are displayed in WIB.
+
+### Permissions and AI
+
+- Permission status values are `pending`, `approved`, and `rejected`.
+- A praktikan creates a `pending` request for their own `userId`; only an
+  assistant may review it. Reviewed requests cannot be changed by the praktikan.
+- The local sentiment model returns `positif`, `netral`, `negatif`, or `null`.
+  It is advisory only: never auto-approve or auto-reject from the AI label.
+- `null` means “tidak terbaca / tidak tersedia”, not `netral`. The form must still
+  save the permission request and show “Hasil AI tidak tersedia”.
+- `ai-service.ts` wraps the model with a timeout and fallback. Keep the model
+  on-device; do not send reasons to a network service.
+
+### Audit log
+
+- Every create, update, and delete of practicum data must write to `auditLogs`
+  through `logAction` or `logActionInBatch`.
+- Service writes that modify data and audit should use one batch so both land
+  together.
+- `auditLogs` is append-only: rules reject update and delete.
+- Do not log passwords, tokens, connection strings, or other secrets.
+
+### Enrollment and deletion
+
+- Enrollment IDs are `{classId}_{uid}`; this prevents duplicate enrollment in the
+  same class.
+- Deleting a class does not cascade to its sessions or enrollments. Delete
+  sessions and participants first when a clean dataset is required.
+- Do not add cascade behavior in a screen; put shared rules in a service.
+
+### Dates, times, and language
+
+- Firestore dates are `YYYY-MM-DD`; times are `HH:mm` in 24-hour format.
+- Display dates and times in Indonesian and WIB (`Asia/Jakarta`). Use the existing
+  formatters rather than `toLocaleString` scattered through screens.
+- Data/status values are English; user-facing labels, comments, and commit
+  messages are Indonesian.
+
+## Theme and UI
+
+- Use `useTheme()` for colors and tokens and `useThemedStyles(factory)` for
+  StyleSheets. The factory must be declared at module scope.
+- Do not hardcode hex colors, font sizes, spacing, or radius in screens. Add a
+  token to `src/theme/` instead.
+- Status must always include text; color alone is not sufficient.
+- Preserve the contrast decisions and component patterns in `DESIGN.md`.
+- Screen copies and labels are Indonesian. Keep accessibility labels and roles
+  intact when changing pressables.
+
+## Firebase and security rules
+
+- `firestore.rules` is the authoritative access control layer. Client checks are
+  UX guards, not a substitute.
+- The rules cover `users`, `classes`, `enrollments`, `sessions`, `attendance`,
+  `permissionRequests`, `auditLogs`, and `invitationCodes`.
+- Deploy rules to the team project after any change and test the affected role
+  paths. CI does not run a Firestore emulator.
+- Firestore has no schema. Keep `src/types/index.ts`, converters, and service
+  payloads synchronized with the collections in `README.md`.
+- `google-services.json` is ignored by Git. It is only needed for Sprint 3 push
+  notifications through `android.googleServicesFile`; core Auth and Firestore use
+  the Web App config in `.env`.
+- Never commit `.env`, Firebase credentials, or service account keys.
+
+## AI model
+
+The sentiment model lives in `ai/` (`model-edom.json`, `sentiment.js`) and runs
+on-device without network access. `src/lib/ai-service.ts` is the only app wrapper;
+use `analisisAlasan` rather than importing the model directly. The model was
+trained on course-evaluation comments, not practicum reasons, so treat its output
+as a weak signal. The training files mentioned in `ai/README.md` are not present
+in this repository.
+
+## EAS builds
+
+Profiles live in `eas.json`: `development` (development client, internal),
+`preview` (internal), and `production` (version auto-increment). Run EAS CLI with
+`npx eas-cli@latest <command>`.
+
+- `app.json` pins `owner` and `extra.eas.projectId`. You need access to the team
+  organization, or replace both values in a fork.
+- Set all `EXPO_PUBLIC_FIREBASE_*` variables in the EAS environment so they are
+  inlined into the build.
+- There is no release workflow in this repository. Builds are manual; do not
+  describe an automatic production release that does not exist.
+
+## Test configuration
+
+- `jest.config.js` spreads `jest-expo/jest-preset` and adds a CSS stub plus asset
+  mappings. Keep the preset’s mappings; do not replace them with a bare
+  `moduleNameMapper`.
+- `jest.setup.ts` mocks `@/hooks/use-color-scheme` to keep component tests
+  deterministic.
+- Mock `firebase/firestore` and the `@/lib/firebase/*` boundary in service tests.
+  Do not initialize Firebase in a unit test.
+- Prefer behavior assertions (result, message, callback, rendered text) over
+  snapshots. Snapshot UI tests rot quickly and are not used here.
+- If a test needs a real device, a native module, or Firestore rules, it is not a
+  unit test; document it as a manual UAT step instead.
+
+## Known limitations and gotchas
+
+- **Sprint 3 is not implemented.** Do not treat `PRD.md` acceptance criteria as
+  current behavior.
+- **Preview data is still mixed in.** `AssistantPreviewProvider` and parts of
+  `SessionContext` are seeded from `src/data/dummy.ts`; those changes disappear
+  on reload. Do not build production features on those paths. Replace them with
+  Firestore services when a screen is migrated.
+- **Two session vocabularies exist.** Firestore uses `scheduled`; the legacy
+  preview types in `src/screens/asisten/schedule-data.ts` use `pending`. Do not
+  mix them in one flow.
+- **Two session data paths exist.** `session-service.ts` handles list/CRUD;
+  `session-actions.ts` and `useSessionFirestore.ts` handle realtime status,
+  open/close, and attendance. They write to the same `sessions` collection with
+  the same date format. Coordinate changes across both.
+- **`invitationCodes` is unused.** It is present in rules but no app code reads or
+  writes it.
+- **`listenSessionsByClass` needs a composite index** (`classId`, `date`,
+  `startTime`) and is currently unused. Add the index before relying on it.
+- **Attendance enrollment is not enforced by rules.** This is a known security
+  gap until the Sprint 3 callable attendance path lands.
+- **`docs/` is ignored by Git.** Local plans and specs under `docs/` will not be
+  visible to other clones. Root documents (`README.md`, `PRD.md`, `DESIGN.md`,
+  `SPRINT-2-PLAN.md`, `rancangan-pembagian-tugas.md`) are the shared ones. If
+  `PRD.md` is untracked in your checkout, commit it before relying on links.
+- **Generated files stay out of Git:** `android/`, `ios/`, `.expo/`, `dist/`,
+  `web-build/`, `expo-env.d.ts`, `.codegraph/`, and `coverage/`. Do not “fix” a
+  generated file; change its source or config.
+- **npm only.** Do not add `yarn.lock`, `pnpm-lock.yaml`, or `bun.lockb`.
+- **Typed routes and React Compiler are enabled** in `app.json`. After adding or
+  renaming a route, restart Expo so `.expo/types/router.d.ts` is regenerated;
+  stale route types look like TypeScript errors.
+- **`@expo/ui` and glass/blur components are native.** A web-only check does not
+  validate their native behavior. Smoke-test on Android when the change touches
+  those modules.
