@@ -4,9 +4,21 @@ const expoConfig = require('eslint-config-expo/flat');
 const globals = require('globals');
 
 module.exports = defineConfig([
+  {
+    ignores: [
+      'node_modules/**',
+      '.expo/**',
+      'dist/**',
+      'web-build/**',
+      'coverage/**',
+      'android/**',
+      'ios/**',
+      '.codegraph/**',
+      'expo-env.d.ts',
+    ],
+  },
   expoConfig,
   {
-    ignores: ['dist/*', 'node_modules/*', 'coverage/*', 'android/*', 'ios/*'],
     rules: {
       'import/no-unresolved': 'off',
     },
