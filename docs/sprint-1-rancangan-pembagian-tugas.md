@@ -1,3 +1,14 @@
+> **ARSIP SPRINT 1 — tidak berlaku.**
+> Dokumen ini menggambarkan aplikasi demo Sprint 1: data dummy di memori,
+> pemilihan peran tanpa autentikasi, status sesi `pending`, dan `SessionContext`
+> dengan reducer. Kode saat ini memakai Firebase Auth + Firestore dan status
+> `scheduled`.
+>
+> Sumber kebenaran: `README.md`, `AGENTS.md`, dan `src/types/index.ts`.
+> Jangan menyalin rute, tipe, status, atau alur dari dokumen ini.
+
+---
+
 # Rancangan Pembagian Tugas Tiga Programmer
 
 Aplikasi demo presensi kegiatan praktikum untuk dua sudut pandang: **praktikan** dan **asisten**. Tiga programmer berbagi satu state lewat `SessionContext`. Data dummy tinggal di memori. Tidak ada database dan tidak ada sinkronisasi.

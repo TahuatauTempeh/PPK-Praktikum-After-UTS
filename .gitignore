@@ -55,4 +55,6 @@ coverage/
 .idea/
 
 .codegraph/
-docs/
+# docs/ lokal; hanya arsip sprint yang ikut di-commit
+docs/*
+!docs/sprint-*.md

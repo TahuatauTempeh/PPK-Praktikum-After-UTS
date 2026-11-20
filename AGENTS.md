@@ -12,8 +12,10 @@ Sources of truth:
 - `PRD.md` — Sprint 3 scope, SRS, UAT, and four-developer ownership. Sprint 3 is
   still a plan; see “Sprint boundaries” below.
 - `DESIGN.md` — visual system, tokens, component patterns, accessibility.
-- `SPRINT-2-PLAN.md` and `rancangan-pembagian-tugas.md` — Sprint 2 task split and
-  the SessionContext contract.
+
+The sprint archives in `docs/` (`sprint-1-rancangan-pembagian-tugas.md` and
+`sprint-2-plan.md`) are historical records, not sources of truth. Do not use them
+as implementation references.
 
 When a document and the code disagree, inspect the code first. Do not implement
 Sprint 3 features unless the task explicitly asks for them.
@@ -362,11 +364,14 @@ Profiles live in `eas.json`: `development` (development client, internal),
   `startTime`) and is currently unused. Add the index before relying on it.
 - **Attendance enrollment is not enforced by rules.** This is a known security
   gap until the Sprint 3 callable attendance path lands.
-- **`docs/` is local-only.** It is ignored by Git, so plans and specs there do
-  not travel to other clones. Shared documents live at the repository root:
-  `README.md`, `PRD.md`, `DESIGN.md`, `SPRINT-2-PLAN.md`,
-  `rancangan-pembagian-tugas.md`, and `CONTRIBUTING.md`. Do not link to `docs/`
-  from README or other shared documents.
+- **`docs/` is local-only, except the sprint archives.** `.gitignore` ignores
+  `docs/*` but tracks `docs/sprint-*.md`. Those archives
+  (`docs/sprint-1-rancangan-pembagian-tugas.md`, `docs/sprint-2-plan.md`) describe
+  superseded work and must never be used as implementation references. Other
+  `docs/` files do not travel to other clones. Shared documents live at the
+  repository root: `README.md`, `PRD.md`, `DESIGN.md`, and `CONTRIBUTING.md`.
+  Link only to the tracked sprint archives from shared documents, not to other
+  `docs/` files.
 - **Generated files stay out of Git:** `android/`, `ios/`, `.expo/`, `dist/`,
   `web-build/`, `expo-env.d.ts`, `.codegraph/`, and `coverage/`. Do not “fix” a
   generated file; change its source or config.

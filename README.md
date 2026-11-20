@@ -163,7 +163,9 @@ Ada dua peran: `praktikan` dan `asisten`, ditambah penanda `isAdmin` untuk asist
 │   ├── praktikan/               Ikon dan ilustrasi SVG area praktikan
 │   ├── images/                  Ikon aplikasi, splash, favicon
 │   └── expo.icon                Ikon iOS
-├── docs/                        Catatan lokal (di-gitignore; tidak ikut clone)
+├── docs/                        Catatan lokal (di-gitignore), kecuali arsip sprint
+│   ├── sprint-1-rancangan-pembagian-tugas.md
+│   └── sprint-2-plan.md
 ├── scripts/                     Skrip bawaan template (reset-project.js)
 ├── src/
 │   ├── app/                     RUTE (Expo Router). Hanya berkas rute di sini
@@ -212,12 +214,11 @@ Ada dua peran: `praktikan` dan `asisten`, ditambah penanda `isAdmin` untuk asist
 ├── app.json                     Konfigurasi Expo
 ├── .env.example                 Contoh variabel lingkungan
 ├── DESIGN.md                    Sistem visual dan antarmuka
-├── SPRINT-2-PLAN.md             Pembagian tugas Sprint 2 (4 developer)
 └── AGENTS.md                    Panduan untuk asisten coding (Expo, perintah, aturan)
 ```
 
-Folder `docs/` bersifat lokal dan tidak di-commit. Dokumen tim yang dibagikan ada
-di root repository.
+Folder `docs/` bersifat lokal dan tidak di-commit, kecuali arsip sprint
+`docs/sprint-*.md`. Dokumen tim yang dibagikan ada di root repository.
 
 Aturan umum:
 
@@ -296,7 +297,7 @@ Selama koleksi `sessions` kosong, jadwal Asisten menampilkan data contoh. Begitu
 
 ## 9. Status pengerjaan
 
-Berdasarkan pembagian di `SPRINT-2-PLAN.md` dan isi kode saat ini.
+Berdasarkan isi kode saat ini.
 
 > Sprint 3 masih berupa rencana dan belum diimplementasikan. Seluruh rencana, SRS, UAT, dan pembagian tugas ada di satu dokumen: [`PRD.md`](PRD.md).
 
@@ -373,9 +374,9 @@ npx eas-cli@latest build --profile development --platform android
 
 - [`PRD.md`](PRD.md): dokumen tunggal Sprint 3: product requirement, SRS (Lampiran A), UAT (Lampiran B), dan pembagian tugas empat developer (Lampiran C).
 - [`DESIGN.md`](DESIGN.md): sistem visual, rute, pola komponen, aksesibilitas.
-- [`SPRINT-2-PLAN.md`](SPRINT-2-PLAN.md): pembagian tugas Sprint 2 dan ketergantungan antar developer.
+- [`docs/sprint-2-plan.md`](docs/sprint-2-plan.md): arsip pembagian tugas Sprint 2 dan ketergantungan antar developer. Bukan acuan perilaku saat ini.
 - [`ai/README.md`](ai/README.md): cara memakai dan melatih model sentimen. Catatan: berkas pelatihan yang disebut di sana (`train_edom.py`, `edom-data.csv`) tidak ada di repositori ini.
-- `docs/`: catatan lokal (diabaikan Git; tidak ikut clone). Dokumen tim yang dibagikan ada di root repository.
+- `docs/`: catatan lokal (diabaikan Git; tidak ikut clone), kecuali arsip `docs/sprint-*.md` yang ikut di-commit. Dokumen tim yang dibagikan ada di root repository.
 - [`AGENTS.md`](AGENTS.md): aturan teknis untuk contributor dan asisten coding.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md): alur Git, commit, test, dan pull request.
 

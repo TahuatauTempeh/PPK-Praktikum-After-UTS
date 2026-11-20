@@ -1,3 +1,21 @@
+> **ARSIP SPRINT 2 — rencana, bukan perilaku saat ini.**
+> Sprint 2 sudah selesai. Dokumen ini disimpan sebagai catatan pembagian tugas,
+> bukan acuan implementasi. Beberapa detailnya berbeda dari kode:
+>
+> - `users` aktual punya `isAdmin`, `updatedAt`, dan `roleUpdatedBy`; dokumen ini tidak mencantumkannya.
+> - Registrasi selalu membuat `praktikan`; `invitationCodes` tidak dipakai dan promosi asisten lewat layar Admin.
+> - `sessions.date` berupa string `YYYY-MM-DD`, bukan `Timestamp`.
+> - `attendance` memakai `recordedAt`, bukan `timestamp`.
+> - `auditLogs` memakai `actorUid`/`actorRole`, bukan `performedBy`.
+> - `permissionRequests.aiLabel` berisi `positif`/`netral`/`negatif`, bukan `valid`/`invalid`.
+> - AI berjalan lokal di perangkat, bukan lewat API dengan timeout 10 detik.
+> - Path `src/lib/firebase.ts`, `src/lib/audit.ts`, dan `src/lib/auth-service.ts` tidak ada; implementasinya ada di `src/lib/firebase/` dan `src/context/auth-context.tsx`.
+>
+> Sumber kebenaran: `README.md`, `AGENTS.md`, dan `src/types/index.ts`.
+> Jangan menyalin skema, path, atau alur dari dokumen ini.
+
+---
+
 # 📋 Sprint 2 — Plan Lengkap (4 Developer)
 
 > **Aplikasi:** Presensi Praktikum (Expo Router SDK 58 + Firebase)
