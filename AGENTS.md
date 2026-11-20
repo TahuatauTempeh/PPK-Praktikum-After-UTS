@@ -54,7 +54,8 @@ npm install
 npm start
 ```
 
-Fill all six values in `.env` from the team Firebase project’s Web App config:
+Fill all six values in `.env` from the team Firebase project’s Web App config
+(`praktikum-ppk-3`):
 `EXPO_PUBLIC_FIREBASE_API_KEY`, `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`,
 `EXPO_PUBLIC_FIREBASE_PROJECT_ID`, `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET`,
 `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`, and `EXPO_PUBLIC_FIREBASE_APP_ID`.
@@ -102,8 +103,8 @@ Later promotions go through the Admin screen and are recorded in `auditLogs`.
 
 ## Verification
 
-CI runs the following steps; reproduce them locally before opening a pull
-request:
+CI runs lint, typecheck, tests, and a whitespace check. Reproduce them locally
+before opening a pull request:
 
 ```bash
 npm run lint
@@ -358,10 +359,11 @@ Profiles live in `eas.json`: `development` (development client, internal),
   `startTime`) and is currently unused. Add the index before relying on it.
 - **Attendance enrollment is not enforced by rules.** This is a known security
   gap until the Sprint 3 callable attendance path lands.
-- **`docs/` is ignored by Git.** Local plans and specs under `docs/` will not be
-  visible to other clones. Root documents (`README.md`, `PRD.md`, `DESIGN.md`,
-  `SPRINT-2-PLAN.md`, `rancangan-pembagian-tugas.md`) are the shared ones. If
-  `PRD.md` is untracked in your checkout, commit it before relying on links.
+- **`docs/` is local-only.** It is ignored by Git, so plans and specs there do
+  not travel to other clones. Shared documents live at the repository root:
+  `README.md`, `PRD.md`, `DESIGN.md`, `SPRINT-2-PLAN.md`,
+  `rancangan-pembagian-tugas.md`, and `CONTRIBUTING.md`. Do not link to `docs/`
+  from README or other shared documents.
 - **Generated files stay out of Git:** `android/`, `ios/`, `.expo/`, `dist/`,
   `web-build/`, `expo-env.d.ts`, `.codegraph/`, and `coverage/`. Do not “fix” a
   generated file; change its source or config.

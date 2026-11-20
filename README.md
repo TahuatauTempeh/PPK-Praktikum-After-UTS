@@ -42,7 +42,7 @@ Model AI (sentimen alasan izin) berada di folder `ai/` dan berjalan langsung di 
 
 ## 2. Prasyarat
 
-- **Node.js** (versi LTS terbaru) dan **npm**.
+- **Node.js** 22.13+ atau 24.3+ (lihat `.nvmrc`; CI memakai Node 24) dan **npm**.
 - Sebuah **proyek Firebase** (lihat bagian 3).
 - Salah satu cara menjalankan:
   - **Browser** (paling mudah): tidak perlu apa-apa lagi.
@@ -56,7 +56,7 @@ Aplikasi tidak bisa berjalan tanpa konfigurasi ini. Jika variabel `.env` kosong,
 
 Di [Firebase Console](https://console.firebase.google.com/):
 
-1. Buat proyek baru (atau minta akses ke proyek tim).
+1. Buat proyek baru (atau minta akses ke proyek tim `praktikum-ppk-3`).
 2. **Authentication → Sign-in method**: aktifkan **Email/Password**.
 3. **Firestore Database**: buat database (mode produksi, lalu pasang rules di langkah 3.3).
 4. **Project settings → Your apps**: tambahkan aplikasi **Web** (`</>`) dan salin nilai konfigurasinya. Aplikasi memakai Firebase JS SDK untuk Auth dan Firestore, jadi `google-services.json` / `GoogleService-Info.plist` tidak dipakai untuk konfigurasi inti tersebut. Untuk push notification Android pada Sprint 3, `google-services.json` tetap diperlukan lewat `android.googleServicesFile`; lihat [`PRD.md`](PRD.md).
@@ -160,7 +160,7 @@ Ada dua peran: `praktikan` dan `asisten`, ditambah penanda `isAdmin` untuk asist
 │   ├── praktikan/               Ikon dan ilustrasi SVG area praktikan
 │   ├── images/                  Ikon aplikasi, splash, favicon
 │   └── expo.icon                Ikon iOS
-├── docs/                        Rencana dan spesifikasi desain (plans/, specs/)
+├── docs/                        Catatan lokal (di-gitignore; tidak ikut clone)
 ├── scripts/                     Skrip bawaan template (reset-project.js)
 ├── src/
 │   ├── app/                     RUTE (Expo Router). Hanya berkas rute di sini
@@ -212,6 +212,9 @@ Ada dua peran: `praktikan` dan `asisten`, ditambah penanda `isAdmin` untuk asist
 ├── SPRINT-2-PLAN.md             Pembagian tugas Sprint 2 (4 developer)
 └── AGENTS.md                    Panduan untuk asisten coding (Expo, perintah, aturan)
 ```
+
+Folder `docs/` bersifat lokal dan tidak di-commit. Dokumen tim yang dibagikan ada
+di root repository.
 
 Aturan umum:
 
@@ -369,7 +372,7 @@ npx eas-cli@latest build --profile development --platform android
 - [`DESIGN.md`](DESIGN.md): sistem visual, rute, pola komponen, aksesibilitas.
 - [`SPRINT-2-PLAN.md`](SPRINT-2-PLAN.md): pembagian tugas Sprint 2 dan ketergantungan antar developer.
 - [`ai/README.md`](ai/README.md): cara memakai dan melatih model sentimen. Catatan: berkas pelatihan yang disebut di sana (`train_edom.py`, `edom-data.csv`) tidak ada di repositori ini.
-- [`docs/`](docs/): rencana dan spesifikasi desain (diabaikan Git; lokal saja).
+- `docs/`: catatan lokal (diabaikan Git; tidak ikut clone). Dokumen tim yang dibagikan ada di root repository.
 - [`AGENTS.md`](AGENTS.md): aturan teknis untuk contributor dan asisten coding.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md): alur Git, commit, test, dan pull request.
 

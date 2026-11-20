@@ -60,7 +60,7 @@ Pastikan perangkat memiliki:
 - Git;
 - Node.js 22.13+ atau 24.3+ (Expo SDK 58 mendukung `^22.13.0 || ^24.3.0`);
 - npm (proyek memakai `package-lock.json`, bukan pnpm/yarn/bun);
-- akses ke project Firebase tim (Authentication dan Cloud Firestore);
+- akses ke project Firebase tim `praktikum-ppk-3` (Authentication dan Cloud Firestore);
 - Android Studio dan emulator/perangkat Android, atau development build;
 - akses ke organisasi EAS `kemal-fazas-team` bila akan membuat build;
 - akses ke repository GitHub.
@@ -234,8 +234,10 @@ repository. Jangan commit:
 - `.codegraph/`;
 - `coverage/` hasil test;
 - file kunci/keystore (`*.jks`, `*.p8`, `*.p12`, `*.key`, `*.mobileprovision`);
-- `docs/` yang memang diabaikan (rencana dan spesifikasi lokal);
+- `docs/` yang memang diabaikan (catatan lokal);
 - file SQL lokal atau dokumen yang tidak terkait task.
+
+Dokumen yang perlu dibagikan taruh di root repository, bukan di `docs/`.
 
 `.env.example` harus tetap tersedia sebagai contoh tanpa secret. Periksa alasan
 sebuah file diabaikan:
