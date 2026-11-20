@@ -5,16 +5,18 @@ describe('mapFirebaseError', () => {
     jest.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
-  it('memetakan kode Firebase yang dikenal ke pesan Indonesia', () => {
-    expect(mapFirebaseError({ code: 'auth/invalid-credential' })).toEqual({
-      code: 'auth/invalid-credential',
-      message: 'Email atau password salah.',
-      cause: { code: 'auth/invalid-credential' },
-    });
-
-    expect(mapFirebaseError({ code: 'firestore/permission-denied' }).message).toBe(
-      'Kamu tidak punya akses untuk tindakan ini.'
-    );
+  it.each([
+    ['auth/invalid-credential', 'Email atau password salah.'],
+    ['permission-denied', 'Kamu tidak punya akses untuk tindakan ini.'],
+    ['firestore/permission-denied', 'Kamu tidak punya akses untuk tindakan ini.'],
+    ['unavailable', 'Layanan sedang tidak tersedia. Coba lagi.'],
+    ['not-found', 'Data tidak ditemukan.'],
+    ['already-exists', 'Data sudah ada.'],
+    ['failed-precondition', 'Operasi tidak bisa dilakukan saat ini.'],
+    ['resource-exhausted', 'Terlalu banyak permintaan. Coba lagi.'],
+    ['unauthenticated', 'Sesi login sudah berakhir. Silakan masuk lagi.'],
+  ])('memetakan %s', (code, message) => {
+    expect(mapFirebaseError({ code }).message).toBe(message);
   });
 
   it('memakai pesan umum untuk kode yang tidak dikenal', () => {
