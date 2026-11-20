@@ -1095,7 +1095,7 @@ Detail ada di [UAT](#lampiran-b-uat).
 - [Lampiran C: Pembagian Tugas](#lampiran-c-pembagian-tugas)
 - [DESIGN.md](DESIGN.md)
 - [README.md](README.md)
-- [SPRINT-2-PLAN.md](SPRINT-2-PLAN.md)
+- [Arsip Sprint 2](docs/sprint-2-plan.md)
 - Expo Location: <https://docs.expo.dev/versions/v58.0.0/sdk/location/>
 - Expo Notifications: <https://docs.expo.dev/versions/v58.0.0/sdk/notifications/>
 - Expo Push setup: <https://docs.expo.dev/push-notifications/push-notifications-setup/>

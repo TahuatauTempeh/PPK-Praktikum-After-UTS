@@ -154,8 +154,9 @@ Catatan:
 - `google-services.json` tidak dipakai untuk Auth/Firestore inti dan diabaikan
   Git. Untuk push notification Android pada Sprint 3, file itu akan dipakai
   lewat `android.googleServicesFile`; jangan commit file tersebut.
-- `docs/` diabaikan Git, jadi jangan mengandalkan tautan ke file di dalamnya
-  untuk kontributor lain. Setup Firebase di atas sengaja ditulis di panduan ini.
+- `docs/` diabaikan Git, kecuali arsip `docs/sprint-*.md`, jadi jangan
+  mengandalkan tautan ke file lain di dalamnya untuk kontributor lain. Setup
+  Firebase di atas sengaja ditulis di panduan ini.
 
 ### Menjalankan aplikasi
 
@@ -234,10 +235,11 @@ repository. Jangan commit:
 - `.codegraph/`;
 - `coverage/` hasil test;
 - file kunci/keystore (`*.jks`, `*.p8`, `*.p12`, `*.key`, `*.mobileprovision`);
-- `docs/` yang memang diabaikan (catatan lokal);
+- `docs/` yang memang diabaikan (catatan lokal), kecuali arsip `docs/sprint-*.md`;
 - file SQL lokal atau dokumen yang tidak terkait task.
 
-Dokumen yang perlu dibagikan taruh di root repository, bukan di `docs/`.
+Dokumen yang perlu dibagikan taruh di root repository, bukan di `docs/`, kecuali
+arsip sprint yang memang disimpan di `docs/`.
 
 `.env.example` harus tetap tersedia sebagai contoh tanpa secret. Periksa alasan
 sebuah file diabaikan:
@@ -278,10 +280,10 @@ memakai empat developer:
 3. **Dev 3**: peta dan aktivitas laboratorium.
 4. **Dev 4**: notifikasi dan kondisi perangkat.
 
-Sprint 2 memiliki pembagian sendiri di `SPRINT-2-PLAN.md`: fondasi/auth, data
-praktikum, sesi/presensi/rules, dan izin/AI. Gunakan pembagian itu sebagai
-konteks historis, bukan alasan untuk mencampur pekerjaan baru ke area yang tidak
-dimiliki.
+Sprint 2 memiliki pembagian sendiri di `docs/sprint-2-plan.md` (arsip):
+fondasi/auth, data praktikum, sesi/presensi/rules, dan izin/AI. Gunakan pembagian
+itu sebagai konteks historis, bukan alasan untuk mencampur pekerjaan baru ke
+area yang tidak dimiliki.
 
 Sebelum membuat branch baru, sinkronkan `main` lokal:
 
@@ -906,7 +908,7 @@ anggota lain, koordinasikan dulu.
 - [`PRD.md`](PRD.md) — Sprint 3, SRS, UAT, dan pembagian tugas.
 - [`DESIGN.md`](DESIGN.md) — sistem visual dan aksesibilitas.
 - [`AGENTS.md`](AGENTS.md) — aturan teknis untuk kontributor dan coding agent.
-- [`SPRINT-2-PLAN.md`](SPRINT-2-PLAN.md) — pembagian tugas Sprint 2.
+- [`docs/sprint-2-plan.md`](docs/sprint-2-plan.md) — arsip pembagian tugas Sprint 2.
 - [Expo Unit Testing](https://docs.expo.dev/develop/unit-testing/)
 - [React Native Testing Library](https://callstack.github.io/react-native-testing-library/)
 - [Jest](https://jestjs.io/docs/getting-started)

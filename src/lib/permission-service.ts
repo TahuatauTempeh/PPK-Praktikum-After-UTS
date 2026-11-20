@@ -1,6 +1,7 @@
 /**
  * Layanan koleksi permissionRequests (task 4.3, 4.4, 4.7).
- * Skema mengikuti SPRINT-2-PLAN.md; aiLabel berisi label sentimen dari ai-service.
+ * Skema mengikuti `src/types/index.ts` dan README; aiLabel berisi label sentimen
+ * dari ai-service.
  */
 
 import {
