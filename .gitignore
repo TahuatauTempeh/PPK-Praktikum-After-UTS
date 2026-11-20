@@ -40,6 +40,9 @@ google-services.json
 # typescript
 *.tsbuildinfo
 
+# test
+coverage/
+
 example
 
 # generated native folders
