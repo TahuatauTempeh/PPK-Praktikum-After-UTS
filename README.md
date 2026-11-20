@@ -59,7 +59,7 @@ Di [Firebase Console](https://console.firebase.google.com/):
 1. Buat proyek baru (atau minta akses ke proyek tim).
 2. **Authentication → Sign-in method**: aktifkan **Email/Password**.
 3. **Firestore Database**: buat database (mode produksi, lalu pasang rules di langkah 3.3).
-4. **Project settings → Your apps**: tambahkan aplikasi **Web** (`</>`) dan salin nilai konfigurasinya. Aplikasi memakai Firebase JS SDK, jadi file `google-services.json` / `GoogleService-Info.plist` **tidak dipakai**.
+4. **Project settings → Your apps**: tambahkan aplikasi **Web** (`</>`) dan salin nilai konfigurasinya. Aplikasi memakai Firebase JS SDK untuk Auth dan Firestore, jadi `google-services.json` / `GoogleService-Info.plist` tidak dipakai untuk konfigurasi inti tersebut. Untuk push notification Android pada Sprint 3, `google-services.json` tetap diperlukan lewat `android.googleServicesFile`; lihat [`PRD.md`](PRD.md).
 
 ### 3.2 Isi file `.env`
 
@@ -108,6 +108,8 @@ Ringkasan aturan:
 | `invitationCodes` | semua yang login | admin membuat/menghapus |
 
 Catatan: rules `sessions` mengizinkan semua pengguna yang login membaca semua sesi. Pembatasan praktikan hanya melihat sesi kelasnya sendiri dilakukan di sisi aplikasi (lewat `enrollments`), bukan di rules.
+
+Untuk Sprint 3, `firestore.rules` akan ditambah aturan `laboratories`, `notificationLogs`, serta penolakan create langsung pada `attendance` (presensi lewat callable). Rancangannya ada di [`PRD.md`](PRD.md), termasuk SRS di Lampiran A.
 
 ## 4. Menjalankan aplikasi
 
@@ -290,6 +292,8 @@ Selama koleksi `sessions` kosong, jadwal Asisten menampilkan data contoh. Begitu
 
 Berdasarkan pembagian di `SPRINT-2-PLAN.md` dan isi kode saat ini.
 
+> Sprint 3 masih berupa rencana dan belum diimplementasikan. Seluruh rencana, SRS, UAT, dan pembagian tugas ada di satu dokumen: [`PRD.md`](PRD.md).
+
 | Area | Keadaan |
 |---|---|
 | **Dev 1: Fondasi & auth** | Ada: setup Firebase, login/registrasi/logout, profil `users`, auth context dan persist sesi, navigasi per peran, `logAction`, pemetaan galat Firebase, komponen loading/empty/error. |
@@ -317,12 +321,16 @@ Keterbatasan yang perlu diketahui:
 | `npm run web` | Jalankan versi web |
 | `npm run android` / `npm run ios` | Build dan jalankan development build lokal |
 | `npm run lint` | ESLint (`expo lint`) |
-| `npx tsc --noEmit` | Periksa tipe TypeScript |
-| `npx expo-doctor` | Periksa masalah dependensi dan konfigurasi |
+| `npm run typecheck` | Periksa tipe TypeScript (`tsc --noEmit`) |
+| `npm test` | Jalankan test Jest |
+| `npm run test:ci` | Jalankan test sekali seperti CI |
+| `npm run verify` | Lint, typecheck, dan test sekaligus |
+| `npx expo-doctor` | Periksa masalah dependensi dan konfigurasi (advisory) |
 | `npx expo install --fix` | Samakan versi paket dengan SDK |
 | `npx expo install <paket>` | Pasang paket dengan versi yang cocok dengan SDK |
 
-Jalankan `npm run lint` dan `npx tsc --noEmit` sebelum membuka pull request.
+Jalankan `npm run verify` dan `git diff --check` sebelum membuka pull request.
+CI menjalankan langkah yang sama; lihat `.github/workflows/ci.yml`.
 
 ## 11. Build dengan EAS
 
@@ -357,10 +365,12 @@ npx eas-cli@latest build --profile development --platform android
 
 ## 13. Dokumen lain
 
+- [`PRD.md`](PRD.md): dokumen tunggal Sprint 3: product requirement, SRS (Lampiran A), UAT (Lampiran B), dan pembagian tugas empat developer (Lampiran C).
 - [`DESIGN.md`](DESIGN.md): sistem visual, rute, pola komponen, aksesibilitas.
 - [`SPRINT-2-PLAN.md`](SPRINT-2-PLAN.md): pembagian tugas Sprint 2 dan ketergantungan antar developer.
 - [`ai/README.md`](ai/README.md): cara memakai dan melatih model sentimen. Catatan: berkas pelatihan yang disebut di sana (`train_edom.py`, `edom-data.csv`) tidak ada di repositori ini.
-- [`docs/`](docs/): rencana dan spesifikasi desain.
-- [`AGENTS.md`](AGENTS.md): panduan Expo dan perintah untuk asisten coding.
+- [`docs/`](docs/): rencana dan spesifikasi desain (diabaikan Git; lokal saja).
+- [`AGENTS.md`](AGENTS.md): aturan teknis untuk contributor dan asisten coding.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md): alur Git, commit, test, dan pull request.
 
 Lisensi: lihat [`LICENSE`](LICENSE).
