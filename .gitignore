@@ -32,18 +32,22 @@ yarn-error.*
 
 # local env files
 .env
-.env*.local
+.env.*
+!.env.example
 
-# firebase client config lama (tidak dipakai JS SDK)
-google-services.json
+# firebase client config
+google-services*.json
+GoogleService-Info.plist
+serviceAccount*.json
+*-firebase-adminsdk-*.json
+.firebase/
+firebase-debug.log
 
 # typescript
 *.tsbuildinfo
 
 # test
 coverage/
-
-example
 
 # generated native folders
 /ios

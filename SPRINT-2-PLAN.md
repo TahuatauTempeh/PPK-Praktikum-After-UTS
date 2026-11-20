@@ -4,6 +4,13 @@
 > **Basis:** Kode Sprint 1 yang sudah di-merge ke `main`
 > **Durasi:** 2 minggu
 
+> **Status (2026-11-20):** Dokumen ini adalah rencana Sprint 2 dan bukan sumber
+> kebenaran penuh untuk perilaku saat ini. Alur **kode undangan** untuk asisten
+> (task 1.3) tidak diimplementasikan. Registrasi selalu membuat `praktikan`;
+> promosi asisten dilakukan lewat layar Admin dan dicatat di `auditLogs`.
+> `invitationCodes` hanya ada di `firestore.rules` dan belum dipakai aplikasi.
+> Lihat `README.md` dan `AGENTS.md` untuk perilaku terkini.
+
 ---
 
 ## 🔥 Perubahan Besar dari Sprint 1

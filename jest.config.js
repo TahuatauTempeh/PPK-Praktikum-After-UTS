@@ -10,6 +10,15 @@ module.exports = {
   clearMocks: true,
   passWithNoTests: false,
   restoreMocks: true,
+  // Tampilkan seluruh source agar file tanpa test tidak hilang dari laporan.
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/**/*.test.{ts,tsx}',
+    '!src/app/**',
+  ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov'],
   setupFilesAfterEnv: [
     ...(preset.setupFilesAfterEnv ?? []),
     '<rootDir>/jest.setup.ts',
