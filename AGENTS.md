@@ -342,6 +342,9 @@ Profiles live in `eas.json`: `development` (development client, internal),
 
 - **Sprint 3 is not implemented.** Do not treat `PRD.md` acceptance criteria as
   current behavior.
+- **Firebase project is on Spark.** `praktikum-ppk-3` does not have billing
+  enabled. Auth and Firestore work, but Cloud Functions from Sprint 3 cannot be
+  deployed until the project is upgraded to Blaze.
 - **Preview data is still mixed in.** `AssistantPreviewProvider` and parts of
   `SessionContext` are seeded from `src/data/dummy.ts`; those changes disappear
   on reload. Do not build production features on those paths. Replace them with

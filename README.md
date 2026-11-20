@@ -61,6 +61,9 @@ Di [Firebase Console](https://console.firebase.google.com/):
 3. **Firestore Database**: buat database (mode produksi, lalu pasang rules di langkah 3.3).
 4. **Project settings → Your apps**: tambahkan aplikasi **Web** (`</>`) dan salin nilai konfigurasinya. Aplikasi memakai Firebase JS SDK untuk Auth dan Firestore, jadi `google-services.json` / `GoogleService-Info.plist` tidak dipakai untuk konfigurasi inti tersebut. Untuk push notification Android pada Sprint 3, `google-services.json` tetap diperlukan lewat `android.googleServicesFile`; lihat [`PRD.md`](PRD.md).
 
+> Project `praktikum-ppk-3` saat ini masih memakai paket **Spark**. Auth dan
+> Firestore berjalan, tetapi Cloud Functions Sprint 3 memerlukan paket **Blaze**.
+
 ### 3.2 Isi file `.env`
 
 Salin contoh lalu isi nilainya:
