@@ -29,6 +29,7 @@ jest.mock('@/lib/notification-service', () => ({
   getExpoPushToken: jest.fn(),
   registerPushToken: jest.fn(),
   unregisterPushTokenBestEffort: jest.fn(),
+  isPushTokenRegistrationPaused: jest.fn(() => false),
   openNotificationSettings: jest.fn(),
   setupNotificationChannel: jest.fn(),
 }));
@@ -63,6 +64,7 @@ describe('NotificationContext', () => {
     (notificationService.setupNotificationChannel as jest.Mock).mockResolvedValue(undefined);
     (notificationService.registerPushToken as jest.Mock).mockResolvedValue(undefined);
     (notificationService.unregisterPushTokenBestEffort as jest.Mock).mockResolvedValue(undefined);
+    (notificationService.isPushTokenRegistrationPaused as jest.Mock).mockReturnValue(false);
     (notificationService.openNotificationSettings as jest.Mock).mockResolvedValue(undefined);
     (pushTokenStorage.getPushTokenOwner as jest.Mock).mockResolvedValue(null);
     (pushTokenStorage.savePushTokenOwner as jest.Mock).mockResolvedValue(undefined);
@@ -247,6 +249,19 @@ describe('NotificationContext', () => {
       expect(result.current.status).toBe('blocked');
     });
     expect(notificationService.unregisterPushTokenBestEffort).not.toHaveBeenCalled();
+  });
+
+  it('tidak mendaftarkan token saat registrasi sedang ditahan', async () => {
+    (notificationService.isPushTokenRegistrationPaused as jest.Mock).mockReturnValue(true);
+
+    const { result } = await renderHook(() => useNotifications(), { wrapper });
+
+    await act(async () => {
+      await result.current.refresh();
+    });
+
+    expect(notificationService.registerPushToken).not.toHaveBeenCalled();
+    expect(result.current.status).toBe('idle');
   });
 
   it('menampilkan status error bila izin granted tetapi token tidak tersedia', async () => {

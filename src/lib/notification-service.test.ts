@@ -7,9 +7,12 @@ import {
   checkNotificationPermission,
   getEasProjectId,
   getExpoPushToken,
+  isPushTokenRegistrationPaused,
   isPushNotificationSupported,
   openNotificationSettings,
+  pausePushTokenRegistration,
   registerPushToken,
+  resumePushTokenRegistration,
   requestNotificationPermission,
   setupNotificationChannel,
   unregisterPushToken,
@@ -179,6 +182,19 @@ describe('notification-service', () => {
       (Device as any).isDevice = false;
       const token = await getExpoPushToken();
       expect(token).toBeNull();
+    });
+  });
+
+  describe('pausePushTokenRegistration', () => {
+    it('menahan lalu mengaktifkan kembali registrasi token', () => {
+      resumePushTokenRegistration();
+      expect(isPushTokenRegistrationPaused()).toBe(false);
+
+      pausePushTokenRegistration();
+      expect(isPushTokenRegistrationPaused()).toBe(true);
+
+      resumePushTokenRegistration();
+      expect(isPushTokenRegistrationPaused()).toBe(false);
     });
   });
 

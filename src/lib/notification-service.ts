@@ -185,6 +185,23 @@ export async function unregisterPushTokenBestEffort(
   }
 }
 
+let pushTokenRegistrationPaused = false;
+
+/** Menahan registrasi token saat proses logout sedang membersihkan Firestore. */
+export function pausePushTokenRegistration(): void {
+  pushTokenRegistrationPaused = true;
+}
+
+/** Mengaktifkan kembali registrasi token setelah logout selesai/gagal. */
+export function resumePushTokenRegistration(): void {
+  pushTokenRegistrationPaused = false;
+}
+
+/** Apakah registrasi token sedang ditahan karena logout. */
+export function isPushTokenRegistrationPaused(): boolean {
+  return pushTokenRegistrationPaused;
+}
+
 /**
  * Membuka menu pengaturan aplikasi di sistem operasi perangkat.
  */

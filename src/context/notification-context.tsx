@@ -13,6 +13,7 @@ import {
   checkNotificationPermission,
   getExpoPushToken,
   isPushNotificationSupported,
+  isPushTokenRegistrationPaused,
   openNotificationSettings,
   registerPushToken,
   requestNotificationPermission,
@@ -53,6 +54,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
    */
   const syncTokenState = useCallback(
     async (opId: number, knownStatus?: NotificationStatus) => {
+      if (isPushTokenRegistrationPaused()) return;
+
       try {
         const currentStatus = knownStatus ?? (await checkNotificationPermission());
         if (opId !== operationCountRef.current) return;
@@ -97,7 +100,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
         setToken(pushToken);
 
-        if (profileId) {
+        if (profileId && !isPushTokenRegistrationPaused()) {
           if (profilePushToken !== pushToken) {
             await registerPushToken(profileId, pushToken);
           }
@@ -108,7 +111,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           }
         }
 
-        if (opId !== operationCountRef.current) return;
+        if (opId !== operationCountRef.current || isPushTokenRegistrationPaused()) return;
         setStatus('granted');
         setLastError(null);
       } catch (err) {
@@ -129,6 +132,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
 
     if (requestingRef.current || refreshingRef.current) return;
+    if (isPushTokenRegistrationPaused()) return;
 
     refreshingRef.current = true;
     try {
@@ -180,6 +184,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       return;
     }
     if (requestingRef.current) return;
+    if (isPushTokenRegistrationPaused()) return;
 
     const opId = ++operationCountRef.current;
     requestingRef.current = true;
