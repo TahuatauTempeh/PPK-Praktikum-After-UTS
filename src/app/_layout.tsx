@@ -14,6 +14,7 @@ import { ErrorState } from '@/components/ErrorState';
 import { LoadingState } from '@/components/LoadingState';
 import { ToastContainer } from '@/components/Toast';
 import { AuthProvider, useAuth } from '@/context/auth-context';
+import { NotificationProvider } from '@/context/notification-context';
 import { SessionProvider } from '@/context/session-context';
 import { ThemePreferenceProvider } from '@/context/theme-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -44,15 +45,17 @@ function ThemedRoot() {
 
   return (
     <AuthProvider>
-      <SessionProvider>
-        <AssistantPreviewProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-            <RootNavigator />
-            <ToastContainer />
-          </ThemeProvider>
-        </AssistantPreviewProvider>
-      </SessionProvider>
+      <NotificationProvider>
+        <SessionProvider>
+          <AssistantPreviewProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+              <RootNavigator />
+              <ToastContainer />
+            </ThemeProvider>
+          </AssistantPreviewProvider>
+        </SessionProvider>
+      </NotificationProvider>
     </AuthProvider>
   );
 }
