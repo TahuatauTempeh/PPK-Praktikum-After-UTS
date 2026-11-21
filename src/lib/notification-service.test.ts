@@ -5,7 +5,6 @@ import { Linking, Platform } from 'react-native';
 
 import {
   checkNotificationPermission,
-  DEFAULT_EAS_PROJECT_ID,
   getEasProjectId,
   getExpoPushToken,
   isPushNotificationSupported,
@@ -90,7 +89,7 @@ describe('notification-service', () => {
       await setupNotificationChannel();
       expect(Notifications.setNotificationChannelAsync).toHaveBeenCalledWith('praktikum', {
         name: 'Praktikum',
-        importance: 5,
+        importance: 7,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#204CAC',
       });

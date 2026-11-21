@@ -16,6 +16,10 @@ import type { NotificationStatus } from '@/types';
 export const ANDROID_NOTIFICATION_CHANNEL_ID = 'praktikum';
 export const DEFAULT_EAS_PROJECT_ID = '973698af-d649-4bb7-a583-4fbf399f00a2';
 
+// Nilai enum numerik: AndroidImportance.MAX = 7, IosAuthorizationStatus.PROVISIONAL = 3
+const ANDROID_IMPORTANCE_MAX = 7;
+const IOS_AUTH_STATUS_PROVISIONAL = 3;
+
 /**
  * Memeriksa apakah perangkat saat ini mendukung notifikasi push.
  * Notifikasi push tidak didukung pada web atau simulator tanpa dukungan push.
@@ -46,7 +50,7 @@ export async function setupNotificationChannel(): Promise<void> {
 
   await Notifications.setNotificationChannelAsync(ANDROID_NOTIFICATION_CHANNEL_ID, {
     name: 'Praktikum',
-    importance: Notifications.AndroidImportance.MAX,
+    importance: ANDROID_IMPORTANCE_MAX,
     vibrationPattern: [0, 250, 250, 250],
     lightColor: '#204CAC',
   });
@@ -63,7 +67,7 @@ export async function checkNotificationPermission(): Promise<NotificationStatus>
   try {
     const settings = await Notifications.getPermissionsAsync();
 
-    if (settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
+    if (settings.granted || settings.ios?.status === IOS_AUTH_STATUS_PROVISIONAL) {
       return 'granted';
     }
 
@@ -95,7 +99,7 @@ export async function requestNotificationPermission(): Promise<NotificationStatu
       },
     });
 
-    if (settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL) {
+    if (settings.granted || settings.ios?.status === IOS_AUTH_STATUS_PROVISIONAL) {
       return 'granted';
     }
 

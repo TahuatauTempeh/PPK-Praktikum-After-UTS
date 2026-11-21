@@ -24,9 +24,15 @@ const NotificationContext = createContext<NotificationContextValue | null>(null)
 
 export function NotificationProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
   const { profile } = useAuth();
-  const [status, setStatus] = useState<NotificationStatus>('idle');
+  const profileId = profile?.id;
+  const profilePushToken = profile?.expoPushToken;
+
+  const [status, setStatus] = useState<NotificationStatus>(() =>
+    isPushNotificationSupported() ? 'idle' : 'unsupported'
+  );
   const [token, setToken] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
+  const operationCountRef = React.useRef(0);
 
   // Pasang observer foreground dan deep link
   useNotificationObserver();
@@ -39,31 +45,68 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       return;
     }
 
+    const opId = ++operationCountRef.current;
+
     try {
       const currentStatus = await checkNotificationPermission();
+      if (opId !== operationCountRef.current) return;
       setStatus(currentStatus);
 
       if (currentStatus === 'granted') {
         const pushToken = await getExpoPushToken();
+        if (opId !== operationCountRef.current) return;
         setToken(pushToken);
 
-        if (profile?.id && pushToken && profile?.expoPushToken !== pushToken) {
-          await registerPushToken(profile.id, pushToken);
+        if (profileId && pushToken && profilePushToken !== pushToken) {
+          await registerPushToken(profileId, pushToken);
         }
       } else {
         setToken(null);
       }
       setLastError(null);
     } catch (err) {
+      if (opId !== operationCountRef.current) return;
       setStatus('error');
       setLastError(err instanceof Error ? err.message : 'Gagal memeriksa status notifikasi.');
     }
-  }, [profile?.id, profile?.expoPushToken]);
+  }, [profileId, profilePushToken]);
 
   // Efek inisialisasi awal
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    let cancelled = false;
+
+    if (!isPushNotificationSupported()) return;
+
+    const opId = ++operationCountRef.current;
+
+    void checkNotificationPermission()
+      .then((currentStatus) => {
+        if (cancelled || opId !== operationCountRef.current) return;
+        setStatus(currentStatus);
+
+        if (currentStatus === 'granted') {
+          return getExpoPushToken().then((pushToken) => {
+            if (cancelled || opId !== operationCountRef.current) return;
+            setToken(pushToken);
+
+            if (profileId && pushToken && profilePushToken !== pushToken) {
+              void registerPushToken(profileId, pushToken);
+            }
+          });
+        } else {
+          setToken(null);
+        }
+      })
+      .catch((err) => {
+        if (cancelled || opId !== operationCountRef.current) return;
+        setStatus('error');
+        setLastError(err instanceof Error ? err.message : 'Gagal memeriksa status notifikasi.');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [profileId, profilePushToken]);
 
   // Pantau pembaruan token dari sistem
   useEffect(() => {
@@ -72,15 +115,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     const subscription = Notifications.addPushTokenListener((tokenIdentifier) => {
       const newToken = tokenIdentifier.data;
       setToken(newToken);
-      if (profile?.id && newToken) {
-        void registerPushToken(profile.id, newToken);
+      if (profileId && newToken) {
+        void registerPushToken(profileId, newToken);
       }
     });
 
     return () => {
-      subscription.remove();
+      subscription?.remove?.();
     };
-  }, [profile?.id]);
+  }, [profileId]);
 
   // Mengaktifkan notifikasi saat diminta pengguna
   const enableNotifications = useCallback(async () => {
@@ -89,19 +132,22 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       return;
     }
 
+    const opId = ++operationCountRef.current;
     setStatus('requesting');
     setLastError(null);
 
     try {
       const resultStatus = await requestNotificationPermission();
+      if (opId !== operationCountRef.current) return;
       setStatus(resultStatus);
 
       if (resultStatus === 'granted') {
         const pushToken = await getExpoPushToken();
+        if (opId !== operationCountRef.current) return;
         if (pushToken) {
           setToken(pushToken);
-          if (profile?.id) {
-            await registerPushToken(profile.id, pushToken);
+          if (profileId) {
+            await registerPushToken(profileId, pushToken);
           }
         } else {
           setStatus('error');
@@ -113,10 +159,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         setLastError('Izin notifikasi ditolak.');
       }
     } catch (err) {
+      if (opId !== operationCountRef.current) return;
       setStatus('error');
       setLastError(err instanceof Error ? err.message : 'Terjadi kesalahan saat mengaktifkan notifikasi.');
     }
-  }, [profile?.id]);
+  }, [profileId]);
 
   // Membuka menu pengaturan aplikasi
   const openSettings = useCallback(async () => {
