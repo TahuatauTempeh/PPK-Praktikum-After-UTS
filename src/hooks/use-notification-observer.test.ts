@@ -97,4 +97,3 @@ describe('useNotificationObserver', () => {
     expect(Notifications.addNotificationResponseReceivedListener).toHaveBeenCalled();
   });
 });
-
