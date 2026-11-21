@@ -13,6 +13,7 @@ import {
   requestNotificationPermission,
   setupNotificationChannel,
   unregisterPushToken,
+  unregisterPushTokenBestEffort,
 } from './notification-service';
 
 jest.mock('expo-device', () => ({
@@ -197,6 +198,25 @@ describe('notification-service', () => {
           pushUpdatedAt: 'SERVER_TIMESTAMP',
         })
       );
+    });
+
+    it('tidak melempar error saat cleanup logout gagal', async () => {
+      (updateDoc as jest.Mock).mockRejectedValueOnce(new Error('offline'));
+
+      await expect(unregisterPushTokenBestEffort('user123')).resolves.toBeUndefined();
+    });
+
+    it('berhenti menunggu setelah timeout saat Firestore menggantung', async () => {
+      jest.useFakeTimers();
+      (updateDoc as jest.Mock).mockReturnValueOnce(new Promise(() => {}));
+
+      try {
+        const cleanup = unregisterPushTokenBestEffort('user123', 1_000);
+        jest.advanceTimersByTime(1_000);
+        await expect(cleanup).resolves.toBeUndefined();
+      } finally {
+        jest.useRealTimers();
+      }
     });
   });
 

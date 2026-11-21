@@ -12,12 +12,14 @@ jest.mock('expo-router', () => ({
 jest.mock('expo-notifications', () => ({
   setNotificationHandler: jest.fn(),
   getLastNotificationResponseAsync: jest.fn(),
+  clearLastNotificationResponseAsync: jest.fn(),
   addNotificationResponseReceivedListener: jest.fn(),
 }));
 
 describe('useNotificationObserver', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (Notifications.clearLastNotificationResponseAsync as jest.Mock).mockResolvedValue(undefined);
   });
 
   it('navigates on cold-start when last notification response has valid URL', async () => {
@@ -41,6 +43,7 @@ describe('useNotificationObserver', () => {
     await waitFor(() => {
       expect(router.push).toHaveBeenCalledWith('/praktikan/presensi/session-123');
     });
+    expect(Notifications.clearLastNotificationResponseAsync).toHaveBeenCalled();
   });
 
   it('ignores cold-start navigation if URL is not a recognized internal route', async () => {
@@ -92,6 +95,7 @@ describe('useNotificationObserver', () => {
     });
 
     expect(router.push).toHaveBeenCalledWith('/(praktikan)/izin');
+    expect(Notifications.clearLastNotificationResponseAsync).toHaveBeenCalled();
 
     unmount();
     expect(Notifications.addNotificationResponseReceivedListener).toHaveBeenCalled();

@@ -1,9 +1,15 @@
 import type { ExpoPushMessage } from './notification-helpers';
 import {
+  buildDedupeKey,
+  buildPermissionBody,
+  buildScheduleChangedBody,
+  buildSessionOpenBody,
   chunkArray,
   cleanInvalidTokens,
+  formatSessionDate,
   getEnrolledPractikan,
   getUserPushToken,
+  getUpdateTime,
   isScheduleChanged,
   sendExpoPushMessages,
 } from './notification-helpers';
@@ -48,6 +54,97 @@ describe('notification-helpers', () => {
       const before = { status: 'scheduled', updatedAt: 'time1' };
       const after = { status: 'scheduled', updatedAt: 'time2' };
       expect(isScheduleChanged(before, after)).toBe(false);
+    });
+
+    it('membandingkan Timestamp berdasarkan waktunya, bukan referensi objek', () => {
+      const before = { status: 'scheduled', date: { toMillis: () => 1_700_000_000_000 } };
+      const after = { status: 'scheduled', date: { toMillis: () => 1_700_000_000_000 } };
+      expect(isScheduleChanged(before, after)).toBe(false);
+    });
+  });
+
+  describe('payload builders', () => {
+    it('menyusun body sesi dibuka dengan kelas, waktu, dan ruang', () => {
+      expect(
+        buildSessionOpenBody({
+          title: 'Basis Data',
+          className: 'IF-3A',
+          startTime: '08:00',
+          endTime: '10:00',
+          room: 'Lab A201',
+        })
+      ).toBe('Basis Data — IF-3A · 08:00–10:00 · Lab A201. Presensi sudah dibuka.');
+    });
+
+    it('menyusun body sesi dibuka tanpa kelas bila kelas tidak ada', () => {
+      expect(
+        buildSessionOpenBody({
+          title: 'Basis Data',
+          className: null,
+          startTime: '08:00',
+          endTime: '10:00',
+          room: 'Lab A201',
+        })
+      ).toBe('Basis Data · 08:00–10:00 · Lab A201. Presensi sudah dibuka.');
+    });
+
+    it('menyusun body perubahan jadwal', () => {
+      expect(
+        buildScheduleChangedBody({
+          title: 'Basis Data',
+          date: '2026-11-24',
+          startTime: '09:00',
+          endTime: '11:00',
+          room: 'Lab B',
+        })
+      ).toBe('Basis Data — 2026-11-24 (09:00–11:00) · Lab B.');
+    });
+
+    it('menyusun body izin dengan nama dan waktu sesi', () => {
+      expect(
+        buildPermissionBody({
+          approved: true,
+          session: {
+            title: 'Basis Data',
+            date: '2026-11-24',
+            startTime: '08:00',
+            endTime: '10:00',
+          },
+        })
+      ).toBe('Basis Data — 2026-11-24 (08:00–10:00). Pengajuan izin kamu disetujui.');
+    });
+
+    it('menyusun body izin ditolak dengan catatan asisten', () => {
+      expect(
+        buildPermissionBody({
+          approved: false,
+          session: null,
+          note: 'Dokumen tidak lengkap',
+        })
+      ).toBe('Sesi praktikum. Pengajuan izin kamu ditolak: "Dokumen tidak lengkap".');
+    });
+
+    it('menormalkan tanggal dari string dan Timestamp', () => {
+      expect(formatSessionDate('2026-11-24')).toBe('2026-11-24');
+      expect(
+        formatSessionDate({ toDate: () => new Date('2026-11-24T00:00:00.000Z') })
+      ).toBe('2026-11-24');
+    });
+
+    it('membuat kunci dedupe yang stabil', () => {
+      expect(buildDedupeKey('session-open', 's1', '2026-11-24T00:00:00.000Z')).toBe(
+        'session-open:s1:2026-11-24T00:00:00.000Z'
+      );
+    });
+
+    it('mengambil update time dari snapshot dan fallback ke event time', () => {
+      expect(
+        getUpdateTime(
+          { updateTime: { toDate: () => new Date('2026-11-24T01:02:03.000Z') } },
+          'event-time'
+        )
+      ).toBe('2026-11-24T01:02:03.000Z');
+      expect(getUpdateTime({}, 'event-time')).toBe('event-time');
     });
   });
 

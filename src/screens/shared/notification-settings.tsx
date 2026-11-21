@@ -21,7 +21,7 @@ interface StatusConfig {
 
 export function NotificationSettings(): React.JSX.Element {
   const theme = useTheme();
-  const { status, enableNotifications, openSettings } = useNotifications();
+  const { status, enableNotifications, openSettings, refresh } = useNotifications();
 
   const getStatusConfig = (s: NotificationStatus): StatusConfig => {
     switch (s) {
@@ -102,7 +102,9 @@ export function NotificationSettings(): React.JSX.Element {
           <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>
             {status === 'unsupported'
               ? 'Notifikasi push tidak didukung pada browser atau perangkat tanpa layanan push.'
-              : 'Dapatkan pemberitahuan otomatis saat sesi dibuka, jadwal praktikum berubah, dan pengajuan izin diputuskan.'}
+              : status === 'error'
+                ? 'Notifikasi belum aktif. Perubahan tetap terlihat saat aplikasi dibuka.'
+                : 'Dapatkan pemberitahuan otomatis saat sesi dibuka, jadwal praktikum berubah, dan pengajuan izin diputuskan.'}
           </Text>
         </View>
 
@@ -153,7 +155,7 @@ export function NotificationSettings(): React.JSX.Element {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Coba lagi mengaktifkan notifikasi"
-            onPress={() => void enableNotifications()}
+            onPress={() => void refresh()}
             style={({ pressed }) => [
               styles.tombolAksi,
               { backgroundColor: theme.colors.errorFill },

@@ -11,7 +11,6 @@ import { Platform } from 'react-native';
 // Konfigurasi bagaimana notifikasi ditampilkan saat aplikasi aktif di foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
     shouldShowBanner: true,
@@ -45,6 +44,10 @@ function handleNotificationNavigation(data: Record<string, unknown> | undefined)
   }
 }
 
+function clearLastNotificationResponse(): void {
+  void Notifications.clearLastNotificationResponseAsync().catch(() => undefined);
+}
+
 export function useNotificationObserver(): void {
   const handledLastResponseRef = useRef(false);
 
@@ -52,18 +55,24 @@ export function useNotificationObserver(): void {
     if (Platform.OS === 'web') return;
 
     // 1. Tangani cold-start saat aplikasi dibuka dari ketukan notifikasi
-    void Notifications.getLastNotificationResponseAsync().then((response) => {
-      if (response && !handledLastResponseRef.current) {
-        handledLastResponseRef.current = true;
-        const data = response.notification.request.content.data as Record<string, unknown> | undefined;
-        handleNotificationNavigation(data);
-      }
-    });
+    void Notifications.getLastNotificationResponseAsync()
+      .then((response) => {
+        if (response && !handledLastResponseRef.current) {
+          handledLastResponseRef.current = true;
+          const data = response.notification.request.content.data as
+            | Record<string, unknown>
+            | undefined;
+          handleNotificationNavigation(data);
+          clearLastNotificationResponse();
+        }
+      })
+      .catch(() => undefined);
 
     // 2. Tangani ketukan notifikasi saat aplikasi berada di background
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       const data = response.notification.request.content.data as Record<string, unknown> | undefined;
       handleNotificationNavigation(data);
+      clearLastNotificationResponse();
     });
 
     return () => {

@@ -15,6 +15,7 @@ jest.mock('@/screens/praktikan/components/ikon', () => ({
 describe('<NotificationSettings />', () => {
   const mockEnableNotifications = jest.fn();
   const mockOpenSettings = jest.fn();
+  const mockRefresh = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -25,6 +26,7 @@ describe('<NotificationSettings />', () => {
       status: 'granted',
       enableNotifications: mockEnableNotifications,
       openSettings: mockOpenSettings,
+      refresh: mockRefresh,
     });
 
     const { getByText } = await render(<NotificationSettings />);
@@ -37,6 +39,7 @@ describe('<NotificationSettings />', () => {
       status: 'denied',
       enableNotifications: mockEnableNotifications,
       openSettings: mockOpenSettings,
+      refresh: mockRefresh,
     });
 
     const { getByText } = await render(<NotificationSettings />);
@@ -52,6 +55,7 @@ describe('<NotificationSettings />', () => {
       status: 'blocked',
       enableNotifications: mockEnableNotifications,
       openSettings: mockOpenSettings,
+      refresh: mockRefresh,
     });
 
     const { getByText } = await render(<NotificationSettings />);
@@ -67,6 +71,7 @@ describe('<NotificationSettings />', () => {
       status: 'unsupported',
       enableNotifications: mockEnableNotifications,
       openSettings: mockOpenSettings,
+      refresh: mockRefresh,
     });
 
     const { getByText } = await render(<NotificationSettings />);
@@ -81,13 +86,18 @@ describe('<NotificationSettings />', () => {
       status: 'error',
       enableNotifications: mockEnableNotifications,
       openSettings: mockOpenSettings,
+      refresh: mockRefresh,
     });
 
     const { getByText } = await render(<NotificationSettings />);
     expect(getByText('Gagal')).toBeTruthy();
+    expect(
+      getByText('Notifikasi belum aktif. Perubahan tetap terlihat saat aplikasi dibuka.')
+    ).toBeTruthy();
 
     const tombol = getByText('Coba lagi');
     await fireEvent.press(tombol);
-    expect(mockEnableNotifications).toHaveBeenCalled();
+    expect(mockRefresh).toHaveBeenCalled();
+    expect(mockEnableNotifications).not.toHaveBeenCalled();
   });
 });

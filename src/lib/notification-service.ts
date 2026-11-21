@@ -159,6 +159,29 @@ export async function unregisterPushToken(uid: string): Promise<void> {
 }
 
 /**
+ * Menghapus token push tanpa menahan proses logout bila Firestore lambat/offline.
+ * Dipakai sebelum signOut agar token tidak tertinggal di profil pengguna.
+ */
+export async function unregisterPushTokenBestEffort(
+  uid: string,
+  timeoutMs = 2_000
+): Promise<void> {
+  if (!uid) return;
+
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      unregisterPushToken(uid).catch(() => undefined),
+      new Promise<void>((resolve) => {
+        timeout = setTimeout(resolve, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
+
+/**
  * Membuka menu pengaturan aplikasi di sistem operasi perangkat.
  */
 export async function openNotificationSettings(): Promise<void> {

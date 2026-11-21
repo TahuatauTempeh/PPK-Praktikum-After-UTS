@@ -4,7 +4,8 @@
  */
 
 import * as Notifications from 'expo-notifications';
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 
 import { useAuth } from '@/context/auth-context';
 import { useNotificationObserver } from '@/hooks/use-notification-observer';
@@ -15,7 +16,14 @@ import {
   openNotificationSettings,
   registerPushToken,
   requestNotificationPermission,
+  setupNotificationChannel,
+  unregisterPushTokenBestEffort,
 } from '@/lib/notification-service';
+import {
+  clearPushTokenOwner,
+  getPushTokenOwner,
+  savePushTokenOwner,
+} from '@/lib/push-token-storage';
 import type { NotificationContextValue, NotificationStatus } from '@/types';
 
 export { useNotificationObserver } from '@/hooks/use-notification-observer';
@@ -32,98 +40,138 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   );
   const [token, setToken] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
-  const operationCountRef = React.useRef(0);
+  const operationCountRef = useRef(0);
+  const refreshingRef = useRef(false);
+  const requestingRef = useRef(false);
 
   // Pasang observer foreground dan deep link
   useNotificationObserver();
 
-  // Sinkronkan status izin saat aplikasi dimuat atau profil berubah
+  /**
+   * Menyinkronkan status izin dan token Expo. Status boleh diberikan langsung
+   * setelah requestPermission agar tidak memeriksa izin dua kali.
+   */
+  const syncTokenState = useCallback(
+    async (opId: number, knownStatus?: NotificationStatus) => {
+      try {
+        const currentStatus = knownStatus ?? (await checkNotificationPermission());
+        if (opId !== operationCountRef.current) return;
+
+        if (currentStatus !== 'granted') {
+          setStatus(currentStatus);
+          setToken(null);
+          setLastError(null);
+
+          let owner: Awaited<ReturnType<typeof getPushTokenOwner>> = null;
+          try {
+            owner = await getPushTokenOwner();
+          } catch {
+            owner = null;
+          }
+
+          if (
+            profileId &&
+            profilePushToken &&
+            owner?.uid === profileId &&
+            owner.token === profilePushToken
+          ) {
+            try {
+              await unregisterPushTokenBestEffort(profileId);
+              await clearPushTokenOwner();
+            } catch {
+              // Best effort: status izin tetap ditampilkan meskipun cleanup gagal.
+            }
+          }
+          return;
+        }
+
+        const pushToken = await getExpoPushToken();
+        if (opId !== operationCountRef.current) return;
+
+        if (!pushToken) {
+          setToken(null);
+          setStatus('error');
+          setLastError('Token notifikasi belum tersedia. Coba lagi.');
+          return;
+        }
+
+        setToken(pushToken);
+
+        if (profileId) {
+          if (profilePushToken !== pushToken) {
+            await registerPushToken(profileId, pushToken);
+          }
+          try {
+            await savePushTokenOwner(profileId, pushToken);
+          } catch {
+            // Storage lokal hanya untuk cleanup; kegagalannya tidak mematikan notifikasi.
+          }
+        }
+
+        if (opId !== operationCountRef.current) return;
+        setStatus('granted');
+        setLastError(null);
+      } catch (err) {
+        if (opId !== operationCountRef.current) return;
+        setStatus('error');
+        setLastError(err instanceof Error ? err.message : 'Gagal memeriksa status notifikasi.');
+      }
+    },
+    [profileId, profilePushToken]
+  );
+
   const refresh = useCallback(async () => {
     if (!isPushNotificationSupported()) {
       setStatus('unsupported');
       setToken(null);
+      setLastError(null);
       return;
     }
 
-    const opId = ++operationCountRef.current;
+    if (requestingRef.current || refreshingRef.current) return;
 
+    refreshingRef.current = true;
     try {
-      const currentStatus = await checkNotificationPermission();
-      if (opId !== operationCountRef.current) return;
-      setStatus(currentStatus);
-
-      if (currentStatus === 'granted') {
-        const pushToken = await getExpoPushToken();
-        if (opId !== operationCountRef.current) return;
-        setToken(pushToken);
-
-        if (profileId && pushToken && profilePushToken !== pushToken) {
-          await registerPushToken(profileId, pushToken);
-        }
-      } else {
-        setToken(null);
-      }
-      setLastError(null);
-    } catch (err) {
-      if (opId !== operationCountRef.current) return;
-      setStatus('error');
-      setLastError(err instanceof Error ? err.message : 'Gagal memeriksa status notifikasi.');
+      await syncTokenState(++operationCountRef.current);
+    } finally {
+      refreshingRef.current = false;
     }
-  }, [profileId, profilePushToken]);
+  }, [syncTokenState]);
 
-  // Efek inisialisasi awal
-  useEffect(() => {
-    let cancelled = false;
-
-    if (!isPushNotificationSupported()) return;
-
-    const opId = ++operationCountRef.current;
-
-    void checkNotificationPermission()
-      .then((currentStatus) => {
-        if (cancelled || opId !== operationCountRef.current) return;
-        setStatus(currentStatus);
-
-        if (currentStatus === 'granted') {
-          return getExpoPushToken().then((pushToken) => {
-            if (cancelled || opId !== operationCountRef.current) return;
-            setToken(pushToken);
-
-            if (profileId && pushToken && profilePushToken !== pushToken) {
-              void registerPushToken(profileId, pushToken);
-            }
-          });
-        } else {
-          setToken(null);
-        }
-      })
-      .catch((err) => {
-        if (cancelled || opId !== operationCountRef.current) return;
-        setStatus('error');
-        setLastError(err instanceof Error ? err.message : 'Gagal memeriksa status notifikasi.');
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [profileId, profilePushToken]);
-
-  // Pantau pembaruan token dari sistem
+  // Siapkan channel Android sejak awal, termasuk untuk Android <= 12 yang izinnya sudah granted.
   useEffect(() => {
     if (!isPushNotificationSupported()) return;
+    void setupNotificationChannel().catch(() => undefined);
+  }, []);
 
-    const subscription = Notifications.addPushTokenListener((tokenIdentifier) => {
-      const newToken = tokenIdentifier.data;
-      setToken(newToken);
-      if (profileId && newToken) {
-        void registerPushToken(profileId, newToken);
-      }
+  // Sinkronkan status saat provider pertama kali dipasang atau profil berubah.
+  // Ditunda satu tick agar setState tidak terjadi langsung di body effect.
+  useEffect(() => {
+    if (!isPushNotificationSupported()) return;
+    const timer = setTimeout(() => {
+      void refresh();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [refresh]);
+
+  // Refresh saat pengguna kembali dari pengaturan sistem atau membuka aplikasi lagi.
+  useEffect(() => {
+    if (!isPushNotificationSupported()) return;
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void refresh();
     });
+    return () => subscription.remove();
+  }, [refresh]);
 
-    return () => {
-      subscription?.remove?.();
-    };
-  }, [profileId]);
+  // Listener ini membawa DevicePushToken (FCM/APNs mentah). Jangan menyimpannya
+  // langsung; ambil ulang ExpoPushToken lewat refresh().
+  useEffect(() => {
+    if (!isPushNotificationSupported()) return;
+    const subscription = Notifications.addPushTokenListener(() => {
+      void refresh();
+    });
+    return () => subscription.remove();
+  }, [refresh]);
 
   // Mengaktifkan notifikasi saat diminta pengguna
   const enableNotifications = useCallback(async () => {
@@ -131,39 +179,35 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       setStatus('unsupported');
       return;
     }
+    if (requestingRef.current) return;
 
     const opId = ++operationCountRef.current;
+    requestingRef.current = true;
     setStatus('requesting');
     setLastError(null);
 
     try {
       const resultStatus = await requestNotificationPermission();
       if (opId !== operationCountRef.current) return;
-      setStatus(resultStatus);
 
-      if (resultStatus === 'granted') {
-        const pushToken = await getExpoPushToken();
-        if (opId !== operationCountRef.current) return;
-        if (pushToken) {
-          setToken(pushToken);
-          if (profileId) {
-            await registerPushToken(profileId, pushToken);
-          }
-        } else {
-          setStatus('error');
-          setLastError('Tidak dapat memperoleh token notifikasi dari perangkat.');
-        }
-      } else if (resultStatus === 'blocked') {
+      // Gunakan status hasil request agar tidak memeriksa izin dua kali.
+      await syncTokenState(opId, resultStatus);
+
+      if (resultStatus === 'blocked') {
         setLastError('Izin notifikasi diblokir di pengaturan perangkat.');
       } else if (resultStatus === 'denied') {
         setLastError('Izin notifikasi ditolak.');
+      } else if (resultStatus === 'error') {
+        setLastError('Terjadi kesalahan saat mengaktifkan notifikasi.');
       }
     } catch (err) {
       if (opId !== operationCountRef.current) return;
       setStatus('error');
       setLastError(err instanceof Error ? err.message : 'Terjadi kesalahan saat mengaktifkan notifikasi.');
+    } finally {
+      requestingRef.current = false;
     }
-  }, [profileId]);
+  }, [syncTokenState]);
 
   // Membuka menu pengaturan aplikasi
   const openSettings = useCallback(async () => {
