@@ -69,9 +69,15 @@ describe('notification-service', () => {
       expect(isPushNotificationSupported()).toBe(false);
     });
 
-    it('mengembalikan false jika bukan perangkat fisik', () => {
+    it('mengembalikan false di simulator iOS', () => {
+      (Platform as any).OS = 'ios';
       (Device as any).isDevice = false;
       expect(isPushNotificationSupported()).toBe(false);
+    });
+
+    it('mengizinkan emulator Android pada development build', () => {
+      (Device as any).isDevice = false;
+      expect(isPushNotificationSupported()).toBe(true);
     });
 
     it('mengembalikan true jika perangkat fisik di native', () => {
@@ -105,6 +111,7 @@ describe('notification-service', () => {
 
   describe('checkNotificationPermission', () => {
     it('mengembalikan unsupported jika bukan device yang didukung', async () => {
+      (Platform as any).OS = 'ios';
       (Device as any).isDevice = false;
       const status = await checkNotificationPermission();
       expect(status).toBe('unsupported');
@@ -168,6 +175,7 @@ describe('notification-service', () => {
     });
 
     it('mengembalikan null jika perangkat tidak didukung', async () => {
+      (Platform as any).OS = 'ios';
       (Device as any).isDevice = false;
       const token = await getExpoPushToken();
       expect(token).toBeNull();

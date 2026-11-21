@@ -26,7 +26,11 @@ const IOS_AUTH_STATUS_PROVISIONAL = 3;
  */
 export function isPushNotificationSupported(): boolean {
   if (Platform.OS === 'web') return false;
-  return Device.isDevice;
+  if (Device.isDevice) return true;
+
+  // Emulator Android dengan Google Play Services tetap bisa menerima push
+  // pada development build. Build produksi tetap mensyaratkan perangkat fisik.
+  return __DEV__ && Platform.OS === 'android';
 }
 
 /**
