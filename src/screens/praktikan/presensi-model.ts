@@ -18,7 +18,8 @@ export interface SesiPresensiTampil {
   ruang: string;
   /** Nama lab, mis. "Lab A201"; null bila sesi belum punya lab */
   laboratorium: string | null;
-  asisten: string;
+  /** null bila nama tidak dapat dibaca (rules `users` hanya untuk pemilik dan asisten) */
+  asisten: string | null;
   status: SessionStatus;
 }
 

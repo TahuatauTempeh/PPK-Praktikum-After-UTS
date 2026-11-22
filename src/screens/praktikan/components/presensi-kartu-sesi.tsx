@@ -21,8 +21,8 @@ export function PresensiKartuSesi({ sesi }: { sesi: SesiPresensiTampil }) {
     { ikon: 'jadwal', label: 'Tanggal', nilai: formatTanggal(sesi.tanggal) },
     { ikon: 'jam', label: 'Waktu', nilai: formatRentangWIB(sesi.waktu) },
     { ikon: 'lokasi', label: 'Ruang dan laboratorium', nilai: lokasi },
-    { ikon: 'profil', label: 'Asisten', nilai: sesi.asisten },
   ];
+  if (sesi.asisten) rincian.push({ ikon: 'profil', label: 'Asisten', nilai: sesi.asisten });
 
   return (
     <>
