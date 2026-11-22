@@ -55,6 +55,8 @@ async function fetchSession(sessionId: string): Promise<FirestoreSession | null>
 }
 
 export const LAB_REQUIRED_MESSAGE = 'Lengkapi laboratorium sesi terlebih dahulu.';
+export const LAB_INACTIVE_MESSAGE =
+  'Laboratorium sesi tidak aktif. Aktifkan laboratorium atau pilih laboratorium lain.';
 
 // ─── Buka sesi (scheduled → open) ────────────────────────────────────────────
 
@@ -74,6 +76,16 @@ export async function openSession(sessionId: string): Promise<ActionResult> {
 
     if (typeof session.laboratoryId !== 'string' || session.laboratoryId.trim() === '') {
       return { success: false, message: LAB_REQUIRED_MESSAGE };
+    }
+
+    const laboratorySnapshot = await getDoc(
+      doc(getDb(), COLLECTIONS.laboratories, session.laboratoryId)
+    );
+    if (!laboratorySnapshot.exists()) {
+      return { success: false, message: LAB_INACTIVE_MESSAGE };
+    }
+    if (laboratorySnapshot.data()?.isActive !== true) {
+      return { success: false, message: LAB_INACTIVE_MESSAGE };
     }
 
     const before = { status: session.status };

@@ -147,6 +147,11 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
 
   try {
     const db = getDb();
+    const laboratorySnapshot = await getDoc(doc(db, COLLECTIONS.laboratories, laboratoryId));
+    if (!laboratorySnapshot.exists() || laboratorySnapshot.data()?.isActive !== true) {
+      throw new Error('Laboratorium tidak aktif. Pilih laboratorium lain.');
+    }
+
     const sessionRef = doc(collection(db, COLLECTIONS.sessions));
     const payload = {
       classId,

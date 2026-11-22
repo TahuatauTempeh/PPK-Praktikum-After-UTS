@@ -19,7 +19,7 @@ jest.mock('firebase/firestore', () => ({
 
 jest.mock('@/lib/firebase/firestore', () => ({
   getDb: jest.fn(() => ({})),
-  COLLECTIONS: { sessions: 'sessions' },
+  COLLECTIONS: { sessions: 'sessions', laboratories: 'laboratories' },
 }));
 
 jest.mock('@/lib/firebase/audit', () => ({
@@ -35,6 +35,14 @@ function sessionSnapshot(status: string, laboratoryId?: string): DocumentSnapsho
     exists: () => true,
     id: 's1',
     data: () => ({ status, ...(laboratoryId === undefined ? {} : { laboratoryId }) }),
+  } as unknown as DocumentSnapshot<DocumentData>;
+}
+
+function laboratorySnapshot(isActive: boolean): DocumentSnapshot<DocumentData> {
+  return {
+    exists: () => true,
+    id: 'lab-a',
+    data: () => ({ isActive }),
   } as unknown as DocumentSnapshot<DocumentData>;
 }
 
@@ -84,8 +92,35 @@ describe('openSession', () => {
     expect(updateDocMock).not.toHaveBeenCalled();
   });
 
+  it('menolak sesi scheduled bila laboratorium nonaktif', async () => {
+    getDocMock
+      .mockResolvedValueOnce(sessionSnapshot('scheduled', 'lab-a'))
+      .mockResolvedValueOnce(laboratorySnapshot(false));
+
+    await expect(openSession('s1')).resolves.toEqual({
+      success: false,
+      message: 'Laboratorium sesi tidak aktif. Aktifkan laboratorium atau pilih laboratorium lain.',
+    });
+    expect(updateDocMock).not.toHaveBeenCalled();
+    expect(logActionMock).not.toHaveBeenCalled();
+  });
+
+  it('menolak sesi scheduled bila dokumen laboratorium tidak ditemukan', async () => {
+    getDocMock
+      .mockResolvedValueOnce(sessionSnapshot('scheduled', 'lab-a'))
+      .mockResolvedValueOnce(missingSnapshot);
+
+    const result = await openSession('s1');
+
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('tidak aktif');
+    expect(updateDocMock).not.toHaveBeenCalled();
+  });
+
   it('mengubah scheduled menjadi open dan menulis audit log', async () => {
-    getDocMock.mockResolvedValueOnce(sessionSnapshot('scheduled', 'lab-a'));
+    getDocMock
+      .mockResolvedValueOnce(sessionSnapshot('scheduled', 'lab-a'))
+      .mockResolvedValueOnce(laboratorySnapshot(true));
 
     await expect(openSession('s1')).resolves.toEqual({
       success: true,
