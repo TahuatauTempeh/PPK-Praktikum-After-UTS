@@ -2,14 +2,18 @@
  * Halaman presensi berbasis lokasi (PRD Sprint 3 bagian 7.1 dan 8.2, FR-ATT-01..11).
  * Urutan: header, kartu sesi, pemeriksaan lokasi, status presensi, footer aksi.
  *
- * `PresensiTampilan` hanya membaca model; hook `usePresensi` (Fase B, setelah fondasi
- * Dev 1 masuk) yang mengisi model dan menjalankan aksi.
+ * `PresensiTampilan` hanya membaca model; `usePresensi` mengisi model dan menjalankan aksi.
  */
 
+import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { LoadingState } from '@/components/LoadingState';
+import { useAuth } from '@/context/auth-context';
+import { useUserPraktikan } from '@/screens/praktikan/guard';
+import { bukaRiwayat } from '@/screens/praktikan/navigasi';
+import { usePresensi } from '@/screens/praktikan/use-presensi';
 import { Ikon } from '@/screens/praktikan/components/ikon';
 import { Kosong } from '@/screens/praktikan/components/kosong';
 import { Layar } from '@/screens/praktikan/components/layar';
@@ -22,6 +26,27 @@ import { tahapLokasi, type PresensiAksi, type PresensiViewModel } from '@/screen
 import { typography, useTheme } from '@/theme';
 
 const SEMUA_TEPI = ['top', 'left', 'right', 'bottom'] as const;
+
+function kembali() {
+  if (router.canGoBack()) router.back();
+  else router.replace('/(praktikan)');
+}
+
+export default function PresensiScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { profile } = useAuth();
+  const user = useUserPraktikan();
+  const { model, onAksiLokasi, onKirim, onMuatUlang } = usePresensi(id ?? '', profile);
+
+  if (!user) return null;
+
+  return (
+    <PresensiTampilan
+      model={model}
+      aksi={{ onKembali: kembali, onAksiLokasi, onKirim, onMuatUlang, onLihatRiwayat: bukaRiwayat }}
+    />
+  );
+}
 
 export function PresensiTampilan({ model, aksi }: { model: PresensiViewModel; aksi: PresensiAksi }) {
   const theme = useTheme();

@@ -4,7 +4,17 @@ import React from 'react';
 import { kelayakanPresensi, type InputKelayakan } from '@/lib/attendance-rules';
 
 import type { PresensiAksi, PresensiViewModel, SesiPresensiTampil } from './presensi-model';
-import { PresensiTampilan } from './presensi-screen';
+import PresensiScreen, { PresensiTampilan } from './presensi-screen';
+import { usePresensi } from './use-presensi';
+
+jest.mock('expo-router', () => ({
+  router: { canGoBack: jest.fn(() => true), back: jest.fn(), replace: jest.fn() },
+  useLocalSearchParams: () => ({ id: 's1' }),
+}));
+jest.mock('@/context/auth-context', () => ({ useAuth: () => ({ profile: { id: 'u1' } }) }));
+jest.mock('@/screens/praktikan/guard', () => ({ useUserPraktikan: () => ({ id: 'u1' }) }));
+jest.mock('@/screens/praktikan/navigasi', () => ({ bukaRiwayat: jest.fn() }));
+jest.mock('./use-presensi', () => ({ usePresensi: jest.fn() }));
 
 // Layar bergantung pada router dan context tab bar; yang diuji di sini isi halamannya.
 jest.mock('@/screens/praktikan/components/layar', () => {
@@ -188,5 +198,23 @@ describe('<PresensiTampilan />', () => {
     expect(getByText('Koneksi internet bermasalah.')).toBeTruthy();
     await fireEvent.press(getByText('Muat ulang'));
     expect(a.onMuatUlang).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('<PresensiScreen />', () => {
+  it('memuat sesi dari parameter route dan meneruskan aksi kirim', async () => {
+    const onKirim = jest.fn();
+    jest.mocked(usePresensi).mockReturnValue({
+      model: model(),
+      onAksiLokasi: jest.fn(),
+      onKirim,
+      onMuatUlang: jest.fn(),
+    });
+    const { getByText } = await render(<PresensiScreen />);
+
+    expect(jest.mocked(usePresensi)).toHaveBeenCalledWith('s1', { id: 'u1' });
+    await fireEvent.press(getByText('Presensi sekarang'));
+    await fireEvent.press(getByText('Ya, presensi sekarang'));
+    expect(onKirim).toHaveBeenCalledTimes(1);
   });
 });
