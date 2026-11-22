@@ -24,11 +24,29 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == uid;
     }
 
-    // Laboratorium dengan ID tertentu ada di koleksi laboratories (Sprint 3)
-    function laboratoryExists(labId) {
+    function laboratoryIsActive(labId) {
       return labId is string
-        && labId.size() > 0
-        && exists(/databases/$(database)/documents/laboratories/$(labId));
+        && labId != ''
+        && exists(/databases/$(database)/documents/laboratories/$(labId))
+        && get(/databases/$(database)/documents/laboratories/$(labId)).data.isActive == true;
+    }
+
+    function isValidLaboratory(data) {
+      return data.keys().hasAll([
+          'name', 'code', 'building', 'floor', 'room', 'latitude', 'longitude',
+          'radiusMeters', 'description', 'isActive', 'createdAt', 'updatedAt', 'updatedBy'
+        ])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 80
+        && data.code is string && data.code.size() > 0 && data.code.size() <= 20
+        && data.building is string && data.building.size() > 0 && data.building.size() <= 80
+        && data.floor is string && data.floor.size() <= 20
+        && data.room is string && data.room.size() > 0 && data.room.size() <= 40
+        && data.latitude is number && data.latitude >= -90 && data.latitude <= 90
+        && data.longitude is number && data.longitude >= -180 && data.longitude <= 180
+        && data.radiusMeters is number && data.radiusMeters >= 10 && data.radiusMeters <= 500
+        && data.description is string && data.description.size() <= 200
+        && data.isActive is bool
+        && data.updatedBy is string && data.updatedBy.size() > 0;
     }
 
     // ─── 1. Users Collection ────────────────────────────────────────────────
@@ -73,10 +91,34 @@ service cloud.firestore {
 
     match /sessions/{sessionId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAsisten()
-        && (request.resource.data.status != 'open'
-            || laboratoryExists(request.resource.data.get('laboratoryId', '')));
+      allow create: if isAsisten()
+        && request.resource.data.status == 'scheduled'
+        && laboratoryIsActive(request.resource.data.laboratoryId);
+      allow update: if isAsisten()
+        && (
+          request.resource.data.status != 'open'
+          || laboratoryIsActive(request.resource.data.laboratoryId)
+        );
       allow delete: if isAsisten();
+    }
+
+    // ─── 4a. Laboratories Collection (Dev 1) ────────────────────────────────
+    // Dibaca semua pengguna login agar peta dan pemilih sesi bekerja. Hanya
+    // asisten yang boleh menulis; lab tidak dihapus permanen (soft delete).
+
+    match /laboratories/{labId} {
+      allow read: if isAuthenticated();
+      allow create: if isAsisten()
+        && isValidLaboratory(request.resource.data)
+        && request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if isAsisten()
+        && isValidLaboratory(request.resource.data)
+        && request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
     }
 
     // ─── 5. Attendance Collection (Dev 3) ───────────────────────────────────
@@ -122,32 +164,7 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // ─── 8. Laboratories Collection (Sprint 3, Dev 1) ───────────────────────
-    // Semua pengguna login boleh membaca (peta, presensi). Hanya asisten yang menulis.
-    // Laboratorium tidak dihapus permanen (soft delete lewat isActive), jadi delete ditolak.
-    // Koordinat dan radius divalidasi di rules sebagai lapis kedua setelah validasi klien.
-
-    function validLaboratoryData(data) {
-      return data.name is string && data.name.size() > 0 && data.name.size() <= 80
-        && data.code is string && data.code.size() > 0 && data.code.size() <= 20
-        && data.building is string && data.building.size() > 0 && data.building.size() <= 80
-        && data.room is string && data.room.size() > 0 && data.room.size() <= 40
-        && data.get('floor', '') is string && data.get('floor', '').size() <= 20
-        && data.get('description', '') is string && data.get('description', '').size() <= 200
-        && data.latitude is number && data.latitude >= -90 && data.latitude <= 90
-        && data.longitude is number && data.longitude >= -180 && data.longitude <= 180
-        && data.radiusMeters is number && data.radiusMeters >= 10 && data.radiusMeters <= 500
-        && data.isActive is bool
-        && data.updatedBy == request.auth.uid;
-    }
-
-    match /laboratories/{labId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAsisten() && validLaboratoryData(request.resource.data);
-      allow delete: if false;
-    }
-
-    // ─── 9. NotificationLogs Collection (Sprint 3, Dev 4 via Functions) ─────
+    // ─── 8. NotificationLogs Collection (Sprint 3, Dev 4 via Functions) ─────
     // Hanya Cloud Functions (Admin SDK) yang menulis; asisten boleh membaca.
 
     match /notificationLogs/{logKey} {
@@ -155,7 +172,7 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // ─── 10. InvitationCodes Collection (Dev 1) ─────────────────────────────
+    // ─── 9. InvitationCodes Collection (Dev 1) ──────────────────────────────
 
     match /invitationCodes/{code} {
       allow read: if isAuthenticated();
