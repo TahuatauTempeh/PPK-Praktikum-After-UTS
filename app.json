@@ -53,12 +53,6 @@
           "color": "#204CAC",
           "defaultChannel": "praktikum"
         }
-      ],
-      [
-        "react-native-maps",
-        {
-          "androidGoogleMapsApiKey": "GANTI_DENGAN_GOOGLE_MAPS_API_KEY"
-        }
       ]
     ],
     "experiments": {
