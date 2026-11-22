@@ -41,6 +41,7 @@ export const dummySessions: Session[] = [
     room: 'Lab Komputer A',
     assistantId: 'a1',
     status: 'closed',
+    laboratoryId: '',
   },
   {
     id: 's2',
@@ -51,6 +52,7 @@ export const dummySessions: Session[] = [
     room: 'Lab Komputer A',
     assistantId: 'a1',
     status: 'open',
+    laboratoryId: '',
   },
   {
     id: 's3',
@@ -61,6 +63,7 @@ export const dummySessions: Session[] = [
     room: 'Lab Komputer B',
     assistantId: 'a2',
     status: 'closed',
+    laboratoryId: '',
   },
   {
     id: 's4',
@@ -71,6 +74,7 @@ export const dummySessions: Session[] = [
     room: 'Lab Komputer B',
     assistantId: 'a2',
     status: 'scheduled',
+    laboratoryId: '',
   },
   {
     id: 's5',
@@ -81,6 +85,7 @@ export const dummySessions: Session[] = [
     room: 'Lab Jaringan',
     assistantId: 'a3',
     status: 'closed',
+    laboratoryId: '',
   },
   {
     id: 's6',
@@ -91,6 +96,7 @@ export const dummySessions: Session[] = [
     room: 'Lab Jaringan',
     assistantId: 'a3',
     status: 'scheduled',
+    laboratoryId: '',
   },
 ];
 

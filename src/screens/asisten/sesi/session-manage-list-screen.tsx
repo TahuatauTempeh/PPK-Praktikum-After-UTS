@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { getClassesByAssistant } from '@/lib/class-service';
+import { listenLaboratories } from '@/lib/laboratory-service';
 import { formatShortDate } from '@/lib/praktikum-helpers';
 import {
   createSession,
@@ -11,7 +12,7 @@ import {
   updateSession,
 } from '@/lib/session-service';
 import { tokens, useTheme, useThemedStyles, type Theme } from '@/theme';
-import { type PracticumClass, type PraktikumSession, type SessionStatus } from '@/types';
+import { type Laboratory, type PracticumClass, type PraktikumSession, type SessionStatus } from '@/types';
 
 import { AssistantScreen } from '../components/assistant-screen';
 import { AssistantText } from '../components/assistant-text';
@@ -50,6 +51,7 @@ export default function SessionManageListScreen({
   const theme = useTheme();
   const styles = useThemedStyles(gaya);
   const [classes, setClasses] = useState<PracticumClass[]>([]);
+  const [laboratories, setLaboratories] = useState<Laboratory[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string>(initialClassId ?? ALL_CLASSES_FILTER);
   const [sessions, setSessions] = useState<PraktikumSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +63,19 @@ export default function SessionManageListScreen({
   const classMap = useMemo(
     () => new Map(classes.map(item => [item.id, item.name])),
     [classes]
+  );
+
+  const labMap = useMemo(
+    () => new Map(laboratories.map(item => [item.id, item])),
+    [laboratories]
+  );
+
+  useEffect(
+    () =>
+      listenLaboratories(setLaboratories, message =>
+        setNotice({ type: 'error', text: `Daftar laboratorium gagal dimuat: ${message}` })
+      ),
+    []
   );
 
   const fetchSessions = useCallback(
@@ -287,6 +302,8 @@ export default function SessionManageListScreen({
           {sessions.map(item => {
             const className = classMap.get(item.classId) ?? 'Kelas';
             const isOpen = item.status === 'open';
+            const lab = item.laboratoryId ? labMap.get(item.laboratoryId) : undefined;
+            const labMissing = !item.laboratoryId;
             return (
               <View key={item.id} style={[styles.card, isOpen && styles.openCard]}>
                 <View style={styles.cardTopRow}>
@@ -324,6 +341,18 @@ export default function SessionManageListScreen({
                   </View>
                 </View>
 
+                {labMissing ? (
+                  <AssistantText variant="caption" style={styles.labWarning}>
+                    Laboratorium belum diatur
+                  </AssistantText>
+                ) : (
+                  <AssistantText variant="caption" tone="secondary">
+                    {lab
+                      ? `Lab: ${lab.name}${lab.isActive ? '' : ' (nonaktif)'}`
+                      : 'Lab: tidak ditemukan'}
+                  </AssistantText>
+                )}
+
                 <View style={styles.cardActions}>
                   <Pressable
                     accessibilityRole="button"
@@ -354,6 +383,7 @@ export default function SessionManageListScreen({
       {formState.mode !== 'closed' && (
         <SessionFormSheet
           classes={classes}
+          laboratories={laboratories}
           initialClassId={selectedClassId === ALL_CLASSES_FILTER ? null : selectedClassId}
           initialSession={formState.mode === 'edit' ? formState.item : null}
           onCancel={() => setFormState({ mode: 'closed' })}
@@ -495,5 +525,6 @@ const gaya = (theme: Theme) => StyleSheet.create({
   chipNeutralText: { fontFamily: tokens.fonts.semibold, color: theme.colors.textPrimary },
   chipDanger: { backgroundColor: theme.colors.errorSoft },
   chipDangerText: { fontFamily: tokens.fonts.semibold, color: theme.colors.error },
+  labWarning: { color: theme.colors.error, fontFamily: tokens.fonts.semibold },
   pressed: { opacity: 0.7 },
 });

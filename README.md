@@ -32,6 +32,7 @@ Versi di bawah diambil dari `package.json`. Selalu pasang paket Expo dengan `npx
 | Bahasa | TypeScript (strict) |
 | Navigasi | Expo Router (rute berbasis berkas di `src/app/`) |
 | Backend | Firebase 13 (Authentication + Cloud Firestore) |
+| Lokasi & peta | `expo-location`, `react-native-maps` (key Android lewat `GOOGLE_MAPS_API_KEY`) |
 | Animasi | `react-native-reanimated`, `react-native-worklets`, `react-native-gesture-handler` |
 | Tampilan | `expo-blur`, `expo-glass-effect`, `expo-image`, `expo-symbols`, `react-native-svg`, font Inter (`@expo-google-fonts/inter`) |
 | Penyimpanan lokal | `@react-native-async-storage/async-storage` (sesi login di perangkat) |
@@ -79,11 +80,15 @@ EXPO_PUBLIC_FIREBASE_PROJECT_ID=
 EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=
 EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 EXPO_PUBLIC_FIREBASE_APP_ID=
+# Opsional sampai peta Android dipakai; jangan commit nilai asli.
+GOOGLE_MAPS_API_KEY=
 ```
 
 Catatan:
 
-- Keenam variabel wajib terisi. Nilainya dibaca saat Metro dijalankan, jadi **setelah mengubah `.env`, restart dengan `npx expo start -c`**.
+- Keenam variabel `EXPO_PUBLIC_FIREBASE_*` wajib terisi. Nilainya dibaca saat Metro dijalankan, jadi **setelah mengubah `.env`, restart dengan `npx expo start -c`**.
+- `GOOGLE_MAPS_API_KEY` hanya dibutuhkan untuk build Android yang memakai peta native. Nilai ini dibaca oleh `app.config.ts`; plugin `react-native-maps` tidak dipasang bila key kosong. Jangan commit nilai asli.
+- Setelah mengubah key atau menambah paket native, build ulang development client. Fast Refresh tidak cukup.
 - `.env` sudah ada di `.gitignore`. Jangan di-commit.
 
 ### 3.3 Pasang Firestore Security Rules
@@ -104,15 +109,17 @@ Ringkasan aturan:
 | `users` | pemilik atau asisten | pemilik membuat profil `praktikan`; admin mengubah peran |
 | `classes` | semua yang login | asisten |
 | `enrollments` | pemilik atau asisten | asisten |
-| `sessions` | semua yang login | asisten |
+| `sessions` | semua yang login | asisten; status `open` wajib memakai laboratorium aktif |
+| `laboratories` | semua yang login | asisten (soft delete, tanpa hapus permanen) |
 | `attendance` | semua yang login | praktikan membuat sendiri (ID `{sessionId}_{uid}`, satu kali); update/hapus oleh asisten |
 | `permissionRequests` | pemilik atau asisten | praktikan membuat (`pending`); asisten meninjau |
 | `auditLogs` | asisten | semua yang login boleh membuat catatan atas namanya; tidak bisa diubah/dihapus |
+| `notificationLogs` | asisten | hanya Cloud Functions (Admin SDK) |
 | `invitationCodes` | semua yang login | admin membuat/menghapus |
 
 Catatan: rules `sessions` mengizinkan semua pengguna yang login membaca semua sesi. Pembatasan praktikan hanya melihat sesi kelasnya sendiri dilakukan di sisi aplikasi (lewat `enrollments`), bukan di rules.
 
-Untuk Sprint 3, `firestore.rules` akan ditambah aturan `laboratories`, `notificationLogs`, serta penolakan create langsung pada `attendance` (presensi lewat callable). Rancangannya ada di [`PRD.md`](PRD.md), termasuk SRS di Lampiran A.
+Sprint 3 sudah menambahkan rules `laboratories`, `notificationLogs`, dan validasi laboratorium aktif pada sesi. Penolakan create langsung `attendance` masih menunggu fitur callable attendance selesai; lihat [`PRD.md`](PRD.md).
 
 ## 4. Menjalankan aplikasi
 
@@ -157,6 +164,7 @@ Ada dua peran: `praktikan` dan `asisten`, ditambah penanda `isAdmin` untuk asist
 
 ```text
 .
+├── app.config.ts                Config dinamis: plugin Maps dan GOOGLE_MAPS_API_KEY
 ├── ai/                          Model sentimen lokal (model-edom.json, sentiment.js, README.md)
 ├── assets/
 │   ├── asisten/                 Ikon SVG area asisten
@@ -172,12 +180,15 @@ Ada dua peran: `praktikan` dan `asisten`, ditambah penanda `isAdmin` untuk asist
 │   │   ├── _layout.tsx          Root: provider, guard peran (Stack.Protected)
 │   │   ├── index.tsx            Redirect sesuai peran
 │   │   ├── (auth)/              login, register
-│   │   ├── (praktikan)/         tab Praktikan: jadwal, riwayat, izin, profil
+│   │   ├── (praktikan)/         tab Praktikan: jadwal, riwayat, izin, peta, profil
 │   │   ├── praktikan/sesi/[id]  detail sesi Praktikan
+│   │   ├── praktikan/presensi/[id]  placeholder halaman presensi lokasi (Dev 2)
 │   │   └── asisten/
 │   │       ├── (tabs)/          tab Asisten: beranda, jadwal, rekap, admin, profil
 │   │       ├── kelas/           kelola kelas (Dev 2)
 │   │       ├── peserta/         kelola peserta per kelas (Dev 2)
+│   │       ├── lab/             daftar dan form laboratorium (Dev 1)
+│   │       ├── peta.tsx         placeholder peta Asisten (Dev 3)
 │   │       ├── atur-sesi/       tambah, ubah, hapus jadwal dan sesi (Dev 2)
 │   │       ├── sesi/[id]        kelola sesi: buka/tutup dan daftar hadir
 │   │       └── izin/            daftar dan tinjau izin
@@ -190,6 +201,10 @@ Ada dua peran: `praktikan` dan `asisten`, ditambah penanda `isAdmin` untuk asist
 │   │   ├── firebase/            app, auth (web/native), firestore, audit (logAction), errors, converters
 │   │   ├── class-service.ts        CRUD kelas (Dev 2)
 │   │   ├── enrollment-service.ts   CRUD peserta/enrollment, cegah daftar ganda (Dev 2)
+│   │   ├── laboratory-service.ts   CRUD laboratorium dan listener (Dev 1)
+│   │   ├── laboratory-validation.ts Validasi field laboratorium (Dev 1)
+│   │   ├── geo.ts                  Haversine dan validasi koordinat/radius (Dev 1)
+│   │   ├── device-location.ts      Izin dan posisi foreground (Dev 1)
 │   │   ├── session-service.ts      CRUD jadwal dan sesi, query per kelas/asisten/praktikan (Dev 2)
 │   │   ├── praktikum-helpers.ts    Validasi tanggal dan jam, format WIB, pemetaan galat layanan (Dev 2)
 │   │   ├── session-actions.ts      Buka/tutup sesi + listener Firestore
@@ -201,6 +216,7 @@ Ada dua peran: `praktikan` dan `asisten`, ditambah penanda `isAdmin` untuk asist
 │   ├── screens/                 Isi layar, dipisah per area
 │   │   ├── asisten/             Beranda, jadwal, sesi, rekap, admin, izin + components/
 │   │   │   ├── kelas/           Daftar kelas, form tambah/ubah, konfirmasi hapus (Dev 2)
+│   │   │   ├── lab/             Daftar dan form laboratorium (Dev 1)
 │   │   │   ├── peserta/         Daftar peserta, tambah (cari nama/NIM), konfirmasi hapus (Dev 2)
 │   │   │   └── sesi/            Daftar sesi per kelas, form tambah/ubah, konfirmasi hapus (Dev 2)
 │   │   ├── praktikan/           Jadwal, detail, riwayat, izin + components/
@@ -234,21 +250,24 @@ Aturan umum:
 | Rute | Layar |
 |---|---|
 | `/login`, `/register` | Masuk dan registrasi |
-| `/asisten` | Beranda Asisten (menu: Jadwal, Rekap, Kelas, Peserta, Atur Sesi, Izin) |
+| `/asisten` | Beranda Asisten (menu: Jadwal, Rekap, Kelas, Peserta, Lab, Peta, Atur Sesi, Izin) |
 | `/asisten/jadwal` | Jadwal praktikum |
 | `/asisten/rekap` | Rekap presensi |
 | `/asisten/admin` | Kelola pengguna (khusus admin) |
 | `/asisten/profil` | Profil Asisten |
 | `/asisten/kelas` | Kelola kelas: tambah, ubah, hapus, lalu buka peserta kelas |
 | `/asisten/peserta?classId=<id>` | Kelola peserta satu kelas: tambah dan hapus |
-| `/asisten/atur-sesi` | Kelola jadwal dan sesi: tambah, ubah, hapus, filter per kelas |
+| `/asisten/lab`, `/asisten/lab/baru`, `/asisten/lab/[id]` | Daftar, tambah, dan ubah laboratorium |
+| `/asisten/peta` | Placeholder peta laboratorium Asisten |
+| `/asisten/atur-sesi` | Kelola jadwal dan sesi: tambah, ubah, hapus, filter per kelas; sesi baru wajib memilih lab |
 | `/asisten/sesi/[id]` | Kelola sesi: buka/tutup dan daftar hadir |
 | `/asisten/izin` dan `/asisten/izin/[id]` | Daftar dan tinjau izin |
 | `/(praktikan)` | Jadwal Praktikan |
-| `/(praktikan)/riwayat`, `/(praktikan)/izin`, `/(praktikan)/profil` | Riwayat, izin, profil |
+| `/(praktikan)/riwayat`, `/(praktikan)/izin`, `/(praktikan)/peta`, `/(praktikan)/profil` | Riwayat, izin, peta, profil |
 | `/praktikan/sesi/[id]` | Detail sesi dan tombol presensi |
+| `/praktikan/presensi/[id]` | Placeholder halaman presensi berbasis lokasi |
 
-Penjagaan rute ada di `src/app/_layout.tsx` (`Stack.Protected`): pengguna tanpa profil hanya melihat grup `(auth)`, praktikan hanya area praktikan, asisten hanya area asisten. Rute `kelas`, `peserta`, dan `atur-sesi` terdaftar di dalam grup asisten.
+Penjagaan rute ada di `src/app/_layout.tsx` (`Stack.Protected`): pengguna tanpa profil hanya melihat grup `(auth)`, praktikan hanya area praktikan, asisten hanya area asisten. Rute `kelas`, `peserta`, `lab`, `peta`, dan `atur-sesi` terdaftar di dalam grup asisten.
 
 ## 8. Struktur data Firestore
 
@@ -257,27 +276,30 @@ Penjagaan rute ada di `src/app/_layout.tsx` (`Stack.Protected`): pengguna tanpa 
 | `users/{uid}` | `name`, `nim`, `email`, `role`, `isAdmin`, `createdAt`, `updatedAt` |
 | `classes/{id}` | `name`, `description` (opsional), `assistantId`, `createdAt` |
 | `enrollments/{classId}_{uid}` | `classId`, `userId`, `userName`, `enrolledAt` |
-| `sessions/{id}` | `classId`, `title`, `date` (`YYYY-MM-DD`), `startTime`, `endTime` (`HH:MM`), `room`, `assistantId`, `status` (`scheduled` / `open` / `closed`), `createdAt`, `openedAt`, `closedAt` |
+| `laboratories/{id}` | `name`, `code`, `building`, `floor`, `room`, `latitude`, `longitude`, `radiusMeters` (10–500), `description`, `isActive`, `createdAt`, `updatedAt`, `updatedBy` |
+| `sessions/{id}` | `classId`, `title`, `date` (`YYYY-MM-DD`), `startTime`, `endTime` (`HH:MM`), `room`, `assistantId`, `laboratoryId`, `status` (`scheduled` / `open` / `closed`), `createdAt`, `openedAt`, `closedAt` |
 | `attendance/{sessionId}_{uid}` | `sessionId`, `userId`, `userName`, `userNim`, `recordedAt` |
 | `permissionRequests/{id}` | `userId`, `userName`, `sessionId`, `reason`, `status` (`pending` / `approved` / `rejected`), hasil AI (`aiLabel`, `aiConfidence`), peninjauan (`reviewedBy`, `reviewedAt`, `reviewNote`), `createdAt` |
 | `auditLogs/{id}` | `action`, `collection`, `docId`, `actorUid`, `actorRole`, `before`, `after`, `timestamp` |
 
-Alur status sesi: `scheduled → open → closed` (tidak ada transisi lain). Sesi baru dari layar Atur Sesi selalu berstatus `scheduled`.
+Alur status sesi: `scheduled → open → closed` (tidak ada transisi lain). Sesi baru dari layar Atur Sesi selalu berstatus `scheduled` dan wajib memilih laboratorium aktif. Sesi lama tanpa `laboratoryId` tetap bisa dibaca, tetapi tidak dapat dibuka sebelum lab diisi.
 
-Hubungan antar data: kelas memiliki banyak sesi (`sessions.classId`) dan banyak peserta (`enrollments.classId`). Praktikan hanya melihat sesi dari kelas tempat dia terdaftar di `enrollments`. ID enrollment berupa `{classId}_{uid}` sehingga satu praktikan tidak bisa terdaftar dua kali di kelas yang sama.
+Hubungan antar data: kelas memiliki banyak sesi (`sessions.classId`) dan banyak peserta (`enrollments.classId`). Sesi menunjuk laboratorium lewat `sessions.laboratoryId`. Praktikan hanya melihat sesi dari kelas tempat dia terdaftar di `enrollments`. ID enrollment berupa `{classId}_{uid}` sehingga satu praktikan tidak bisa terdaftar dua kali di kelas yang sama.
 
 ### Membuat data untuk pengujian
 
 Semua data praktikum kini dibuat lewat aplikasi, tanpa perlu Firebase Console. Urutannya mengikuti alur Dev 2:
 
-1. Masuk sebagai **asisten**, buka menu **Kelas**, lalu tambah kelas (nama wajib, deskripsi opsional).
-2. Dari daftar kelas, buka **Peserta**, lalu tambah praktikan dengan mencari nama atau NIM. Praktikan harus sudah registrasi lebih dulu.
-3. Buka menu **Atur Sesi**, pilih kelas, lalu tambah sesi. Aturan isian:
+1. Masuk sebagai **asisten**, buka menu **Lab**, lalu tambah laboratorium: isi nama, kode, gedung, ruang, koordinat, dan radius 10–500 m. Lab baru aktif secara default.
+2. Buka menu **Kelas**, lalu tambah kelas (nama wajib, deskripsi opsional).
+3. Dari daftar kelas, buka **Peserta**, lalu tambah praktikan dengan mencari nama atau NIM. Praktikan harus sudah registrasi lebih dulu.
+4. Buka menu **Atur Sesi**, pilih kelas, lalu tambah sesi. Aturan isian:
    - Judul dan ruangan wajib diisi.
+   - Laboratorium wajib dipilih dan harus aktif.
    - Tanggal berformat `YYYY-MM-DD` dan harus tanggal kalender yang ada (contoh `2026-11-20`).
    - Jam berformat `HH:mm` 24 jam, dan jam selesai harus lebih akhir dari jam mulai.
-4. Masuk sebagai praktikan yang sudah didaftarkan. Sesi tersebut muncul di jadwal praktikan.
-5. Asisten membuka sesi dari `/asisten/sesi/[id]`, praktikan presensi, lalu asisten menutup sesi.
+5. Masuk sebagai praktikan yang sudah didaftarkan. Sesi tersebut muncul di jadwal praktikan.
+6. Asisten membuka sesi dari `/asisten/sesi/[id]`, praktikan presensi, lalu asisten menutup sesi.
 
 Alternatif lewat Firebase Console (misalnya untuk mengisi data cepat): buat dokumen di koleksi `sessions` dengan isi berikut, lalu pastikan praktikan terdaftar di `enrollments` untuk `classId` yang sama.
 
@@ -289,6 +311,7 @@ startTime:   "08:00"
 endTime:     "09:40"
 room:        "Lab Komputer A"
 assistantId: "<uid asisten>"
+laboratoryId: "<id dokumen laboratorium>"
 status:      "scheduled"
 createdAt:   <timestamp>
 ```
@@ -299,17 +322,21 @@ Selama koleksi `sessions` kosong, jadwal Asisten menampilkan data contoh. Begitu
 
 Berdasarkan isi kode saat ini.
 
-> Sprint 3 masih berupa rencana dan belum diimplementasikan. Seluruh rencana, SRS, UAT, dan pembagian tugas ada di satu dokumen: [`PRD.md`](PRD.md).
+> Sprint 3 sudah dimulai sebagai **foundation**: data laboratorium, integrasi lab ke sesi, helper lokasi, rules lab/sesi, dan route placeholder sudah ada. Presensi berbasis lokasi, peta native, dan notifikasi masih dikerjakan Dev 2–4. Rencana lengkap ada di [`PRD.md`](PRD.md).
 
 | Area | Keadaan |
 |---|---|
 | **Dev 1: Fondasi & auth** | Ada: setup Firebase, login/registrasi/logout, profil `users`, auth context dan persist sesi, navigasi per peran, `logAction`, pemetaan galat Firebase, komponen loading/empty/error. |
+| **Dev 1: Fondasi Sprint 3** | Ada: CRUD laboratorium + validasi, `listenAllClasses`, helper Haversine dan validasi radius, `device-location` foreground, `laboratoryId` pada sesi, guard lab aktif saat buka sesi, rules `laboratories` + validasi sesi, dan route placeholder peta/presensi. |
 | **Dev 2: Data praktikum** | Ada: CRUD kelas (`class-service`, layar Kelas), CRUD peserta (`enrollment-service`, layar Peserta, cegah daftar ganda), CRUD jadwal dan sesi (`session-service`, layar Atur Sesi, validasi tanggal dan jam), filter jadwal dan riwayat praktikan lewat enrollment (`usePraktikanSchedule`), dan audit log pada setiap tambah/ubah/hapus. Sebagian: penggantian seluruh data dummy ke Firestore belum tuntas (lihat keterbatasan). |
-| **Dev 3: Sesi, presensi, rules** | Ada: buka/tutup sesi dengan audit log, presensi hanya saat sesi `open`, pencegahan presensi ganda, rekap realtime, `firestore.rules` untuk semua koleksi. |
+| **Dev 3: Sesi & presensi** | Ada: buka/tutup sesi dengan audit log, presensi hanya saat sesi `open`, pencegahan presensi ganda, rekap realtime. |
 | **Dev 4: Izin & AI** | Ada: form izin, modul AI dengan timeout dan fallback, penyimpanan `permissionRequests`, riwayat izin praktikan, daftar dan peninjauan izin oleh asisten. |
 
 Keterbatasan yang perlu diketahui:
 
+- **Peta masih placeholder.** Tab/menu Peta sudah bisa dibuka, tetapi layarnya belum memuat `MapView`; implementasi marker dan panel ada di Dev 3. Build Android yang memakai peta native memerlukan `GOOGLE_MAPS_API_KEY` yang valid.
+- **Presensi berbasis lokasi belum aktif.** Halaman `/praktikan/presensi/[id]` masih placeholder dan callable `submitAttendance` masih melempar `unimplemented`; presensi saat ini memakai jalur langsung yang lama. Validasi jarak/akurasi/mock location baru berlaku setelah Dev 2 menyelesaikan callable.
+- **Rules `attendance` masih mengizinkan create langsung**; penolakan create menunggu fitur callable selesai. Rules `notificationLogs` sudah ditambahkan, tetapi baru berlaku setelah rules dideploy ulang.
 - **Sebagian layar masih memakai data contoh**: beranda dan rekap Asisten (`AssistantPreviewProvider`), serta sebagian detail dan presensi Praktikan (`SessionContext` yang diisi `src/data/dummy.ts`). Data ini hilang saat aplikasi dimuat ulang. Jadwal Asisten (`/asisten/jadwal`) memakai Firestore bila ada sesi, dan kembali ke data contoh bila koleksi `sessions` kosong.
 - Layar jadwal Asisten menampilkan satu tanggal saja (tanggal sesi pertama dari Firestore). Untuk melihat semua sesi dan mengelolanya, pakai layar **Atur Sesi**.
 - Layar **Atur Sesi** tanpa filter kelas hanya menampilkan sesi milik asisten yang sedang login (`assistantId`).
@@ -348,7 +375,7 @@ npx eas-cli@latest login
 npx eas-cli@latest build --profile development --platform android
 ```
 
-`app.json` sudah berisi `owner` dan `extra.eas.projectId` milik tim. Agar bisa membangun lewat EAS, akunmu harus punya akses ke organisasi tersebut, atau ganti dua nilai itu dengan milikmu sendiri. Variabel `EXPO_PUBLIC_*` juga harus diset di EAS (secret/environment variable) agar ikut masuk ke build.
+`app.json` sudah berisi `owner` dan `extra.eas.projectId` milik tim. Agar bisa membangun lewat EAS, akunmu harus punya akses ke organisasi tersebut, atau ganti dua nilai itu dengan milikmu sendiri. Variabel `EXPO_PUBLIC_*` juga harus diset di EAS (secret/environment variable) agar ikut masuk ke build. Untuk build Android dengan peta native, set juga `GOOGLE_MAPS_API_KEY` di environment EAS; key tidak disimpan di repository.
 
 ## 12. Pemecahan masalah
 
@@ -357,7 +384,8 @@ npx eas-cli@latest build --profile development --platform android
 | `Unable to resolve module expo-blur` (atau modul lain) | Dependensi belum terpasang. Jalankan `npm install`, lalu `npx expo start -c`. Jika baru menambah paket native di development build, build ulang. |
 | Layar "Konfigurasi Firebase belum lengkap" | Ada variabel `EXPO_PUBLIC_FIREBASE_*` yang kosong atau `.env` belum dibuat. Isi lalu restart dengan `-c`. |
 | "Metode login belum diaktifkan" | Aktifkan Email/Password di Firebase Authentication. |
-| "Kamu tidak punya akses untuk tindakan ini" | Rules belum dipasang, atau akun belum berperan `asisten` untuk aksi yang butuh itu. |
+| "Kamu tidak punya akses untuk tindakan ini" | Rules belum dipasang, atau akun belum berperan `asisten` untuk aksi yang butuh itu. Pastikan rules terbaru sudah dideploy; `laboratories` dan validasi sesi baru ada di Sprint 3. |
+| Peta Android kosong atau build gagal memuat Maps | `GOOGLE_MAPS_API_KEY` kosong/tidak valid, atau key dibatasi untuk package/SHA-1 lain. Isi key, lalu build ulang development client. |
 | Login berhasil tetapi muncul "Profil tidak ditemukan" | Dokumen `users/{uid}` belum ada. Buat lewat registrasi di aplikasi, atau tambahkan manual di Firestore. |
 | Tab Admin tidak muncul | `isAdmin` pada profil belum `true`. Keluar dan masuk lagi setelah mengubahnya. |
 | Jadwal Asisten menampilkan data contoh | Koleksi `sessions` masih kosong. Tambahkan sesi lewat layar Atur Sesi (bagian 8). |

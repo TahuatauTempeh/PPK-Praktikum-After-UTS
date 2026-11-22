@@ -8,7 +8,7 @@ import {
   validateTimeRange,
 } from '@/lib/praktikum-helpers';
 import { tokens, useTheme, useThemedStyles, type Theme } from '@/theme';
-import { type PracticumClass, type PraktikumSession } from '@/types';
+import { type Laboratory, type PracticumClass, type PraktikumSession } from '@/types';
 
 import { AssistantSheet } from '../components/assistant-sheet';
 import { AssistantText } from '../components/assistant-text';
@@ -21,10 +21,13 @@ export type SessionFormValues = {
   startTime: string;
   endTime: string;
   room: string;
+  laboratoryId: string;
 };
 
 type Props = {
   classes: readonly PracticumClass[];
+  /** Semua laboratorium; yang nonaktif disembunyikan kecuali sedang dipakai sesi ini. */
+  laboratories: readonly Laboratory[];
   initialClassId?: string | null;
   initialSession: PraktikumSession | null;
   onCancel: () => void;
@@ -34,6 +37,7 @@ type Props = {
 /** Bottom sheet untuk membuat atau mengubah jadwal sesi praktikum. */
 export function SessionFormSheet({
   classes,
+  laboratories,
   initialClassId,
   initialSession,
   onCancel,
@@ -54,10 +58,22 @@ export function SessionFormSheet({
   const [startTime, setStartTime] = useState(initialSession?.startTime ?? '08:00');
   const [endTime, setEndTime] = useState(initialSession?.endTime ?? '10:00');
   const [room, setRoom] = useState(initialSession?.room ?? '');
+  const [laboratoryId, setLaboratoryId] = useState(initialSession?.laboratoryId ?? '');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const heading = isEditing ? 'Edit Sesi Praktikum' : 'Tambah Sesi Baru';
+  const originalLabId = initialSession?.laboratoryId ?? '';
+  const labChoices = laboratories.filter(item => item.isActive || item.id === originalLabId);
+  const labMissing = isEditing && originalLabId === '' && laboratoryId === '';
+  const originalLabUnknown =
+    originalLabId !== '' && !laboratories.some(item => item.id === originalLabId);
+
+  function pickLaboratory(item: Laboratory) {
+    setLaboratoryId(item.id);
+    if (!room.trim()) setRoom(item.name);
+    if (error) setError(null);
+  }
 
   async function handleSave(closeSheet: (action?: () => void) => void) {
     if (submitting) return;
@@ -69,6 +85,11 @@ export function SessionFormSheet({
       const isoDate = parseDateInput(date);
       const times = validateTimeRange(startTime, endTime);
       const cleanRoom = requireNonEmpty(room, 'Ruangan');
+      // Sesi baru wajib punya laboratorium. Sesi lama tanpa lab boleh disimpan dulu,
+      // tetapi tidak dapat dibuka sebelum lab diisi (guard di openSession).
+      if (!laboratoryId && !(isEditing && originalLabId === '')) {
+        throw new Error('Pilih laboratorium.');
+      }
 
       setSubmitting(true);
       await onSubmit({
@@ -78,6 +99,7 @@ export function SessionFormSheet({
         startTime: times.startTime,
         endTime: times.endTime,
         room: cleanRoom,
+        laboratoryId,
       });
       closeSheet(onCancel);
     } catch (err) {
@@ -98,7 +120,7 @@ export function SessionFormSheet({
               <AssistantText style={styles.title} accessibilityRole="header">{heading}</AssistantText>
               <AssistantText variant="caption" tone="secondary">
                 {isEditing
-                  ? 'Perbarui kelas, topik, tanggal, jam, atau ruang sesi.'
+                  ? 'Perbarui kelas, topik, tanggal, jam, laboratorium, atau ruang sesi.'
                   : 'Sesi baru otomatis berstatus Dijadwalkan (scheduled).'}
               </AssistantText>
             </View>
@@ -218,6 +240,52 @@ export function SessionFormSheet({
             </View>
 
             <View style={styles.field}>
+              <AssistantText variant="label" style={styles.fieldLabel}>Laboratorium *</AssistantText>
+              {labChoices.length === 0 ? (
+                <AssistantText variant="caption" tone="secondary">
+                  Belum ada laboratorium aktif. Tambahkan lebih dulu lewat menu Lab.
+                </AssistantText>
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.classChips}>
+                  {labChoices.map(item => {
+                    const selected = item.id === laboratoryId;
+                    return (
+                      <Pressable
+                        key={item.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Laboratorium ${item.name}${item.isActive ? '' : ', nonaktif'}`}
+                        accessibilityState={{ selected }}
+                        disabled={submitting}
+                        onPress={() => pickLaboratory(item)}
+                        style={({ pressed }) => [
+                          styles.classChip,
+                          selected && styles.classChipActive,
+                          pressed && styles.pressed,
+                        ]}>
+                        <AssistantText style={[styles.classChipText, selected && styles.white]}>
+                          {item.isActive ? item.name : `${item.name} (nonaktif)`}
+                        </AssistantText>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              )}
+              {labMissing && (
+                <AssistantText variant="caption" style={styles.warningText}>
+                  Laboratorium belum diatur. Sesi ini tidak dapat dibuka sebelum laboratorium dipilih.
+                </AssistantText>
+              )}
+              {originalLabUnknown && (
+                <AssistantText variant="caption" style={styles.warningText}>
+                  Laboratorium sesi ini tidak ditemukan. Pilih laboratorium yang masih ada.
+                </AssistantText>
+              )}
+            </View>
+
+            <View style={styles.field}>
               <AssistantText variant="label" style={styles.fieldLabel}>Ruangan *</AssistantText>
               <TextInput
                 value={room}
@@ -292,6 +360,7 @@ const gaya = (theme: Theme) => StyleSheet.create({
   fields: { gap: 12 },
   field: { gap: 6 },
   fieldLabel: { fontSize: 13, lineHeight: 18 },
+  warningText: { color: theme.colors.error, fontFamily: tokens.fonts.medium },
   classChips: { flexDirection: 'row', gap: 8, paddingVertical: 2 },
   classChip: {
     minHeight: 38,

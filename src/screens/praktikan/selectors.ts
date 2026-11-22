@@ -60,6 +60,7 @@ export function toPraktikanSession(
     room: session.room,
     assistantId: session.assistantId,
     status: session.status,
+    laboratoryId: session.laboratoryId,
   };
 }
 

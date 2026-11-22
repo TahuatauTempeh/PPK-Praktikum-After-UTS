@@ -8,4 +8,5 @@ import { initializeApp } from 'firebase-admin/app';
 // Inisialisasi Firebase Admin SDK singleton
 initializeApp();
 
+export { submitAttendance } from './attendance';
 export { onSessionUpdated, onPermissionReviewed } from './notifications';

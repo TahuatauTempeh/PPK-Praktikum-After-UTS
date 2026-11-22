@@ -9,8 +9,9 @@ Sources of truth:
 
 - `README.md` — setup, routes, Firestore collections, current behavior, known
   limitations.
-- `PRD.md` — Sprint 3 scope, SRS, UAT, and four-developer ownership. Sprint 3 is
-  still a plan; see “Sprint boundaries” below.
+- `PRD.md` — Sprint 3 scope, SRS, UAT, and four-developer ownership. The Sprint 3
+  foundation is implemented; the map, location attendance, and notification
+  features are still in progress. See “Sprint boundaries” below.
 - `DESIGN.md` — visual system, tokens, component patterns, accessibility.
 
 The sprint archives in `docs/` (`sprint-1-rancangan-pembagian-tugas.md` and
@@ -22,15 +23,22 @@ Sprint 3 features unless the task explicitly asks for them.
 
 ## Sprint boundaries
 
-The repository implements Sprint 2: Firebase auth, role-based navigation, class
-and enrollment CRUD, session CRUD, attendance, recap, permissions, and the local
-sentiment model.
+The repository implements Sprint 2 plus the Sprint 3 **foundation**: Firebase
+auth, role-based navigation, class/enrollment/session CRUD, attendance, recap,
+permissions, the local sentiment model, laboratory CRUD, session-to-laboratory
+integration, location helpers, and laboratory/session security rules.
 
-Sprint 3 in `PRD.md` is **not implemented**. It plans `laboratories`,
-`notificationLogs`, location-based attendance through callable Cloud Functions,
-`expo-location`, `react-native-maps`, and `expo-notifications`. Do not assume
-those APIs, collections, or packages exist. Do not add callable attendance or
-rules that reject direct writes before the Cloud Functions side exists.
+Sprint 3 features still in progress:
+
+- Map screens are placeholders; `react-native-maps` is installed but no
+  `MapView` is rendered yet.
+- `expo-location` and `device-location.ts` exist, but location-based attendance
+  is not active. The `/praktikan/presensi/[id]` route is a placeholder and the
+  `submitAttendance` callable still throws `unimplemented`.
+- Notification rules exist (`notificationLogs` is read-only for assistants and
+  written by Cloud Functions), but the callable attendance lock-down is not
+  finalized. Do not make the client reject direct attendance writes until Dev 2's
+  callable path is ready.
 
 ## Expo has changed — do not trust your training data
 
@@ -62,6 +70,9 @@ Fill all six values in `.env` from the team Firebase project’s Web App config
 `EXPO_PUBLIC_FIREBASE_PROJECT_ID`, `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET`,
 `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`, and `EXPO_PUBLIC_FIREBASE_APP_ID`.
 
+- `GOOGLE_MAPS_API_KEY` is optional until the Android map screen uses a native
+  map. `app.config.ts` adds the `react-native-maps` plugin only when this value
+  is set. Do not commit the real key.
 - Metro reads `.env` at startup. After changing it, restart with
   `npx expo start -c`.
 - If any key is empty, the app renders “Konfigurasi Firebase belum lengkap”
@@ -143,9 +154,11 @@ Keep routes, screens, services, and presentation separate. Do not create a
 
 - **Routes:** `src/app/` only. Every file is a screen; `_layout.tsx` defines
   navigators. The root `src/app/_layout.tsx` mounts providers and
-  `Stack.Protected` role guards.
+  `Stack.Protected` role guards. Do not put reusable components under
+  `src/app/`; Expo Router treats every file there as a route.
 - **Screens:** `src/screens/` contains the UI implementation, grouped by area
-  (`asisten/`, `praktikan/`, `shared/`).
+  (`asisten/`, `praktikan/`, `shared/`). This includes the lab list/form and the
+  praktikan tab bar.
 - **Shared UI:** `src/components/` for Toast, ConfirmModal, LoadingState,
   ErrorState, BottomSheet, and form primitives.
 - **State:** `src/context/` for auth, session, theme, blur target, and tab-bar
@@ -222,11 +235,15 @@ directly from screens.
   transition and write an audit log.
 - New sessions from the Atur Sesi screen always start as `scheduled`.
 - Required fields: class, title, date (`YYYY-MM-DD`), start time, end time,
-  room, and assistant ID. Validate calendar dates and require `endTime >
-  startTime` with the helpers in `src/lib/praktikum-helpers.ts`.
+  room, assistant ID, and an active `laboratoryId`. Validate calendar dates and
+  require `endTime > startTime` with the helpers in
+  `src/lib/praktikum-helpers.ts`. Sessions created before Sprint 3 may have an
+  empty `laboratoryId`; they can be edited but cannot be opened until a lab is
+  selected.
 - Only assistants may write sessions; Firestore rules allow all authenticated
   users to read them, so per-class filtering in the app is not a security
-  boundary.
+  boundary. Rules require an existing, active laboratory when a session is
+  created or opened.
 
 ### Attendance
 
@@ -293,8 +310,9 @@ directly from screens.
 
 - `firestore.rules` is the authoritative access control layer. Client checks are
   UX guards, not a substitute.
-- The rules cover `users`, `classes`, `enrollments`, `sessions`, `attendance`,
-  `permissionRequests`, `auditLogs`, and `invitationCodes`.
+- The rules cover `users`, `classes`, `enrollments`, `sessions`, `laboratories`,
+  `notificationLogs`, `attendance`, `permissionRequests`, `auditLogs`, and
+  `invitationCodes`. The callable attendance lock-down is still pending.
 - Deploy rules to the team project after any change and test the affected role
   paths. CI does not run a Firestore emulator.
 - Firestore has no schema. Keep `src/types/index.ts`, converters, and service
@@ -322,7 +340,8 @@ Profiles live in `eas.json`: `development` (development client, internal),
 - `app.json` pins `owner` and `extra.eas.projectId`. You need access to the team
   organization, or replace both values in a fork.
 - Set all `EXPO_PUBLIC_FIREBASE_*` variables in the EAS environment so they are
-  inlined into the build.
+  inlined into the build. Set `GOOGLE_MAPS_API_KEY` too when the Android build
+  uses the native map; `app.config.ts` reads it at config time.
 - There is no release workflow in this repository. Builds are manual; do not
   describe an automatic production release that does not exist.
 
@@ -342,8 +361,12 @@ Profiles live in `eas.json`: `development` (development client, internal),
 
 ## Known limitations and gotchas
 
-- **Sprint 3 is not implemented.** Do not treat `PRD.md` acceptance criteria as
-  current behavior.
+- **Sprint 3 is partially implemented.** Laboratory CRUD, session-to-lab
+  integration, geo helpers, and lab/session rules exist. Map screens, location
+  attendance, and notifications are still in progress; do not treat all
+  `PRD.md` acceptance criteria as current behavior.
+- **Map screens are placeholders.** The tab/menu routes exist, but no `MapView`
+  is rendered. The Android Google Maps key comes from `GOOGLE_MAPS_API_KEY`.
 - **Firebase project is on Spark.** `praktikum-ppk-3` does not have billing
   enabled. Auth and Firestore work, but Cloud Functions from Sprint 3 cannot be
   deployed until the project is upgraded to Blaze.
@@ -363,7 +386,8 @@ Profiles live in `eas.json`: `development` (development client, internal),
 - **`listenSessionsByClass` needs a composite index** (`classId`, `date`,
   `startTime`) and is currently unused. Add the index before relying on it.
 - **Attendance enrollment is not enforced by rules.** This is a known security
-  gap until the Sprint 3 callable attendance path lands.
+  gap until the Sprint 3 callable attendance path lands. Direct attendance
+  writes still work while `submitAttendance` is a stub.
 - **`docs/` is local-only, except the sprint archives.** `.gitignore` ignores
   `docs/*` but tracks `docs/sprint-*.md`. Those archives
   (`docs/sprint-1-rancangan-pembagian-tugas.md`, `docs/sprint-2-plan.md`) describe

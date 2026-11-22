@@ -3,7 +3,7 @@
  * Dipasang lewat prop tabBar di Tabs, jadi tab tetap dikelola Expo Router.
  */
 
-import { router, Tabs } from 'expo-router';
+import { router, Tabs, type Href } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import React, { ComponentProps, useEffect, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -20,13 +20,15 @@ const TAB: Record<string, { label: string; ikon: IkonNama }> = {
   index: { label: 'Jadwal', ikon: 'jadwal' },
   riwayat: { label: 'Riwayat', ikon: 'riwayat' },
   izin: { label: 'Izin', ikon: 'izin' },
+  peta: { label: 'Peta', ikon: 'lokasi' },
   profil: { label: 'Profil', ikon: 'profil' },
 };
 
-const RUTE: Record<string, '/(praktikan)' | '/(praktikan)/riwayat' | '/(praktikan)/izin' | '/(praktikan)/profil'> = {
+const RUTE: Record<string, '/(praktikan)' | '/(praktikan)/riwayat' | '/(praktikan)/izin' | '/(praktikan)/peta' | '/(praktikan)/profil'> = {
   index: '/(praktikan)',
   riwayat: '/(praktikan)/riwayat',
   izin: '/(praktikan)/izin',
+  peta: '/(praktikan)/peta',
   profil: '/(praktikan)/profil',
 };
 
@@ -113,7 +115,7 @@ export function NavigasiPraktikan({ state, emitter, insets }: TabBarProps) {
               const warna = terpilih ? theme.colors.primary : theme.colors.iconMuted;
               const onPress = () => {
                 const kejadian = emitter.emit({ type: 'tabPress', target: r.key, canPreventDefault: true });
-                if (!terpilih && !kejadian.defaultPrevented) router.navigate(RUTE[r.name]);
+                if (!terpilih && !kejadian.defaultPrevented) router.navigate(RUTE[r.name] as Href);
               };
               return (
                 <Pressable

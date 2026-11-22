@@ -46,6 +46,7 @@ export function useSesiIzin(): { sessions: Session[]; keadaan: KeadaanSesi } {
                 endTime: teks(data.endTime, '00:00'),
                 room: teks(data.room),
                 assistantId: teks(data.assistantId),
+                laboratoryId: teks(data.laboratoryId),
                 status: status(data.status),
                 createdAt: '',
               };

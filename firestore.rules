@@ -24,6 +24,31 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == uid;
     }
 
+    function laboratoryIsActive(labId) {
+      return labId is string
+        && labId != ''
+        && exists(/databases/$(database)/documents/laboratories/$(labId))
+        && get(/databases/$(database)/documents/laboratories/$(labId)).data.isActive == true;
+    }
+
+    function isValidLaboratory(data) {
+      return data.keys().hasAll([
+          'name', 'code', 'building', 'floor', 'room', 'latitude', 'longitude',
+          'radiusMeters', 'description', 'isActive', 'createdAt', 'updatedAt', 'updatedBy'
+        ])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 80
+        && data.code is string && data.code.size() > 0 && data.code.size() <= 20
+        && data.building is string && data.building.size() > 0 && data.building.size() <= 80
+        && data.floor is string && data.floor.size() <= 20
+        && data.room is string && data.room.size() > 0 && data.room.size() <= 40
+        && data.latitude is number && data.latitude >= -90 && data.latitude <= 90
+        && data.longitude is number && data.longitude >= -180 && data.longitude <= 180
+        && data.radiusMeters is number && data.radiusMeters >= 10 && data.radiusMeters <= 500
+        && data.description is string && data.description.size() <= 200
+        && data.isActive is bool
+        && data.updatedBy is string && data.updatedBy.size() > 0;
+    }
+
     // ─── 1. Users Collection ────────────────────────────────────────────────
 
     match /users/{uid} {
@@ -62,10 +87,43 @@ service cloud.firestore {
     // ─── 4. Sessions Collection (Dev 2 & Dev 3) ─────────────────────────────
     // Hanya asisten yang bisa create, update (buka/tutup sesi), atau delete.
     // Praktikan hanya bisa read.
+    // Sprint 3: dokumen yang berstatus 'open' wajib merujuk laboratorium yang ada.
 
     match /sessions/{sessionId} {
       allow read: if isAuthenticated();
-      allow write: if isAsisten();
+      allow create: if isAsisten()
+        && request.resource.data.status == 'scheduled'
+        && laboratoryIsActive(request.resource.data.laboratoryId);
+      allow update: if isAsisten()
+        && (
+          request.resource.data.status == resource.data.status
+          || (resource.data.status == 'scheduled' && request.resource.data.status == 'open')
+          || (resource.data.status == 'open' && request.resource.data.status == 'closed')
+        )
+        && (
+          request.resource.data.status != 'open'
+          || laboratoryIsActive(request.resource.data.laboratoryId)
+        );
+      allow delete: if isAsisten();
+    }
+
+    // ─── 4a. Laboratories Collection (Dev 1) ────────────────────────────────
+    // Dibaca semua pengguna login agar peta dan pemilih sesi bekerja. Hanya
+    // asisten yang boleh menulis; lab tidak dihapus permanen (soft delete).
+
+    match /laboratories/{labId} {
+      allow read: if isAuthenticated();
+      allow create: if isAsisten()
+        && isValidLaboratory(request.resource.data)
+        && request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if isAsisten()
+        && isValidLaboratory(request.resource.data)
+        && request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
     }
 
     // ─── 5. Attendance Collection (Dev 3) ───────────────────────────────────
@@ -76,6 +134,11 @@ service cloud.firestore {
     //  - docId harus gabungan sessionId + '_' + uid
     //  - Praktikan hanya bisa create (update ditolak -> cegah presensi ganda)
     //  - Hanya asisten yang bisa update/delete catatan presensi
+    //
+    // CATATAN DEPLOY SPRINT 3: aturan create di bawah masih aturan Sprint 2 supaya
+    // presensi tetap berjalan sebelum callable `submitAttendance` ter-deploy.
+    // Setelah callable aktif (CP4), ganti baris `allow create` menjadi `allow create: if false;`
+    // dan deploy ulang rules. Jangan membalik urutan ini.
 
     match /attendance/{attendanceId} {
       allow read: if isAuthenticated();
@@ -106,7 +169,15 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // ─── 8. InvitationCodes Collection (Dev 1) ──────────────────────────────
+    // ─── 8. NotificationLogs Collection (Sprint 3, Dev 4 via Functions) ─────
+    // Hanya Cloud Functions (Admin SDK) yang menulis; asisten boleh membaca.
+
+    match /notificationLogs/{logKey} {
+      allow read: if isAsisten();
+      allow write: if false;
+    }
+
+    // ─── 9. InvitationCodes Collection (Dev 1) ──────────────────────────────
 
     match /invitationCodes/{code} {
       allow read: if isAuthenticated();
