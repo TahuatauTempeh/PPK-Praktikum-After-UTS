@@ -92,4 +92,16 @@ describe('<DetailSesiScreen /> Sprint 3', () => {
     expect(getByText('Lihat riwayat kehadiran')).toBeTruthy();
     expect(queryByText('Buka halaman presensi')).toBeNull();
   });
+
+  it('menampilkan nama asisten dari sesi, bukan dari data dummy', async () => {
+    siapkan({ ...SESI, assistantName: 'Raka Pratama' });
+    const { getByText } = await render(<DetailSesiScreen />);
+    expect(getByText('Raka Pratama')).toBeTruthy();
+  });
+
+  it('menulis Belum ditentukan untuk sesi lama tanpa nama asisten', async () => {
+    siapkan(SESI);
+    const { getByText } = await render(<DetailSesiScreen />);
+    expect(getByText('Belum ditentukan')).toBeTruthy();
+  });
 });

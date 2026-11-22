@@ -277,7 +277,7 @@ Penjagaan rute ada di `src/app/_layout.tsx` (`Stack.Protected`): pengguna tanpa 
 | `classes/{id}` | `name`, `description` (opsional), `assistantId`, `createdAt` |
 | `enrollments/{classId}_{uid}` | `classId`, `userId`, `userName`, `enrolledAt` |
 | `laboratories/{id}` | `name`, `code`, `building`, `floor`, `room`, `latitude`, `longitude`, `radiusMeters` (10–500), `description`, `isActive`, `createdAt`, `updatedAt`, `updatedBy` |
-| `sessions/{id}` | `classId`, `title`, `date` (`YYYY-MM-DD`), `startTime`, `endTime` (`HH:MM`), `room`, `assistantId`, `laboratoryId`, `status` (`scheduled` / `open` / `closed`), `createdAt`, `openedAt`, `closedAt` |
+| `sessions/{id}` | `classId`, `title`, `date` (`YYYY-MM-DD`), `startTime`, `endTime` (`HH:MM`), `room`, `assistantId`, `assistantName` (nama asisten saat sesi dibuat, kosong pada sesi lama), `laboratoryId`, `status` (`scheduled` / `open` / `closed`), `createdAt`, `openedAt`, `closedAt` |
 | `attendance/{sessionId}_{uid}` | `sessionId`, `userId`, `userName`, `userNim`, `recordedAt` |
 | `permissionRequests/{id}` | `userId`, `userName`, `sessionId`, `reason`, `status` (`pending` / `approved` / `rejected`), hasil AI (`aiLabel`, `aiConfidence`), peninjauan (`reviewedBy`, `reviewedAt`, `reviewNote`), `createdAt` |
 | `auditLogs/{id}` | `action`, `collection`, `docId`, `actorUid`, `actorRole`, `before`, `after`, `timestamp` |
@@ -311,6 +311,7 @@ startTime:   "08:00"
 endTime:     "09:40"
 room:        "Lab Komputer A"
 assistantId: "<uid asisten>"
+assistantName: "<nama asisten>"
 laboratoryId: "<id dokumen laboratorium>"
 status:      "scheduled"
 createdAt:   <timestamp>

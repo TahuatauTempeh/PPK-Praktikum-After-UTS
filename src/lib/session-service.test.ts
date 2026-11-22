@@ -23,7 +23,7 @@ jest.mock('firebase/firestore', () => ({
 
 jest.mock('@/lib/firebase/firestore', () => ({
   getDb: jest.fn(() => ({})),
-  COLLECTIONS: { sessions: 'sessions', laboratories: 'laboratories' },
+  COLLECTIONS: { sessions: 'sessions', laboratories: 'laboratories', users: 'users' },
 }));
 
 jest.mock('@/lib/firebase/audit', () => ({
@@ -85,6 +85,7 @@ describe('createSession laboratorium', () => {
   it('menyimpan laboratoryId pada sesi baru yang memakai lab aktif', async () => {
     getDocMock
       .mockResolvedValueOnce(snapshot('lab-a', { isActive: true }))
+      .mockResolvedValueOnce(snapshot('a1', { name: ' Raka Pratama ' }))
       .mockResolvedValueOnce(
         snapshot('s1', {
           ...INPUT,
@@ -101,7 +102,7 @@ describe('createSession laboratorium', () => {
 
     expect(batch.set).toHaveBeenCalledWith(
       { collectionName: 'sessions', id: 's1' },
-      expect.objectContaining({ laboratoryId: 'lab-a', status: 'scheduled' })
+      expect.objectContaining({ laboratoryId: 'lab-a', status: 'scheduled', assistantName: 'Raka Pratama' })
     );
     expect(logActionInBatchMock).toHaveBeenCalledWith(
       batch,
@@ -112,5 +113,18 @@ describe('createSession laboratorium', () => {
       expect.objectContaining({ laboratoryId: 'lab-a' })
     );
     expect(batch.commit).toHaveBeenCalledTimes(1);
+  });
+
+  it('tetap membuat sesi tanpa nama asisten bila profil asisten gagal dibaca', async () => {
+    getDocMock
+      .mockResolvedValueOnce(snapshot('lab-a', { isActive: true }))
+      .mockRejectedValueOnce(new Error('permission-denied'))
+      .mockResolvedValueOnce(snapshot('s1', null));
+
+    await expect(createSession(INPUT)).resolves.toMatchObject({ id: 's1', assistantName: '' });
+    expect(batch.set).toHaveBeenCalledWith(
+      { collectionName: 'sessions', id: 's1' },
+      expect.objectContaining({ assistantName: '' })
+    );
   });
 });

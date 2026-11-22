@@ -118,7 +118,11 @@ export default function DetailSesiScreen() {
   const status = presensiStatus(session, record);
   const info = describePresensi(status);
   const { mataKuliah, sesi } = pecahJudul(session);
-  const asisten = allUsers.find((u) => u.id === session.assistantId)?.name ?? 'Belum ditentukan';
+  // Sesi Firestore menyimpan nama asisten; data dummy hanya untuk mode tanpa login.
+  const asisten =
+    (useFirestore ? fsSession?.assistantName?.trim() : undefined) ||
+    allUsers.find((u) => u.id === session.assistantId)?.name ||
+    'Belum ditentukan';
   const bentuk = record ? 'sukses' : status === 'ditutup-tanpa-catatan' ? 'galat' : 'aksen';
 
   const rincian: { ikon: IkonNama; label: string; nilai: string }[] = [

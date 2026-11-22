@@ -284,7 +284,7 @@ export function usePresensi(sessionId: string, profile: UserProfile | null): Pre
           waktu: `${sesi.startTime} - ${sesi.endTime}`,
           ruang: sesi.room,
           laboratorium: namaLab,
-          asisten: null,
+          asisten: sesi.assistantName?.trim() || null,
           status: sesi.status,
         }
       : sesi,

@@ -33,6 +33,8 @@ export interface FirestoreSession {
   endTime: string;
   room: string;
   assistantId: string;
+  /** Nama asisten yang disimpan saat sesi dibuat; tidak ada pada sesi lama. */
+  assistantName?: string;
   status: SessionStatus;
   /** Kosong atau tidak ada pada sesi lama (Sprint 2): sesi tidak boleh dibuka. */
   laboratoryId?: string;

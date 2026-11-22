@@ -100,6 +100,11 @@ describe('usePresensi', () => {
     expect(result.current.model.ukuran).toEqual({ distanceMeters: 0, radiusMeters: 100, accuracyMeters: 12 });
   });
 
+  it('menampilkan nama asisten yang tersimpan di sesi', async () => {
+    const { result } = await mulai({ assistantName: 'Raka Pratama' });
+    expect(result.current.model.sesi).toMatchObject({ asisten: 'Raka Pratama' });
+  });
+
   it('mengirim posisi ke callable dan menampilkan sukses dari respons server', async () => {
     jest.mocked(submitAttendanceWithLocation).mockResolvedValue({
       ok: true,
