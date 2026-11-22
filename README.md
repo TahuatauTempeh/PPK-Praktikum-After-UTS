@@ -114,11 +114,12 @@ Ringkasan aturan:
 | `attendance` | semua yang login | praktikan membuat sendiri (ID `{sessionId}_{uid}`, satu kali); update/hapus oleh asisten |
 | `permissionRequests` | pemilik atau asisten | praktikan membuat (`pending`); asisten meninjau |
 | `auditLogs` | asisten | semua yang login boleh membuat catatan atas namanya; tidak bisa diubah/dihapus |
+| `notificationLogs` | asisten | hanya Cloud Functions (Admin SDK) |
 | `invitationCodes` | semua yang login | admin membuat/menghapus |
 
 Catatan: rules `sessions` mengizinkan semua pengguna yang login membaca semua sesi. Pembatasan praktikan hanya melihat sesi kelasnya sendiri dilakukan di sisi aplikasi (lewat `enrollments`), bukan di rules.
 
-Sprint 3 sudah menambahkan rules `laboratories` dan validasi laboratorium aktif pada sesi. Rules `notificationLogs` dan penolakan create langsung `attendance` masih menunggu fitur callable attendance/notifikasi selesai; lihat [`PRD.md`](PRD.md).
+Sprint 3 sudah menambahkan rules `laboratories`, `notificationLogs`, dan validasi laboratorium aktif pada sesi. Penolakan create langsung `attendance` masih menunggu fitur callable attendance selesai; lihat [`PRD.md`](PRD.md).
 
 ## 4. Menjalankan aplikasi
 
@@ -335,7 +336,7 @@ Keterbatasan yang perlu diketahui:
 
 - **Peta masih placeholder.** Tab/menu Peta sudah bisa dibuka, tetapi layarnya belum memuat `MapView`; implementasi marker dan panel ada di Dev 3. Build Android yang memakai peta native memerlukan `GOOGLE_MAPS_API_KEY` yang valid.
 - **Presensi berbasis lokasi belum aktif.** Halaman `/praktikan/presensi/[id]` masih placeholder dan callable `submitAttendance` masih melempar `unimplemented`; presensi saat ini memakai jalur langsung yang lama. Validasi jarak/akurasi/mock location baru berlaku setelah Dev 2 menyelesaikan callable.
-- **Rules `attendance` masih mengizinkan create langsung** dan rules `notificationLogs` belum ditambahkan; keduanya menunggu fitur callable/notifikasi selesai.
+- **Rules `attendance` masih mengizinkan create langsung**; penolakan create menunggu fitur callable selesai. Rules `notificationLogs` sudah ditambahkan, tetapi baru berlaku setelah rules dideploy ulang.
 - **Sebagian layar masih memakai data contoh**: beranda dan rekap Asisten (`AssistantPreviewProvider`), serta sebagian detail dan presensi Praktikan (`SessionContext` yang diisi `src/data/dummy.ts`). Data ini hilang saat aplikasi dimuat ulang. Jadwal Asisten (`/asisten/jadwal`) memakai Firestore bila ada sesi, dan kembali ke data contoh bila koleksi `sessions` kosong.
 - Layar jadwal Asisten menampilkan satu tanggal saja (tanggal sesi pertama dari Firestore). Untuk melihat semua sesi dan mengelolanya, pakai layar **Atur Sesi**.
 - Layar **Atur Sesi** tanpa filter kelas hanya menampilkan sesi milik asisten yang sedang login (`assistantId`).

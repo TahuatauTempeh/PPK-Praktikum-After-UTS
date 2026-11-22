@@ -35,9 +35,10 @@ Sprint 3 features still in progress:
 - `expo-location` and `device-location.ts` exist, but location-based attendance
   is not active. The `/praktikan/presensi/[id]` route is a placeholder and the
   `submitAttendance` callable still throws `unimplemented`.
-- Notification rules and the callable attendance rules are not finalized. Do not
-  make the client reject direct attendance writes until Dev 2's callable path is
-  ready.
+- Notification rules exist (`notificationLogs` is read-only for assistants and
+  written by Cloud Functions), but the callable attendance lock-down is not
+  finalized. Do not make the client reject direct attendance writes until Dev 2's
+  callable path is ready.
 
 ## Expo has changed — do not trust your training data
 
@@ -310,8 +311,8 @@ directly from screens.
 - `firestore.rules` is the authoritative access control layer. Client checks are
   UX guards, not a substitute.
 - The rules cover `users`, `classes`, `enrollments`, `sessions`, `laboratories`,
-  `attendance`, `permissionRequests`, `auditLogs`, and `invitationCodes`.
-  `notificationLogs` and the callable attendance lock-down are still pending.
+  `notificationLogs`, `attendance`, `permissionRequests`, `auditLogs`, and
+  `invitationCodes`. The callable attendance lock-down is still pending.
 - Deploy rules to the team project after any change and test the affected role
   paths. CI does not run a Firestore emulator.
 - Firestore has no schema. Keep `src/types/index.ts`, converters, and service
