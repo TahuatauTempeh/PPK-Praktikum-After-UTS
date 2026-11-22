@@ -3,12 +3,14 @@ import {
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   query,
   serverTimestamp,
   where,
   writeBatch,
   type DocumentData,
   type DocumentSnapshot,
+  type Unsubscribe,
 } from 'firebase/firestore';
 
 import { logActionInBatch } from '@/lib/firebase/audit';
@@ -26,6 +28,19 @@ function toEnrollment(snapshot: DocumentSnapshot<DocumentData>): Enrollment {
     userName: typeof data.userName === 'string' ? data.userName : '',
     enrolledAt: data.enrolledAt ?? '',
   };
+}
+
+/** Listener realtime seluruh enrollment (untuk ringkasan peserta di jadwal asisten). */
+export function listenAllEnrollments(
+  callback: (items: Enrollment[]) => void
+): Unsubscribe {
+  return onSnapshot(
+    collection(getDb(), COLLECTIONS.enrollments),
+    snapshot => callback(snapshot.docs.map(toEnrollment)),
+    error => {
+      console.warn('[listenAllEnrollments] error:', error);
+    }
+  );
 }
 
 /** Mengambil daftar peserta pada kelas tertentu, urut berdasarkan nama. */

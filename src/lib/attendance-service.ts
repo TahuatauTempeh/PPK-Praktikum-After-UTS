@@ -109,6 +109,45 @@ export async function submitAttendance(
   }
 }
 
+// ─── Realtime: semua kehadiran milik satu praktikan ───────────────────────────
+
+export function listenUserAttendance(
+  userId: string,
+  callback: (records: AttendanceDoc[]) => void,
+): Unsubscribe {
+  const q = query(
+    collection(getDb(), COLLECTIONS.attendance),
+    where('userId', '==', userId),
+  );
+  return onSnapshot(
+    q,
+    (snap) => {
+      const records = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as AttendanceDoc);
+      callback(records);
+    },
+    (err) => {
+      console.warn('[listenUserAttendance] error:', err);
+    },
+  );
+}
+
+// ─── Realtime: semua kehadiran (untuk ringkasan jadwal asisten) ───────────────
+
+export function listenAllAttendance(
+  callback: (records: AttendanceDoc[]) => void,
+): Unsubscribe {
+  return onSnapshot(
+    collection(getDb(), COLLECTIONS.attendance),
+    (snap) => {
+      const records = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as AttendanceDoc);
+      callback(records);
+    },
+    (err) => {
+      console.warn('[listenAllAttendance] error:', err);
+    },
+  );
+}
+
 // ─── Realtime: semua kehadiran dalam satu sesi (untuk rekap asisten) ──────────
 
 export function listenSessionAttendance(

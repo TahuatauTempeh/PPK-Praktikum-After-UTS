@@ -1,16 +1,49 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { listenUserAttendance, type AttendanceDoc } from '@/lib/attendance-service';
 import { getAllClasses } from '@/lib/class-service';
+import { toDate } from '@/lib/praktikum-helpers';
 import { getSessionsForPraktikan } from '@/lib/session-service';
 import { toPraktikanSession } from '@/screens/praktikan/selectors';
-import { Session } from '@/types';
+import { AttendanceRecord, Session, TimestampValue } from '@/types';
 
-/** Memuat daftar sesi praktikan yang sudah difilter berdasarkan enrollment kelasnya. */
+function toAttendanceRecord(doc: AttendanceDoc): AttendanceRecord {
+  const parsed = toDate(doc.recordedAt as TimestampValue | null | undefined);
+  const timestamp = Number.isNaN(parsed.getTime())
+    ? new Date().toISOString()
+    : parsed.toISOString();
+
+  return {
+    id: doc.id,
+    sessionId: doc.sessionId,
+    userId: doc.userId,
+    userName: doc.userName,
+    timestamp,
+  };
+}
+
+/** Memuat daftar sesi dan kehadiran realtime praktikan dari Firestore. */
 export function usePraktikanSchedule(userId: string) {
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [attendanceDocs, setAttendanceDocs] = useState<AttendanceDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!userId) return;
+    return listenUserAttendance(userId, setAttendanceDocs);
+  }, [userId]);
+
+  const attendance = useMemo(
+    () =>
+      userId
+        ? attendanceDocs
+            .filter((item) => item.userId === userId)
+            .map(toAttendanceRecord)
+        : [],
+    [attendanceDocs, userId]
+  );
 
   const loadData = useCallback(async () => {
     if (!userId) return [];
@@ -63,5 +96,5 @@ export function usePraktikanSchedule(userId: string) {
     }, [loadData, userId])
   );
 
-  return { sessions, loading, error, refresh };
+  return { sessions, attendance, loading, error, refresh };
 }
