@@ -15,6 +15,7 @@ import { Ikon } from '@/screens/praktikan/components/ikon';
 import { Layar } from '@/screens/praktikan/components/layar';
 import { KartuProfil } from '@/screens/shared/components/kartu-profil';
 import { PemilihTema } from '@/screens/shared/components/pemilih-tema';
+import { NotificationSettings } from '@/screens/shared/notification-settings';
 import { typography, useTheme } from '@/theme';
 
 function BarisInfo({ label, nilai }: { label: string; nilai: string }) {
@@ -66,6 +67,8 @@ export default function ProfilScreen() {
             <BarisInfo label="Email" nilai={profile.email || '—'} />
           </View>
         </View>
+
+        <NotificationSettings />
 
         <View style={styles.bagian}>
           <Text style={[typography.eyebrow, { color: theme.colors.textSecondary }]}>TAMPILAN</Text>

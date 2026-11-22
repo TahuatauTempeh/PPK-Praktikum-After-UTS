@@ -10,6 +10,10 @@ module.exports = {
   clearMocks: true,
   passWithNoTests: false,
   restoreMocks: true,
+  testPathIgnorePatterns: [
+    '[\\\\/]node_modules[\\\\/]',
+    '[\\\\/]functions[\\\\/]',
+  ],
   // Tampilkan seluruh source agar file tanpa test tidak hilang dari laporan.
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

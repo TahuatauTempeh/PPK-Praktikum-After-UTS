@@ -22,6 +22,12 @@ import { setAuditActor } from '@/lib/firebase/audit';
 import { toUserProfile } from '@/lib/firebase/converters';
 import { mapFirebaseError, type AppError } from '@/lib/firebase/errors';
 import { COLLECTIONS, getDb } from '@/lib/firebase/firestore';
+import {
+  pausePushTokenRegistration,
+  resumePushTokenRegistration,
+  unregisterPushTokenBestEffort,
+} from '@/lib/notification-service';
+import { clearPushTokenOwner } from '@/lib/push-token-storage';
 import type { RegisterInput, UserProfile } from '@/types';
 
 export type AuthStatus =
@@ -169,8 +175,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const handleSignOut = useCallback(async () => {
-    await signOut(getFirebaseAuth());
-  }, []);
+    // Tahan registrasi token selama cleanup agar snapshot profil tidak mendaftarkan ulang token.
+    pausePushTokenRegistration();
+    try {
+      // Bersihkan token push sebelum signOut agar tulisan Firestore masih memakai auth user.
+      if (profile?.id && profile?.expoPushToken) {
+        await unregisterPushTokenBestEffort(profile.id);
+      }
+      await clearPushTokenOwner();
+      await signOut(getFirebaseAuth());
+    } finally {
+      resumePushTokenRegistration();
+    }
+  }, [profile]);
 
   const refreshProfile = useCallback(async () => {
     setRefreshKey((value) => value + 1);

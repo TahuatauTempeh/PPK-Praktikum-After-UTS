@@ -27,6 +27,9 @@ export interface UserProfile extends User {
   roleUpdatedAt?: Timestamp | null;
   createdAt: Timestamp | null;
   updatedAt: Timestamp | null;
+  expoPushToken?: string | null;
+  pushPlatform?: 'android' | 'ios' | null;
+  pushUpdatedAt?: Timestamp | null;
 }
 
 /** Input form registrasi praktikan */
@@ -151,4 +154,65 @@ export interface UpdateSessionInput {
   startTime?: string;
   endTime?: string;
   room?: string;
+}
+
+// ─── Sprint 3: Notifikasi & Perangkat (Dev 4) ───────────────────────────────
+
+/** Status izin dan ketersediaan notifikasi di perangkat */
+export type NotificationStatus =
+  | 'idle'
+  | 'requesting'
+  | 'granted'
+  | 'denied'
+  | 'blocked'
+  | 'unsupported'
+  | 'error';
+
+/** Nilai context notifikasi */
+export interface NotificationContextValue {
+  status: NotificationStatus;
+  token: string | null;
+  lastError: string | null;
+  enableNotifications(): Promise<void>;
+  openSettings(): Promise<void>;
+  refresh(): Promise<void>;
+}
+
+/** Jenis event notifikasi */
+export type NotificationEventType =
+  | 'session-open'
+  | 'session-schedule-changed'
+  | 'permission-approved'
+  | 'permission-rejected';
+
+/** Payload data dalam push notification */
+export interface NotificationPayloadData {
+  type: NotificationEventType;
+  sessionId?: string;
+  permissionId?: string;
+  url: string;
+}
+
+/** Status proses pengiriman di notificationLogs */
+export type NotificationLogStatus =
+  | 'processing'
+  | 'sent'
+  | 'partial'
+  | 'failed'
+  | 'skipped';
+
+/** Dokumen pada koleksi notificationLogs/{dedupeKey} */
+export interface NotificationLog {
+  id?: string;
+  eventType: NotificationEventType;
+  sourceCollection: 'sessions' | 'permissionRequests';
+  sourceId: string;
+  recipientIds: string[];
+  successCount: number;
+  failureCount: number;
+  invalidTokens: string[];
+  status: NotificationLogStatus;
+  error: string | null;
+  createdAt: TimestampValue;
+  completedAt: TimestampValue | null;
 }
