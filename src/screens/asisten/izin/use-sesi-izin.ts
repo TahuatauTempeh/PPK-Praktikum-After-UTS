@@ -17,65 +17,66 @@ import type { KeadaanSesi } from '@/screens/shared/izin';
 import type { PracticumClass, PraktikumSession, Session, SessionStatus } from '@/types';
 
 function teks(nilai: unknown, cadangan = ''): string {
-  return typeof nilai === 'string' ? nilai : cadangan;
+    return typeof nilai === 'string' ? nilai : cadangan;
 }
 
 function status(nilai: unknown): SessionStatus {
-  return nilai === 'open' || nilai === 'closed' ? nilai : 'scheduled';
+    return nilai === 'open' || nilai === 'closed' ? nilai : 'scheduled';
 }
 
 export function useSesiIzin(): { sessions: Session[]; keadaan: KeadaanSesi } {
-  const [mentah, setMentah] = useState<PraktikumSession[]>([]);
-  const [keadaan, setKeadaan] = useState<KeadaanSesi>('memuat');
-  const [kelas, setKelas] = useState<PracticumClass[]>([]);
+    const [mentah, setMentah] = useState<PraktikumSession[]>([]);
+    const [keadaan, setKeadaan] = useState<KeadaanSesi>('memuat');
+    const [kelas, setKelas] = useState<PracticumClass[]>([]);
 
-  useEffect(
-    () =>
-      onSnapshot(
-        collection(getDb(), COLLECTIONS.sessions),
-        (hasil) => {
-          setMentah(
-            hasil.docs.map((dok) => {
-              const data = dok.data();
-              return {
-                id: dok.id,
-                classId: teks(data.classId),
-                title: teks(data.title),
-                date: data.date ?? '',
-                startTime: teks(data.startTime, '00:00'),
-                endTime: teks(data.endTime, '00:00'),
-                room: teks(data.room),
-                assistantId: teks(data.assistantId),
-                status: status(data.status),
-                createdAt: '',
-              };
-            })
-          );
-          setKeadaan('siap');
-        },
-        (error) => {
-          console.warn('[izin] daftar sesi gagal dimuat', error);
-          setKeadaan('galat');
-        }
-      ),
-    []
-  );
+    useEffect(
+        () =>
+            onSnapshot(
+                collection(getDb(), COLLECTIONS.sessions),
+                (hasil) => {
+                    setMentah(
+                        hasil.docs.map((dok) => {
+                            const data = dok.data();
+                            return {
+                                id: dok.id,
+                                classId: teks(data.classId),
+                                title: teks(data.title),
+                                date: data.date ?? '',
+                                startTime: teks(data.startTime, '00:00'),
+                                endTime: teks(data.endTime, '00:00'),
+                                room: teks(data.room),
+                                assistantId: teks(data.assistantId),
+                                laboratoryId: teks(data.laboratoryId),
+                                status: status(data.status),
+                                createdAt: '',
+                            };
+                        })
+                    );
+                    setKeadaan('siap');
+                },
+                (error) => {
+                    console.warn('[izin] daftar sesi gagal dimuat', error);
+                    setKeadaan('galat');
+                }
+            ),
+        []
+    );
 
-  useEffect(() => {
-    let aktif = true;
-    // Gagal memuat kelas tidak menghalangi izin; nama kelas jatuh ke 'Praktikum'.
-    getAllClasses()
-      .then((hasil) => aktif && setKelas(hasil))
-      .catch((error) => console.warn('[izin] nama kelas gagal dimuat', error));
-    return () => {
-      aktif = false;
-    };
-  }, []);
+    useEffect(() => {
+        let aktif = true;
+        // Gagal memuat kelas tidak menghalangi izin; nama kelas jatuh ke 'Praktikum'.
+        getAllClasses()
+            .then((hasil) => aktif && setKelas(hasil))
+            .catch((error) => console.warn('[izin] nama kelas gagal dimuat', error));
+        return () => {
+            aktif = false;
+        };
+    }, []);
 
-  const sessions = useMemo(() => {
-    const peta = new Map(kelas.map((item) => [item.id, item]));
-    return mentah.map((s) => toPraktikanSession(s, peta));
-  }, [mentah, kelas]);
+    const sessions = useMemo(() => {
+        const peta = new Map(kelas.map((item) => [item.id, item]));
+        return mentah.map((s) => toPraktikanSession(s, peta));
+    }, [mentah, kelas]);
 
-  return { sessions, keadaan };
+    return { sessions, keadaan };
 }

@@ -30,11 +30,11 @@ const getDocMock = jest.mocked(getDoc);
 const updateDocMock = jest.mocked(updateDoc);
 const logActionMock = jest.mocked(logAction);
 
-function sessionSnapshot(status: string): DocumentSnapshot<DocumentData> {
+function sessionSnapshot(status: string, laboratoryId?: string): DocumentSnapshot<DocumentData> {
   return {
     exists: () => true,
     id: 's1',
-    data: () => ({ status }),
+    data: () => ({ status, ...(laboratoryId === undefined ? {} : { laboratoryId }) }),
   } as unknown as DocumentSnapshot<DocumentData>;
 }
 
@@ -63,23 +63,44 @@ describe('openSession', () => {
     expect(updateDocMock).not.toHaveBeenCalled();
   });
 
-  it('mengubah scheduled menjadi open dan menulis audit log', async () => {
+  it('menolak sesi scheduled tanpa laboratoryId (sesi lama)', async () => {
     getDocMock.mockResolvedValueOnce(sessionSnapshot('scheduled'));
+
+    await expect(openSession('s1')).resolves.toEqual({
+      success: false,
+      message: 'Lengkapi laboratorium sesi terlebih dahulu.',
+    });
+    expect(updateDocMock).not.toHaveBeenCalled();
+    expect(logActionMock).not.toHaveBeenCalled();
+  });
+
+  it('menolak sesi scheduled dengan laboratoryId kosong', async () => {
+    getDocMock.mockResolvedValueOnce(sessionSnapshot('scheduled', '   '));
+
+    const result = await openSession('s1');
+
+    expect(result.success).toBe(false);
+    expect(result.message).toBe('Lengkapi laboratorium sesi terlebih dahulu.');
+    expect(updateDocMock).not.toHaveBeenCalled();
+  });
+
+  it('mengubah scheduled menjadi open dan menulis audit log', async () => {
+    getDocMock.mockResolvedValueOnce(sessionSnapshot('scheduled', 'lab-a'));
 
     await expect(openSession('s1')).resolves.toEqual({
       success: true,
       message: 'Sesi berhasil dibuka.',
     });
     expect(updateDocMock).toHaveBeenCalledWith(
-      { collectionName: 'sessions', id: 's1' },
-      { status: 'open', openedAt: 'SERVER_TS' }
+        { collectionName: 'sessions', id: 's1' },
+        { status: 'open', openedAt: 'SERVER_TS' }
     );
     expect(logActionMock).toHaveBeenCalledWith(
-      'OPEN_SESSION',
-      'sessions',
-      's1',
-      { status: 'scheduled' },
-      { status: 'open' }
+        'OPEN_SESSION',
+        'sessions',
+        's1',
+        { status: 'scheduled' },
+        { status: 'open' }
     );
   });
 });
@@ -113,15 +134,15 @@ describe('closeSession', () => {
       message: 'Sesi berhasil ditutup.',
     });
     expect(updateDocMock).toHaveBeenCalledWith(
-      { collectionName: 'sessions', id: 's1' },
-      { status: 'closed', closedAt: 'SERVER_TS' }
+        { collectionName: 'sessions', id: 's1' },
+        { status: 'closed', closedAt: 'SERVER_TS' }
     );
     expect(logActionMock).toHaveBeenCalledWith(
-      'CLOSE_SESSION',
-      'sessions',
-      's1',
-      { status: 'open' },
-      { status: 'closed' }
+        'CLOSE_SESSION',
+        'sessions',
+        's1',
+        { status: 'open' },
+        { status: 'closed' }
     );
   });
 
