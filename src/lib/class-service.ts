@@ -38,14 +38,18 @@ function toPracticumClass(snapshot: DocumentSnapshot<DocumentData>): PracticumCl
  * Dipakai peta (Dev 3) untuk label kelas pada aktivitas laboratorium.
  */
 export function listenAllClasses(
-    onData: (items: PracticumClass[]) => void,
-    onError?: (message: string) => void
+  onData: (items: PracticumClass[]) => void,
+  onError?: (message: string) => void
 ): () => void {
   return onSnapshot(
-      collection(getDb(), COLLECTIONS.classes),
-      snapshot =>
-          onData(snapshot.docs.map(toPracticumClass).sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt))),
-      error => onError?.(mapFirebaseError(error).message)
+    collection(getDb(), COLLECTIONS.classes),
+    snapshot =>
+      onData(
+        snapshot.docs
+          .map(toPracticumClass)
+          .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt))
+      ),
+    error => onError?.(mapFirebaseError(error).message)
   );
 }
 
@@ -54,8 +58,8 @@ export async function getAllClasses(): Promise<PracticumClass[]> {
   try {
     const snapshot = await getDocs(collection(getDb(), COLLECTIONS.classes));
     return snapshot.docs
-        .map(toPracticumClass)
-        .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt));
+      .map(toPracticumClass)
+      .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt));
   } catch (error) {
     rethrowServiceError(error);
   }
@@ -66,14 +70,14 @@ export async function getClassesByAssistant(assistantId: string): Promise<Practi
   const cleanAssistantId = requireNonEmpty(assistantId, 'ID asisten');
   try {
     const snapshot = await getDocs(
-        query(
-            collection(getDb(), COLLECTIONS.classes),
-            where('assistantId', '==', cleanAssistantId)
-        )
+      query(
+        collection(getDb(), COLLECTIONS.classes),
+        where('assistantId', '==', cleanAssistantId)
+      )
     );
     return snapshot.docs
-        .map(toPracticumClass)
-        .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt));
+      .map(toPracticumClass)
+      .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt));
   } catch (error) {
     rethrowServiceError(error);
   }
@@ -108,19 +112,19 @@ export async function createClass(input: CreateClassInput): Promise<PracticumCla
     const batch = writeBatch(db);
     batch.set(classRef, payload);
     logActionInBatch(
-        batch,
-        'CREATE',
-        COLLECTIONS.classes,
-        classRef.id,
-        null,
-        { name, description, assistantId }
+      batch,
+      'CREATE',
+      COLLECTIONS.classes,
+      classRef.id,
+      null,
+      { name, description, assistantId }
     );
     await batch.commit();
 
     const createdSnap = await getDoc(classRef);
     return createdSnap.exists()
-        ? toPracticumClass(createdSnap)
-        : { id: classRef.id, name, description, assistantId, createdAt: new Date().toISOString() };
+      ? toPracticumClass(createdSnap)
+      : { id: classRef.id, name, description, assistantId, createdAt: new Date().toISOString() };
   } catch (error) {
     rethrowServiceError(error);
   }
@@ -128,9 +132,9 @@ export async function createClass(input: CreateClassInput): Promise<PracticumCla
 
 /** Memperbarui data kelas praktikum dan mencatat audit log. */
 export async function updateClass(
-    classId: string,
-    input: UpdateClassInput,
-    _performedBy?: string
+  classId: string,
+  input: UpdateClassInput,
+  _performedBy?: string
 ): Promise<PracticumClass> {
   const cleanId = requireNonEmpty(classId, 'ID kelas');
 
@@ -144,9 +148,9 @@ export async function updateClass(
 
     const current = toPracticumClass(currentSnap);
     const nextName =
-        input.name !== undefined ? requireNonEmpty(input.name, 'Nama kelas') : current.name;
+      input.name !== undefined ? requireNonEmpty(input.name, 'Nama kelas') : current.name;
     const nextDescription =
-        input.description !== undefined ? input.description.trim() : current.description;
+      input.description !== undefined ? input.description.trim() : current.description;
 
     const batch = writeBatch(db);
     batch.update(classRef, {
@@ -154,12 +158,12 @@ export async function updateClass(
       description: nextDescription,
     });
     logActionInBatch(
-        batch,
-        'UPDATE',
-        COLLECTIONS.classes,
-        cleanId,
-        { name: current.name, description: current.description },
-        { name: nextName, description: nextDescription }
+      batch,
+      'UPDATE',
+      COLLECTIONS.classes,
+      cleanId,
+      { name: current.name, description: current.description },
+      { name: nextName, description: nextDescription }
     );
     await batch.commit();
 
@@ -189,12 +193,12 @@ export async function deleteClass(classId: string, _performedBy?: string): Promi
     const batch = writeBatch(db);
     batch.delete(classRef);
     logActionInBatch(
-        batch,
-        'DELETE',
-        COLLECTIONS.classes,
-        cleanId,
-        { name: current.name, description: current.description, assistantId: current.assistantId },
-        null
+      batch,
+      'DELETE',
+      COLLECTIONS.classes,
+      cleanId,
+      { name: current.name, description: current.description, assistantId: current.assistantId },
+      null
     );
     await batch.commit();
   } catch (error) {

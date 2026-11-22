@@ -1,7 +1,7 @@
 /**
  * session-actions.ts – Dev 3, guard laboratorium oleh Dev 1 (Sprint 3)
  * Aksi buka/tutup sesi dengan audit log ke Firestore.
- * Sesi tanpa laboratorium tidak dapat dibuka (BR-10).
+ * Sesi tanpa laboratorium aktif tidak dapat dibuka (BR-10).
  * Hanya asisten yang boleh memanggil fungsi ini (enforced oleh Security Rules di Firestore).
  */
 
@@ -81,10 +81,7 @@ export async function openSession(sessionId: string): Promise<ActionResult> {
     const laboratorySnapshot = await getDoc(
       doc(getDb(), COLLECTIONS.laboratories, session.laboratoryId)
     );
-    if (!laboratorySnapshot.exists()) {
-      return { success: false, message: LAB_INACTIVE_MESSAGE };
-    }
-    if (laboratorySnapshot.data()?.isActive !== true) {
+    if (!laboratorySnapshot.exists() || laboratorySnapshot.data()?.isActive !== true) {
       return { success: false, message: LAB_INACTIVE_MESSAGE };
     }
 
@@ -147,62 +144,63 @@ export async function getSession(sessionId: string): Promise<FirestoreSession | 
 // ─── Realtime listener: semua sesi milik asisten di kelas tertentu ────────────
 
 export function listenSessionsByClass(
-    classId: string,
-    callback: (sessions: FirestoreSession[]) => void,
+  classId: string,
+  callback: (sessions: FirestoreSession[]) => void,
 ): Unsubscribe {
   const q = query(
-      collection(getDb(), COLLECTIONS.sessions),
-      where('classId', '==', classId),
-      orderBy('date', 'asc'),
-      orderBy('startTime', 'asc'),
+    collection(getDb(), COLLECTIONS.sessions),
+    where('classId', '==', classId),
+    orderBy('date', 'asc'),
+    orderBy('startTime', 'asc'),
   );
   return onSnapshot(
-      q,
-      (snap) => {
-        const sessions = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as FirestoreSession);
-        callback(sessions);
-      },
-      (err) => {
-        console.warn('[listenSessionsByClass] error:', err);
-      },
+    q,
+    (snap) => {
+      const sessions = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as FirestoreSession);
+      callback(sessions);
+    },
+    (err) => {
+      console.warn('[listenSessionsByClass] error:', err);
+    },
   );
 }
 
 // ─── Realtime listener: satu sesi (untuk status updates) ─────────────────────
 
 export function listenSession(
-    sessionId: string,
-    callback: (session: FirestoreSession | null) => void,
+  sessionId: string,
+  callback: (session: FirestoreSession | null) => void,
 ): Unsubscribe {
   return onSnapshot(
-      doc(getDb(), COLLECTIONS.sessions, sessionId),
-      (snap) => {
-        if (!snap.exists()) {
-          callback(null);
-          return;
-        }
-        callback({ id: snap.id, ...snap.data() } as FirestoreSession);
-      },
-      (err) => {
-        console.warn('[listenSession] error:', err);
-      },
+    doc(getDb(), COLLECTIONS.sessions, sessionId),
+    (snap) => {
+      if (!snap.exists()) {
+        callback(null);
+        return;
+      }
+      callback({ id: snap.id, ...snap.data() } as FirestoreSession);
+    },
+    (err) => {
+      console.warn('[listenSession] error:', err);
+    },
   );
 }
 
 // ─── Realtime listener: seluruh sesi (untuk sinkronisasi jadwal) ─────────────
 
 export function listenAllSessions(
-    callback: (sessions: FirestoreSession[]) => void,
+  callback: (sessions: FirestoreSession[]) => void,
 ): Unsubscribe {
   const q = collection(getDb(), COLLECTIONS.sessions);
   return onSnapshot(
-      q,
-      (snap) => {
-        const sessions = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as FirestoreSession);
-        callback(sessions);
-      },
-      (err) => {
-        console.warn('[listenAllSessions] error:', err);
-      },
+    q,
+    (snap) => {
+      const sessions = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as FirestoreSession);
+      callback(sessions);
+    },
+    (err) => {
+      console.warn('[listenAllSessions] error:', err);
+    },
   );
 }
+

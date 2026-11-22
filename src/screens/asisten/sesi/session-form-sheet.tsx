@@ -36,24 +36,24 @@ type Props = {
 
 /** Bottom sheet untuk membuat atau mengubah jadwal sesi praktikum. */
 export function SessionFormSheet({
-                                   classes,
-                                   laboratories,
-                                   initialClassId,
-                                   initialSession,
-                                   onCancel,
-                                   onSubmit,
-                                 }: Props) {
+  classes,
+  laboratories,
+  initialClassId,
+  initialSession,
+  onCancel,
+  onSubmit,
+}: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(gaya);
   const isEditing = initialSession !== null;
   const defaultClassId =
-      initialSession?.classId ??
-      (initialClassId && classes.some(c => c.id === initialClassId) ? initialClassId : classes[0]?.id ?? '');
+    initialSession?.classId ??
+    (initialClassId && classes.some(c => c.id === initialClassId) ? initialClassId : classes[0]?.id ?? '');
 
   const [classId, setClassId] = useState(defaultClassId);
   const [title, setTitle] = useState(initialSession?.title ?? '');
   const [date, setDate] = useState(
-      initialSession ? toDateInputValue(initialSession.date) : toDateInputValue(new Date())
+    initialSession ? toDateInputValue(initialSession.date) : toDateInputValue(new Date())
   );
   const [startTime, setStartTime] = useState(initialSession?.startTime ?? '08:00');
   const [endTime, setEndTime] = useState(initialSession?.endTime ?? '10:00');
@@ -67,7 +67,7 @@ export function SessionFormSheet({
   const labChoices = laboratories.filter(item => item.isActive || item.id === originalLabId);
   const labMissing = isEditing && originalLabId === '' && laboratoryId === '';
   const originalLabUnknown =
-      originalLabId !== '' && !laboratories.some(item => item.id === originalLabId);
+    originalLabId !== '' && !laboratories.some(item => item.id === originalLabId);
 
   function pickLaboratory(item: Laboratory) {
     setLaboratoryId(item.id);
@@ -109,227 +109,227 @@ export function SessionFormSheet({
   }
 
   return (
-      <AssistantSheet onCancel={onCancel} onShow={() => {}}>
-        {closeSheet => (
-            <View style={styles.dialog} role="dialog" accessibilityViewIsModal accessibilityLabel={heading}>
-              <View style={styles.header}>
-                <View style={styles.icon}>
-                  <ScheduleIcon name="calendarPlus" size={22} tintColor={theme.colors.primary} />
-                </View>
-                <View style={styles.headingBlock}>
-                  <AssistantText style={styles.title} accessibilityRole="header">{heading}</AssistantText>
-                  <AssistantText variant="caption" tone="secondary">
-                    {isEditing
-                        ? 'Perbarui kelas, topik, tanggal, jam, laboratorium, atau ruang sesi.'
-                        : 'Sesi baru otomatis berstatus Dijadwalkan (scheduled).'}
-                  </AssistantText>
-                </View>
+    <AssistantSheet onCancel={onCancel} onShow={() => {}}>
+      {closeSheet => (
+        <View style={styles.dialog} role="dialog" accessibilityViewIsModal accessibilityLabel={heading}>
+          <View style={styles.header}>
+            <View style={styles.icon}>
+              <ScheduleIcon name="calendarPlus" size={22} tintColor={theme.colors.primary} />
+            </View>
+            <View style={styles.headingBlock}>
+              <AssistantText style={styles.title} accessibilityRole="header">{heading}</AssistantText>
+              <AssistantText variant="caption" tone="secondary">
+                {isEditing
+                  ? 'Perbarui kelas, topik, tanggal, jam, laboratorium, atau ruang sesi.'
+                  : 'Sesi baru otomatis berstatus Dijadwalkan (scheduled).'}
+              </AssistantText>
+            </View>
+          </View>
+
+          {error && (
+            <View style={styles.errorBox} accessibilityLiveRegion="polite">
+              <ScheduleIcon name="formError" size={16} />
+              <AssistantText variant="caption" style={styles.errorText}>{error}</AssistantText>
+            </View>
+          )}
+
+          <View style={styles.fields}>
+            <View style={styles.field}>
+              <AssistantText variant="label" style={styles.fieldLabel}>Kelas *</AssistantText>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.classChips}>
+                {classes.map(item => {
+                  const selected = item.id === classId;
+                  return (
+                    <Pressable
+                      key={item.id}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                      disabled={submitting}
+                      onPress={() => {
+                        setClassId(item.id);
+                        if (error) setError(null);
+                      }}
+                      style={({ pressed }) => [
+                        styles.classChip,
+                        selected && styles.classChipActive,
+                        pressed && styles.pressed,
+                      ]}>
+                      <AssistantText style={[styles.classChipText, selected && styles.white]}>
+                        {item.name}
+                      </AssistantText>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+
+            <View style={styles.field}>
+              <AssistantText variant="label" style={styles.fieldLabel}>Judul / Topik Sesi *</AssistantText>
+              <TextInput
+                value={title}
+                onChangeText={value => {
+                  setTitle(value);
+                  if (error) setError(null);
+                }}
+                placeholder="Contoh: Pertemuan 3: JOIN & Subquery"
+                placeholderTextColor={theme.colors.textSecondary}
+                editable={!submitting}
+                maxLength={100}
+                style={styles.input}
+                accessibilityLabel="Judul Sesi"
+              />
+            </View>
+
+            <View style={styles.field}>
+              <AssistantText variant="label" style={styles.fieldLabel}>Tanggal (YYYY-MM-DD) *</AssistantText>
+              <TextInput
+                value={date}
+                onChangeText={value => {
+                  setDate(value);
+                  if (error) setError(null);
+                }}
+                placeholder="2026-11-20"
+                placeholderTextColor={theme.colors.textSecondary}
+                editable={!submitting}
+                maxLength={10}
+                keyboardType="numbers-and-punctuation"
+                style={styles.input}
+                accessibilityLabel="Tanggal Sesi"
+              />
+            </View>
+
+            <View style={styles.timeRow}>
+              <View style={[styles.field, styles.timeField]}>
+                <AssistantText variant="label" style={styles.fieldLabel}>Jam Mulai *</AssistantText>
+                <TextInput
+                  value={startTime}
+                  onChangeText={value => {
+                    setStartTime(value);
+                    if (error) setError(null);
+                  }}
+                  placeholder="08:00"
+                  placeholderTextColor={theme.colors.textSecondary}
+                  editable={!submitting}
+                  maxLength={5}
+                  keyboardType="numbers-and-punctuation"
+                  style={styles.input}
+                  accessibilityLabel="Jam Mulai"
+                />
               </View>
 
-              {error && (
-                  <View style={styles.errorBox} accessibilityLiveRegion="polite">
-                    <ScheduleIcon name="formError" size={16} />
-                    <AssistantText variant="caption" style={styles.errorText}>{error}</AssistantText>
-                  </View>
-              )}
-
-              <View style={styles.fields}>
-                <View style={styles.field}>
-                  <AssistantText variant="label" style={styles.fieldLabel}>Kelas *</AssistantText>
-                  <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={styles.classChips}>
-                    {classes.map(item => {
-                      const selected = item.id === classId;
-                      return (
-                          <Pressable
-                              key={item.id}
-                              accessibilityRole="button"
-                              accessibilityState={{ selected }}
-                              disabled={submitting}
-                              onPress={() => {
-                                setClassId(item.id);
-                                if (error) setError(null);
-                              }}
-                              style={({ pressed }) => [
-                                styles.classChip,
-                                selected && styles.classChipActive,
-                                pressed && styles.pressed,
-                              ]}>
-                            <AssistantText style={[styles.classChipText, selected && styles.white]}>
-                              {item.name}
-                            </AssistantText>
-                          </Pressable>
-                      );
-                    })}
-                  </ScrollView>
-                </View>
-
-                <View style={styles.field}>
-                  <AssistantText variant="label" style={styles.fieldLabel}>Judul / Topik Sesi *</AssistantText>
-                  <TextInput
-                      value={title}
-                      onChangeText={value => {
-                        setTitle(value);
-                        if (error) setError(null);
-                      }}
-                      placeholder="Contoh: Pertemuan 3: JOIN & Subquery"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      editable={!submitting}
-                      maxLength={100}
-                      style={styles.input}
-                      accessibilityLabel="Judul Sesi"
-                  />
-                </View>
-
-                <View style={styles.field}>
-                  <AssistantText variant="label" style={styles.fieldLabel}>Tanggal (YYYY-MM-DD) *</AssistantText>
-                  <TextInput
-                      value={date}
-                      onChangeText={value => {
-                        setDate(value);
-                        if (error) setError(null);
-                      }}
-                      placeholder="2026-11-20"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      editable={!submitting}
-                      maxLength={10}
-                      keyboardType="numbers-and-punctuation"
-                      style={styles.input}
-                      accessibilityLabel="Tanggal Sesi"
-                  />
-                </View>
-
-                <View style={styles.timeRow}>
-                  <View style={[styles.field, styles.timeField]}>
-                    <AssistantText variant="label" style={styles.fieldLabel}>Jam Mulai *</AssistantText>
-                    <TextInput
-                        value={startTime}
-                        onChangeText={value => {
-                          setStartTime(value);
-                          if (error) setError(null);
-                        }}
-                        placeholder="08:00"
-                        placeholderTextColor={theme.colors.textSecondary}
-                        editable={!submitting}
-                        maxLength={5}
-                        keyboardType="numbers-and-punctuation"
-                        style={styles.input}
-                        accessibilityLabel="Jam Mulai"
-                    />
-                  </View>
-
-                  <View style={[styles.field, styles.timeField]}>
-                    <AssistantText variant="label" style={styles.fieldLabel}>Jam Selesai *</AssistantText>
-                    <TextInput
-                        value={endTime}
-                        onChangeText={value => {
-                          setEndTime(value);
-                          if (error) setError(null);
-                        }}
-                        placeholder="10:00"
-                        placeholderTextColor={theme.colors.textSecondary}
-                        editable={!submitting}
-                        maxLength={5}
-                        keyboardType="numbers-and-punctuation"
-                        style={styles.input}
-                        accessibilityLabel="Jam Selesai"
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.field}>
-                  <AssistantText variant="label" style={styles.fieldLabel}>Laboratorium *</AssistantText>
-                  {labChoices.length === 0 ? (
-                      <AssistantText variant="caption" tone="secondary">
-                        Belum ada laboratorium aktif. Tambahkan lebih dulu lewat menu Lab.
-                      </AssistantText>
-                  ) : (
-                      <ScrollView
-                          horizontal
-                          showsHorizontalScrollIndicator={false}
-                          contentContainerStyle={styles.classChips}>
-                        {labChoices.map(item => {
-                          const selected = item.id === laboratoryId;
-                          return (
-                              <Pressable
-                                  key={item.id}
-                                  accessibilityRole="button"
-                                  accessibilityLabel={`Laboratorium ${item.name}${item.isActive ? '' : ', nonaktif'}`}
-                                  accessibilityState={{ selected }}
-                                  disabled={submitting}
-                                  onPress={() => pickLaboratory(item)}
-                                  style={({ pressed }) => [
-                                    styles.classChip,
-                                    selected && styles.classChipActive,
-                                    pressed && styles.pressed,
-                                  ]}>
-                                <AssistantText style={[styles.classChipText, selected && styles.white]}>
-                                  {item.isActive ? item.name : `${item.name} (nonaktif)`}
-                                </AssistantText>
-                              </Pressable>
-                          );
-                        })}
-                      </ScrollView>
-                  )}
-                  {labMissing && (
-                      <AssistantText variant="caption" style={styles.warningText}>
-                        Laboratorium belum diatur. Sesi ini tidak dapat dibuka sebelum laboratorium dipilih.
-                      </AssistantText>
-                  )}
-                  {originalLabUnknown && (
-                      <AssistantText variant="caption" style={styles.warningText}>
-                        Laboratorium sesi ini tidak ditemukan. Pilih laboratorium yang masih ada.
-                      </AssistantText>
-                  )}
-                </View>
-
-                <View style={styles.field}>
-                  <AssistantText variant="label" style={styles.fieldLabel}>Ruangan *</AssistantText>
-                  <TextInput
-                      value={room}
-                      onChangeText={value => {
-                        setRoom(value);
-                        if (error) setError(null);
-                      }}
-                      placeholder="Contoh: Lab Komputer A"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      editable={!submitting}
-                      maxLength={60}
-                      style={styles.input}
-                      accessibilityLabel="Ruangan"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.actions}>
-                <Pressable
-                    accessibilityRole="button"
-                    disabled={submitting}
-                    onPress={() => void handleSave(closeSheet)}
-                    style={({ pressed }) => [
-                      styles.button,
-                      styles.primary,
-                      submitting && styles.disabled,
-                      pressed && !submitting && styles.pressed,
-                    ]}>
-                  <AssistantText variant="label" style={styles.white}>
-                    {submitting ? 'Menyimpan...' : isEditing ? 'Simpan perubahan' : 'Buat sesi'}
-                  </AssistantText>
-                </Pressable>
-
-                <Pressable
-                    accessibilityRole="button"
-                    disabled={submitting}
-                    onPress={() => closeSheet(onCancel)}
-                    style={({ pressed }) => [styles.button, styles.cancel, pressed && styles.pressed]}>
-                  <AssistantText variant="label" tone="accent">Batal</AssistantText>
-                </Pressable>
+              <View style={[styles.field, styles.timeField]}>
+                <AssistantText variant="label" style={styles.fieldLabel}>Jam Selesai *</AssistantText>
+                <TextInput
+                  value={endTime}
+                  onChangeText={value => {
+                    setEndTime(value);
+                    if (error) setError(null);
+                  }}
+                  placeholder="10:00"
+                  placeholderTextColor={theme.colors.textSecondary}
+                  editable={!submitting}
+                  maxLength={5}
+                  keyboardType="numbers-and-punctuation"
+                  style={styles.input}
+                  accessibilityLabel="Jam Selesai"
+                />
               </View>
             </View>
-        )}
-      </AssistantSheet>
+
+            <View style={styles.field}>
+              <AssistantText variant="label" style={styles.fieldLabel}>Laboratorium *</AssistantText>
+              {labChoices.length === 0 ? (
+                <AssistantText variant="caption" tone="secondary">
+                  Belum ada laboratorium aktif. Tambahkan lebih dulu lewat menu Lab.
+                </AssistantText>
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.classChips}>
+                  {labChoices.map(item => {
+                    const selected = item.id === laboratoryId;
+                    return (
+                      <Pressable
+                        key={item.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Laboratorium ${item.name}${item.isActive ? '' : ', nonaktif'}`}
+                        accessibilityState={{ selected }}
+                        disabled={submitting}
+                        onPress={() => pickLaboratory(item)}
+                        style={({ pressed }) => [
+                          styles.classChip,
+                          selected && styles.classChipActive,
+                          pressed && styles.pressed,
+                        ]}>
+                        <AssistantText style={[styles.classChipText, selected && styles.white]}>
+                          {item.isActive ? item.name : `${item.name} (nonaktif)`}
+                        </AssistantText>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              )}
+              {labMissing && (
+                <AssistantText variant="caption" style={styles.warningText}>
+                  Laboratorium belum diatur. Sesi ini tidak dapat dibuka sebelum laboratorium dipilih.
+                </AssistantText>
+              )}
+              {originalLabUnknown && (
+                <AssistantText variant="caption" style={styles.warningText}>
+                  Laboratorium sesi ini tidak ditemukan. Pilih laboratorium yang masih ada.
+                </AssistantText>
+              )}
+            </View>
+
+            <View style={styles.field}>
+              <AssistantText variant="label" style={styles.fieldLabel}>Ruangan *</AssistantText>
+              <TextInput
+                value={room}
+                onChangeText={value => {
+                  setRoom(value);
+                  if (error) setError(null);
+                }}
+                placeholder="Contoh: Lab Komputer A"
+                placeholderTextColor={theme.colors.textSecondary}
+                editable={!submitting}
+                maxLength={60}
+                style={styles.input}
+                accessibilityLabel="Ruangan"
+              />
+            </View>
+          </View>
+
+          <View style={styles.actions}>
+            <Pressable
+              accessibilityRole="button"
+              disabled={submitting}
+              onPress={() => void handleSave(closeSheet)}
+              style={({ pressed }) => [
+                styles.button,
+                styles.primary,
+                submitting && styles.disabled,
+                pressed && !submitting && styles.pressed,
+              ]}>
+              <AssistantText variant="label" style={styles.white}>
+                {submitting ? 'Menyimpan...' : isEditing ? 'Simpan perubahan' : 'Buat sesi'}
+              </AssistantText>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              disabled={submitting}
+              onPress={() => closeSheet(onCancel)}
+              style={({ pressed }) => [styles.button, styles.cancel, pressed && styles.pressed]}>
+              <AssistantText variant="label" tone="accent">Batal</AssistantText>
+            </Pressable>
+          </View>
+        </View>
+      )}
+    </AssistantSheet>
   );
 }
 
@@ -357,10 +357,10 @@ const gaya = (theme: Theme) => StyleSheet.create({
     borderColor: theme.colors.error,
   },
   errorText: { flex: 1, color: theme.colors.error, fontFamily: tokens.fonts.medium },
-  warningText: { color: theme.colors.error, fontFamily: tokens.fonts.medium },
   fields: { gap: 12 },
   field: { gap: 6 },
   fieldLabel: { fontSize: 13, lineHeight: 18 },
+  warningText: { color: theme.colors.error, fontFamily: tokens.fonts.medium },
   classChips: { flexDirection: 'row', gap: 8, paddingVertical: 2 },
   classChip: {
     minHeight: 38,

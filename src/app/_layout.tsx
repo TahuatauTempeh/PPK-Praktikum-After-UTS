@@ -34,9 +34,9 @@ export default function RootLayout() {
   if (!loaded && !error) return null;
 
   return (
-      <ThemePreferenceProvider>
-        <ThemedRoot />
-      </ThemePreferenceProvider>
+    <ThemePreferenceProvider>
+      <ThemedRoot />
+    </ThemePreferenceProvider>
   );
 }
 
@@ -44,19 +44,19 @@ function ThemedRoot() {
   const colorScheme = useColorScheme();
 
   return (
-      <AuthProvider>
-        <NotificationProvider>
-          <SessionProvider>
-            <AssistantPreviewProvider>
-              <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-                <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-                <RootNavigator />
-                <ToastContainer />
-              </ThemeProvider>
-            </AssistantPreviewProvider>
-          </SessionProvider>
-        </NotificationProvider>
-      </AuthProvider>
+    <AuthProvider>
+      <NotificationProvider>
+        <SessionProvider>
+          <AssistantPreviewProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+              <RootNavigator />
+              <ToastContainer />
+            </ThemeProvider>
+          </AssistantPreviewProvider>
+        </SessionProvider>
+      </NotificationProvider>
+    </AuthProvider>
   );
 }
 
@@ -71,10 +71,10 @@ function RootNavigator() {
 
   if (missingFirebaseEnvKeys.length > 0) {
     return (
-        <ErrorState
-            title="Konfigurasi Firebase belum lengkap"
-            message={`Isi variabel berikut di .env: ${missingFirebaseEnvKeys.join(', ')}`}
-        />
+      <ErrorState
+        title="Konfigurasi Firebase belum lengkap"
+        message={`Isi variabel berikut di .env: ${missingFirebaseEnvKeys.join(', ')}`}
+      />
     );
   }
 
@@ -84,59 +84,59 @@ function RootNavigator() {
 
   if (status === 'error') {
     return (
-        <ErrorState
-            title="Gagal memuat profil"
-            message={profileError?.message ?? 'Terjadi kesalahan.'}
-            onRetry={refreshProfile}
-            secondaryLabel="Keluar"
-            onSecondary={signOut}
-        />
+      <ErrorState
+        title="Gagal memuat profil"
+        message={profileError?.message ?? 'Terjadi kesalahan.'}
+        onRetry={refreshProfile}
+        secondaryLabel="Keluar"
+        onSecondary={signOut}
+      />
     );
   }
 
   if (status === 'profile-missing') {
     return (
-        <ErrorState
-            title="Profil tidak ditemukan"
-            message="Akun ini belum memiliki profil. Hubungi admin."
-            secondaryLabel="Keluar"
-            onSecondary={signOut}
-        />
+      <ErrorState
+        title="Profil tidak ditemukan"
+        message="Akun ini belum memiliki profil. Hubungi admin."
+        secondaryLabel="Keluar"
+        onSecondary={signOut}
+      />
     );
   }
 
   return (
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Protected
-            guard={!profile}
-            redirectTo={profile?.role === 'asisten' ? '/asisten' : '/(praktikan)'}
-        >
-          <Stack.Screen name="(auth)" options={{ animation: 'slide_from_right' }} />
-        </Stack.Protected>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected
+        guard={!profile}
+        redirectTo={profile?.role === 'asisten' ? '/asisten' : '/(praktikan)'}
+      >
+        <Stack.Screen name="(auth)" options={{ animation: 'slide_from_right' }} />
+      </Stack.Protected>
 
-        <Stack.Protected
-            guard={profile?.role === 'praktikan'}
-            redirectTo={profile?.role === 'asisten' ? '/asisten' : '/login'}
-        >
-          <Stack.Screen name="(praktikan)" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="praktikan/sesi/[id]" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="praktikan/presensi/[id]" options={{ animation: 'slide_from_right' }} />
-        </Stack.Protected>
+      <Stack.Protected
+        guard={profile?.role === 'praktikan'}
+        redirectTo={profile?.role === 'asisten' ? '/asisten' : '/login'}
+      >
+        <Stack.Screen name="(praktikan)" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="praktikan/sesi/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="praktikan/presensi/[id]" options={{ animation: 'slide_from_right' }} />
+      </Stack.Protected>
 
-        <Stack.Protected
-            guard={profile?.role === 'asisten'}
-            redirectTo={profile?.role === 'praktikan' ? '/(praktikan)' : '/login'}
-        >
-          <Stack.Screen name="asisten/(tabs)" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="asisten/sesi/[id]" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="asisten/kelas/index" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="asisten/peserta/index" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="asisten/atur-sesi/index" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="asisten/lab" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="asisten/peta" options={{ animation: 'slide_from_right' }} />
-        </Stack.Protected>
+      <Stack.Protected
+        guard={profile?.role === 'asisten'}
+        redirectTo={profile?.role === 'praktikan' ? '/(praktikan)' : '/login'}
+      >
+        <Stack.Screen name="asisten/(tabs)" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="asisten/sesi/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="asisten/kelas/index" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="asisten/peserta/index" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="asisten/atur-sesi/index" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="asisten/lab" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="asisten/peta" options={{ animation: 'slide_from_right' }} />
+      </Stack.Protected>
 
-        <Stack.Screen name="index" />
-      </Stack>
+      <Stack.Screen name="index" />
+    </Stack>
   );
 }
