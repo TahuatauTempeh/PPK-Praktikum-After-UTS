@@ -64,6 +64,11 @@ export interface Session {
   room: string; // e.g. "Lab Komputer A"
   assistantId: string; // ID asisten penanggung jawab
   status: SessionStatus;
+  /**
+   * Laboratorium sesi. Opsional pada bentuk UI lama ini agar data dummy dan adaptor
+   * yang belum memuatnya tetap valid; '' atau undefined berarti belum diatur.
+   */
+  laboratoryId?: string;
 }
 
 /** Catatan kehadiran (presensi) */
@@ -132,6 +137,7 @@ export interface PraktikumSession {
   room: string;
   assistantId: string;
   status: SessionStatus;
+  laboratoryId: string; // '' berarti laboratorium belum diatur (data lama)
   createdAt: TimestampValue;
 }
 
@@ -144,6 +150,7 @@ export interface CreateSessionInput {
   endTime: string;
   room: string;
   assistantId: string;
+  laboratoryId: string;
 }
 
 /** Input untuk memperbarui sesi praktikum */
@@ -154,19 +161,88 @@ export interface UpdateSessionInput {
   startTime?: string;
   endTime?: string;
   room?: string;
+  laboratoryId?: string;
 }
+
+// ─── Sprint 3: Laboratorium & Presensi Lokasi (Dev 1) ───────────────────────
+
+/** Dokumen pada koleksi `laboratories/{labId}` */
+export interface Laboratory {
+  id: string;
+  name: string;
+  code: string;
+  building: string;
+  floor: string;
+  room: string;
+  latitude: number;
+  longitude: number;
+  radiusMeters: number;
+  description: string;
+  isActive: boolean;
+  createdAt: TimestampValue;
+  updatedAt: TimestampValue;
+  updatedBy: string;
+}
+
+/** Input untuk membuat laboratorium baru */
+export interface CreateLaboratoryInput {
+  name: string;
+  code: string;
+  building: string;
+  floor: string;
+  room: string;
+  latitude: number;
+  longitude: number;
+  radiusMeters: number;
+  description: string;
+}
+
+/** Input untuk memperbarui laboratorium */
+export interface UpdateLaboratoryInput extends Partial<CreateLaboratoryInput> {
+  isActive?: boolean;
+}
+
+/** Kode kegagalan presensi berbasis lokasi (klien dan callable) */
+export type AttendanceFailureCode =
+    | 'SESSION_NOT_FOUND'
+    | 'SESSION_NOT_OPEN'
+    | 'NOT_ENROLLED'
+    | 'LAB_NOT_SET'
+    | 'LAB_INACTIVE'
+    | 'OUT_OF_RADIUS'
+    | 'LOCATION_INACCURATE'
+    | 'MOCK_LOCATION'
+    | 'ALREADY_PRESENT'
+    | 'NETWORK'
+    | 'UNKNOWN';
+
+/** Hasil pengiriman presensi ke callable `submitAttendance` */
+export type AttendanceSubmitResult =
+    | {
+  ok: true;
+  recordedAt: string;
+  distanceMeters: number;
+  radiusMeters: number;
+}
+    | {
+  ok: false;
+  code: AttendanceFailureCode;
+  message: string;
+  distanceMeters?: number;
+  radiusMeters?: number;
+};
 
 // ─── Sprint 3: Notifikasi & Perangkat (Dev 4) ───────────────────────────────
 
 /** Status izin dan ketersediaan notifikasi di perangkat */
 export type NotificationStatus =
-  | 'idle'
-  | 'requesting'
-  | 'granted'
-  | 'denied'
-  | 'blocked'
-  | 'unsupported'
-  | 'error';
+    | 'idle'
+    | 'requesting'
+    | 'granted'
+    | 'denied'
+    | 'blocked'
+    | 'unsupported'
+    | 'error';
 
 /** Nilai context notifikasi */
 export interface NotificationContextValue {
@@ -180,10 +256,10 @@ export interface NotificationContextValue {
 
 /** Jenis event notifikasi */
 export type NotificationEventType =
-  | 'session-open'
-  | 'session-schedule-changed'
-  | 'permission-approved'
-  | 'permission-rejected';
+    | 'session-open'
+    | 'session-schedule-changed'
+    | 'permission-approved'
+    | 'permission-rejected';
 
 /** Payload data dalam push notification */
 export interface NotificationPayloadData {
@@ -195,11 +271,11 @@ export interface NotificationPayloadData {
 
 /** Status proses pengiriman di notificationLogs */
 export type NotificationLogStatus =
-  | 'processing'
-  | 'sent'
-  | 'partial'
-  | 'failed'
-  | 'skipped';
+    | 'processing'
+    | 'sent'
+    | 'partial'
+    | 'failed'
+    | 'skipped';
 
 /** Dokumen pada koleksi notificationLogs/{dedupeKey} */
 export interface NotificationLog {

@@ -19,5 +19,6 @@ export const COLLECTIONS = {
   attendance: 'attendance',
   permissionRequests: 'permissionRequests',
   auditLogs: 'auditLogs',
+  laboratories: 'laboratories',
   notificationLogs: 'notificationLogs',
 } as const;

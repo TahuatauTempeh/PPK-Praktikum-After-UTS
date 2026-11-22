@@ -41,11 +41,23 @@
       "expo-status-bar",
       "expo-web-browser",
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Izinkan Presensi Praktikum mengakses lokasi untuk memvalidasi presensi."
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/images/icon.png",
           "color": "#204CAC",
           "defaultChannel": "praktikum"
+        }
+      ],
+      [
+        "react-native-maps",
+        {
+          "androidGoogleMapsApiKey": "GANTI_DENGAN_GOOGLE_MAPS_API_KEY"
         }
       ]
     ],
