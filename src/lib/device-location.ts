@@ -149,10 +149,20 @@ export function watchPosition(
     };
 
     void (async () => {
-        const permission = await getForegroundPermission();
+        let permission: Location.LocationPermissionResponse;
+        try {
+            permission = await Location.getForegroundPermissionsAsync();
+        } catch {
+            fail('UNAVAILABLE');
+            return;
+        }
         if (removed) return;
-        if (permission !== 'granted') {
-            fail(permission === 'undetermined' ? 'PERMISSION_DENIED' : 'PERMISSION_BLOCKED');
+        if (!permission.granted) {
+            if (permission.status === Location.PermissionStatus.UNDETERMINED) {
+                fail('PERMISSION_DENIED');
+            } else {
+                fail(permission.canAskAgain === false ? 'PERMISSION_BLOCKED' : 'PERMISSION_DENIED');
+            }
             return;
         }
         if (!(await hasLocationServicesEnabled())) {
