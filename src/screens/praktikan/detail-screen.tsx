@@ -76,6 +76,7 @@ export default function DetailSesiScreen() {
         room: fsSession.room,
         assistantId: fsSession.assistantId,
         status: (fsSession.status === 'scheduled' ? 'scheduled' : fsSession.status) as 'scheduled' | 'open' | 'closed',
+        laboratoryId: fsSession.laboratoryId ?? '',
       }
     : state.sessions.find((s) => s.id === id);
 
