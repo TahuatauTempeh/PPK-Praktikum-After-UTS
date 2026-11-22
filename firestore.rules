@@ -96,6 +96,11 @@ service cloud.firestore {
         && laboratoryIsActive(request.resource.data.laboratoryId);
       allow update: if isAsisten()
         && (
+          request.resource.data.status == resource.data.status
+          || (resource.data.status == 'scheduled' && request.resource.data.status == 'open')
+          || (resource.data.status == 'open' && request.resource.data.status == 'closed')
+        )
+        && (
           request.resource.data.status != 'open'
           || laboratoryIsActive(request.resource.data.laboratoryId)
         );
