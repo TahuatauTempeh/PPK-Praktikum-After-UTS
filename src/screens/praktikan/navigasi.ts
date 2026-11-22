@@ -4,6 +4,10 @@ export function bukaDetailSesi(id: string) {
   router.push({ pathname: '/praktikan/sesi/[id]', params: { id } });
 }
 
+export function bukaPresensi(id: string) {
+  router.push({ pathname: '/praktikan/presensi/[id]', params: { id } });
+}
+
 export function bukaRiwayat() {
   router.navigate('/(praktikan)/riwayat');
 }
