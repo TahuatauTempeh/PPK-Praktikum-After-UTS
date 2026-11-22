@@ -1,6 +1,7 @@
 /**
- * session-actions.ts – Dev 3
+ * session-actions.ts – Dev 3, guard laboratorium oleh Dev 1 (Sprint 3)
  * Aksi buka/tutup sesi dengan audit log ke Firestore.
+ * Sesi tanpa laboratorium aktif tidak dapat dibuka (BR-10).
  * Hanya asisten yang boleh memanggil fungsi ini (enforced oleh Security Rules di Firestore).
  */
 
@@ -33,6 +34,8 @@ export interface FirestoreSession {
   room: string;
   assistantId: string;
   status: SessionStatus;
+  /** Kosong atau tidak ada pada sesi lama (Sprint 2): sesi tidak boleh dibuka. */
+  laboratoryId?: string;
   createdAt: unknown;
   openedAt?: unknown;
   closedAt?: unknown;
@@ -51,6 +54,10 @@ async function fetchSession(sessionId: string): Promise<FirestoreSession | null>
   return { id: snap.id, ...snap.data() } as FirestoreSession;
 }
 
+export const LAB_REQUIRED_MESSAGE = 'Lengkapi laboratorium sesi terlebih dahulu.';
+export const LAB_INACTIVE_MESSAGE =
+  'Laboratorium sesi tidak aktif. Aktifkan laboratorium atau pilih laboratorium lain.';
+
 // ─── Buka sesi (scheduled → open) ────────────────────────────────────────────
 
 export async function openSession(sessionId: string): Promise<ActionResult> {
@@ -65,6 +72,17 @@ export async function openSession(sessionId: string): Promise<ActionResult> {
         success: false,
         message: `Sesi tidak bisa dibuka (status saat ini: ${session.status}).`,
       };
+    }
+
+    if (typeof session.laboratoryId !== 'string' || session.laboratoryId.trim() === '') {
+      return { success: false, message: LAB_REQUIRED_MESSAGE };
+    }
+
+    const laboratorySnapshot = await getDoc(
+      doc(getDb(), COLLECTIONS.laboratories, session.laboratoryId)
+    );
+    if (!laboratorySnapshot.exists() || laboratorySnapshot.data()?.isActive !== true) {
+      return { success: false, message: LAB_INACTIVE_MESSAGE };
     }
 
     const before = { status: session.status };

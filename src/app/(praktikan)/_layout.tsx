@@ -1,6 +1,6 @@
 /**
  * Praktikan Tab Layout — Navigasi tab untuk sisi praktikan.
- * Tab: Jadwal, Riwayat, Izin, Profil
+ * Tab: Jadwal, Riwayat, Izin, Peta, Profil
  */
 
 import { Tabs } from 'expo-router';
@@ -57,6 +57,14 @@ export default function PraktikanLayout() {
               title: 'Izin',
               headerShown: false,
               tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📝</Text>,
+            }}
+          />
+          <Tabs.Screen
+            name="peta"
+            options={{
+              title: 'Peta',
+              headerShown: false,
+              tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📍</Text>,
             }}
           />
           <Tabs.Screen

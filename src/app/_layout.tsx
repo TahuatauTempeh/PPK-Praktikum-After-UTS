@@ -120,6 +120,7 @@ function RootNavigator() {
       >
         <Stack.Screen name="(praktikan)" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="praktikan/sesi/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="praktikan/presensi/[id]" options={{ animation: 'slide_from_right' }} />
       </Stack.Protected>
 
       <Stack.Protected
@@ -131,6 +132,8 @@ function RootNavigator() {
         <Stack.Screen name="asisten/kelas/index" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="asisten/peserta/index" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="asisten/atur-sesi/index" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="asisten/lab" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="asisten/peta" options={{ animation: 'slide_from_right' }} />
       </Stack.Protected>
 
       <Stack.Screen name="index" />

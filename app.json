@@ -41,6 +41,12 @@
       "expo-status-bar",
       "expo-web-browser",
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Izinkan Presensi Praktikum mengakses lokasi untuk memvalidasi presensi."
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/images/icon.png",

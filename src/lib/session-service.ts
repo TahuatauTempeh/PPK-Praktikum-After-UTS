@@ -49,6 +49,8 @@ function toPraktikumSession(snapshot: DocumentSnapshot<DocumentData>): Praktikum
     room: typeof data.room === 'string' ? data.room : '',
     assistantId: typeof data.assistantId === 'string' ? data.assistantId : '',
     status: normalizeStatus(data.status),
+    // Sesi lama (Sprint 2) belum punya laboratorium: dibaca sebagai string kosong.
+    laboratoryId: typeof data.laboratoryId === 'string' ? data.laboratoryId : '',
     createdAt: data.createdAt ?? '',
   };
 }
@@ -137,12 +139,19 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
   const title = requireNonEmpty(input.title, 'Judul sesi');
   const room = requireNonEmpty(input.room, 'Ruangan');
   const assistantId = requireNonEmpty(input.assistantId, 'ID asisten');
+  const laboratoryId = input.laboratoryId.trim();
+  if (!laboratoryId) throw new Error('Pilih laboratorium.');
   const { startTime, endTime } = validateTimeRange(input.startTime, input.endTime);
   const dateValue = toDateInputValue(input.date);
   if (!dateValue) throw new Error('Tanggal tidak valid.');
 
   try {
     const db = getDb();
+    const laboratorySnapshot = await getDoc(doc(db, COLLECTIONS.laboratories, laboratoryId));
+    if (!laboratorySnapshot.exists() || laboratorySnapshot.data()?.isActive !== true) {
+      throw new Error('Laboratorium tidak aktif. Pilih laboratorium lain.');
+    }
+
     const sessionRef = doc(collection(db, COLLECTIONS.sessions));
     const payload = {
       classId,
@@ -152,6 +161,7 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
       endTime,
       room,
       assistantId,
+      laboratoryId,
       status: 'scheduled' as SessionStatus,
       createdAt: serverTimestamp(),
     };
@@ -164,7 +174,17 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
       COLLECTIONS.sessions,
       sessionRef.id,
       null,
-      { classId, title, date: dateValue, startTime, endTime, room, assistantId, status: 'scheduled' }
+      {
+        classId,
+        title,
+        date: dateValue,
+        startTime,
+        endTime,
+        room,
+        assistantId,
+        laboratoryId,
+        status: 'scheduled',
+      }
     );
     await batch.commit();
 
@@ -180,6 +200,7 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
           endTime,
           room,
           assistantId,
+          laboratoryId,
           status: 'scheduled',
           createdAt: new Date().toISOString(),
         };
@@ -211,6 +232,11 @@ export async function updateSession(
       input.title !== undefined ? requireNonEmpty(input.title, 'Judul sesi') : current.title;
     const nextRoom =
       input.room !== undefined ? requireNonEmpty(input.room, 'Ruangan') : current.room;
+    const nextLaboratoryId =
+      input.laboratoryId !== undefined ? input.laboratoryId.trim() : current.laboratoryId;
+    // Sesi lama tanpa lab boleh disimpan tanpa lab (diubah nanti), tetapi sesi yang
+    // sudah punya lab tidak boleh dikosongkan.
+    if (current.laboratoryId && !nextLaboratoryId) throw new Error('Pilih laboratorium.');
     const nextDate = input.date !== undefined ? toDateInputValue(input.date) : current.date;
     if (!nextDate) throw new Error('Tanggal tidak valid.');
     const { startTime, endTime } = validateTimeRange(
@@ -226,6 +252,7 @@ export async function updateSession(
       startTime,
       endTime,
       room: nextRoom,
+      laboratoryId: nextLaboratoryId,
     });
     logActionInBatch(
       batch,
@@ -239,6 +266,7 @@ export async function updateSession(
         startTime: current.startTime,
         endTime: current.endTime,
         room: current.room,
+        laboratoryId: current.laboratoryId,
       },
       {
         classId: nextClassId,
@@ -247,6 +275,7 @@ export async function updateSession(
         startTime,
         endTime,
         room: nextRoom,
+        laboratoryId: nextLaboratoryId,
       }
     );
     await batch.commit();
@@ -259,6 +288,7 @@ export async function updateSession(
       startTime,
       endTime,
       room: nextRoom,
+      laboratoryId: nextLaboratoryId,
     };
   } catch (error) {
     rethrowServiceError(error);
@@ -292,6 +322,7 @@ export async function deleteSession(sessionId: string, _performedBy?: string): P
         startTime: current.startTime,
         endTime: current.endTime,
         room: current.room,
+        laboratoryId: current.laboratoryId,
         status: current.status,
       },
       null

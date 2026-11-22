@@ -3,6 +3,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   query,
   serverTimestamp,
   where,
@@ -12,6 +13,7 @@ import {
 } from 'firebase/firestore';
 
 import { logActionInBatch } from '@/lib/firebase/audit';
+import { mapFirebaseError } from '@/lib/firebase/errors';
 import { COLLECTIONS, getDb } from '@/lib/firebase/firestore';
 import {
   requireNonEmpty,
@@ -29,6 +31,26 @@ function toPracticumClass(snapshot: DocumentSnapshot<DocumentData>): PracticumCl
     assistantId: typeof data.assistantId === 'string' ? data.assistantId : '',
     createdAt: data.createdAt ?? '',
   };
+}
+
+/**
+ * Listener realtime semua kelas, urut terbaru lebih dulu.
+ * Dipakai peta (Dev 3) untuk label kelas pada aktivitas laboratorium.
+ */
+export function listenAllClasses(
+  onData: (items: PracticumClass[]) => void,
+  onError?: (message: string) => void
+): () => void {
+  return onSnapshot(
+    collection(getDb(), COLLECTIONS.classes),
+    snapshot =>
+      onData(
+        snapshot.docs
+          .map(toPracticumClass)
+          .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt))
+      ),
+    error => onError?.(mapFirebaseError(error).message)
+  );
 }
 
 /** Mengambil semua kelas yang tersedia, urut terbaru lebih dulu. */
