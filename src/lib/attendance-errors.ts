@@ -4,35 +4,9 @@
  * file ini mengubahnya menjadi AttendanceSubmitResult dengan pesan Bahasa Indonesia.
  */
 
-// SEMENTARA: salinan kontrak PRD Lampiran C 3.1. Setelah Dev 1 menambahkannya ke
-// `src/types/index.ts`, hapus kedua tipe ini dan impor dari `@/types`.
-export type AttendanceFailureCode =
-  | 'SESSION_NOT_FOUND'
-  | 'SESSION_NOT_OPEN'
-  | 'NOT_ENROLLED'
-  | 'LAB_NOT_SET'
-  | 'LAB_INACTIVE'
-  | 'OUT_OF_RADIUS'
-  | 'LOCATION_INACCURATE'
-  | 'MOCK_LOCATION'
-  | 'ALREADY_PRESENT'
-  | 'NETWORK'
-  | 'UNKNOWN';
+import type { AttendanceFailureCode, AttendanceSubmitResult } from '@/types';
 
-export type AttendanceSubmitResult =
-  | {
-      ok: true;
-      recordedAt: string;
-      distanceMeters: number;
-      radiusMeters: number;
-    }
-  | {
-      ok: false;
-      code: AttendanceFailureCode;
-      message: string;
-      distanceMeters?: number;
-      radiusMeters?: number;
-    };
+export type { AttendanceFailureCode, AttendanceSubmitResult };
 
 export type AttendanceFailure = Extract<AttendanceSubmitResult, { ok: false }>;
 
