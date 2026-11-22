@@ -14,6 +14,7 @@
     },
     "android": {
       "package": "com.ppk.presensipraktikum",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -38,7 +39,15 @@
       ],
       "expo-image",
       "expo-status-bar",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#204CAC",
+          "defaultChannel": "praktikum"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

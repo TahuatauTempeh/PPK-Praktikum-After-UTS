@@ -16,5 +16,8 @@ export function toUserProfile(snapshot: DocumentSnapshot<DocumentData>): UserPro
     roleUpdatedAt: data.roleUpdatedAt,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
+    expoPushToken: typeof data.expoPushToken === 'string' ? data.expoPushToken : null,
+    pushPlatform: data.pushPlatform === 'android' || data.pushPlatform === 'ios' ? data.pushPlatform : null,
+    pushUpdatedAt: data.pushUpdatedAt ?? null,
   };
 }
