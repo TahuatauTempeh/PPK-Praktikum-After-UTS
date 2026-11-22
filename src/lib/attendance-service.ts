@@ -1,7 +1,9 @@
 /**
- * attendance-service.ts – Dev 3
- * Submit presensi ke Firestore dengan pencegahan presensi ganda,
- * dan realtime listeners untuk rekap asisten & status praktikan.
+ * attendance-service.ts
+ * Sprint 3: presensi berbasis lokasi lewat callable `submitAttendanceWithLocation`.
+ * Realtime listeners untuk rekap asisten dan status presensi praktikan.
+ * `submitAttendance` (tulis langsung Sprint 2) masih dipakai Detail Sesi dan
+ * dihapus setelah Detail Sesi beralih ke halaman presensi.
  */
 
 import {
@@ -16,9 +18,15 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 
+import { getFunctions, httpsCallable } from 'firebase/functions';
+
+import { hasilGagalDariGalat } from '@/lib/attendance-errors';
+import type { DevicePosition } from '@/lib/device-location';
+import { getFirebaseApp } from '@/lib/firebase/app';
 import { logAction } from '@/lib/firebase/audit';
+import { mapFirebaseError } from '@/lib/firebase/errors';
 import { COLLECTIONS, getDb } from '@/lib/firebase/firestore';
-import type { UserProfile } from '@/types';
+import type { AttendanceSubmitResult, UserProfile } from '@/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -30,6 +38,72 @@ export interface AttendanceDoc {
   userName: string;
   userNim: string;
   recordedAt: unknown; // Firestore Timestamp (serverTimestamp)
+  // Bukti lokasi Sprint 3, ditulis callable. Catatan Sprint 2 tidak memilikinya.
+  latitude?: number;
+  longitude?: number;
+  accuracyMeters?: number;
+  distanceMeters?: number;
+  radiusMeters?: number;
+  laboratoryId?: string;
+  mocked?: boolean;
+  source?: string;
+}
+
+// ─── Sprint 3: presensi berbasis lokasi lewat callable ───────────────────────
+
+/** Region callable, sama dengan `functions/src/attendance.ts` */
+const FUNCTIONS_REGION = 'asia-southeast2';
+
+interface SubmitAttendanceRequest {
+  sessionId: string;
+  latitude: number;
+  longitude: number;
+  accuracyMeters: number;
+  mocked: boolean;
+}
+
+interface SubmitAttendanceResponse {
+  attendanceId: string;
+  recordedAt: string;
+  distanceMeters: number;
+  radiusMeters: number;
+  laboratoryId: string;
+  laboratoryName: string;
+}
+
+/**
+ * Kirim presensi ke callable `submitAttendance` (PRD 10.3). Server yang memvalidasi
+ * dan menulis; klien tidak menulis `attendance`. Tidak ada retry otomatis dan tidak
+ * ada antrean offline (BR-16): kegagalan dikembalikan agar pengguna mencoba lagi.
+ *
+ * `laboratoryName` hanya dipakai untuk pesan "di luar radius".
+ */
+export async function submitAttendanceWithLocation(
+  sessionId: string,
+  position: DevicePosition,
+  laboratoryName?: string,
+): Promise<AttendanceSubmitResult> {
+  try {
+    const kirim = httpsCallable<SubmitAttendanceRequest, SubmitAttendanceResponse>(
+      getFunctions(getFirebaseApp(), FUNCTIONS_REGION),
+      'submitAttendance',
+    );
+    const { data } = await kirim({
+      sessionId,
+      latitude: position.latitude,
+      longitude: position.longitude,
+      accuracyMeters: position.accuracyMeters,
+      mocked: position.mocked,
+    });
+    return {
+      ok: true,
+      recordedAt: data.recordedAt,
+      distanceMeters: data.distanceMeters,
+      radiusMeters: data.radiusMeters,
+    };
+  } catch (error) {
+    return hasilGagalDariGalat(error, laboratoryName);
+  }
 }
 
 export interface SubmitResult {
@@ -137,6 +211,7 @@ export function listenMyAttendance(
   sessionId: string,
   uid: string,
   callback: (record: AttendanceDoc | null) => void,
+  onError?: (message: string) => void,
 ): Unsubscribe {
   const attendanceId = `${sessionId}_${uid}`;
   return onSnapshot(
@@ -150,6 +225,7 @@ export function listenMyAttendance(
     },
     (err) => {
       console.warn('[listenMyAttendance] error:', err);
+      onError?.(mapFirebaseError(err).message);
     },
   );
 }
