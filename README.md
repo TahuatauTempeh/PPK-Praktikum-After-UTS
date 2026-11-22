@@ -328,7 +328,7 @@ Berdasarkan isi kode saat ini.
 | **Dev 1: Fondasi & auth** | Ada: setup Firebase, login/registrasi/logout, profil `users`, auth context dan persist sesi, navigasi per peran, `logAction`, pemetaan galat Firebase, komponen loading/empty/error. |
 | **Dev 1: Fondasi Sprint 3** | Ada: CRUD laboratorium + validasi, `listenAllClasses`, helper Haversine dan validasi radius, `device-location` foreground, `laboratoryId` pada sesi, guard lab aktif saat buka sesi, rules `laboratories` + validasi sesi, dan route placeholder peta/presensi. |
 | **Dev 2: Data praktikum** | Ada: CRUD kelas (`class-service`, layar Kelas), CRUD peserta (`enrollment-service`, layar Peserta, cegah daftar ganda), CRUD jadwal dan sesi (`session-service`, layar Atur Sesi, validasi tanggal dan jam), filter jadwal dan riwayat praktikan lewat enrollment (`usePraktikanSchedule`), dan audit log pada setiap tambah/ubah/hapus. Sebagian: penggantian seluruh data dummy ke Firestore belum tuntas (lihat keterbatasan). |
-| **Dev 3: Sesi, presensi, rules** | Ada: buka/tutup sesi dengan audit log, presensi hanya saat sesi `open`, pencegahan presensi ganda, rekap realtime, dan rules inti. |
+| **Dev 3: Sesi & presensi** | Ada: buka/tutup sesi dengan audit log, presensi hanya saat sesi `open`, pencegahan presensi ganda, rekap realtime. |
 | **Dev 4: Izin & AI** | Ada: form izin, modul AI dengan timeout dan fallback, penyimpanan `permissionRequests`, riwayat izin praktikan, daftar dan peninjauan izin oleh asisten. |
 
 Keterbatasan yang perlu diketahui:
