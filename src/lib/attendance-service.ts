@@ -1,32 +1,19 @@
 /**
  * attendance-service.ts
  * Sprint 3: presensi berbasis lokasi lewat callable `submitAttendanceWithLocation`.
+ * Klien tidak menulis `attendance` langsung (PRD D-02).
  * Realtime listeners untuk rekap asisten dan status presensi praktikan.
- * `submitAttendance` (tulis langsung Sprint 2) masih dipakai Detail Sesi dan
- * dihapus setelah Detail Sesi beralih ke halaman presensi.
  */
 
-import {
-  doc,
-  setDoc,
-  getDoc,
-  serverTimestamp,
-  onSnapshot,
-  collection,
-  query,
-  where,
-  type Unsubscribe,
-} from 'firebase/firestore';
-
+import { collection, doc, onSnapshot, query, where, type Unsubscribe } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 import { hasilGagalDariGalat } from '@/lib/attendance-errors';
 import type { DevicePosition } from '@/lib/device-location';
 import { getFirebaseApp } from '@/lib/firebase/app';
-import { logAction } from '@/lib/firebase/audit';
 import { mapFirebaseError } from '@/lib/firebase/errors';
 import { COLLECTIONS, getDb } from '@/lib/firebase/firestore';
-import type { AttendanceSubmitResult, UserProfile } from '@/types';
+import type { AttendanceSubmitResult } from '@/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -109,78 +96,6 @@ export async function submitAttendanceWithLocation(
 export interface SubmitResult {
   success: boolean;
   message: string;
-}
-
-// ─── Submit presensi ──────────────────────────────────────────────────────────
-
-/**
- * Catat kehadiran praktikan ke koleksi `attendance`.
- *
- * Doc ID = `{sessionId}_{uid}` → setDoc tanpa merge membuat duplikat langsung ditolak
- * oleh Firestore (error ALREADY_EXISTS).
- *
- * Guard tambahan di sisi klien:
- *  1. Sesi harus berstatus 'open'
- *  2. Belum ada doc dengan ID yang sama (presensi ganda)
- */
-export async function submitAttendance(
-  sessionId: string,
-  profile: UserProfile,
-): Promise<SubmitResult> {
-  try {
-    // Guard 1: cek status sesi
-    const sessionSnap = await getDoc(doc(getDb(), COLLECTIONS.sessions, sessionId));
-    if (!sessionSnap.exists()) {
-      return { success: false, message: 'Sesi tidak ditemukan.' };
-    }
-    const sessionData = sessionSnap.data();
-    if (sessionData.status !== 'open') {
-      const statusMsg =
-        sessionData.status === 'scheduled'
-          ? 'Sesi belum dibuka oleh asisten.'
-          : 'Sesi sudah ditutup, presensi tidak bisa dilakukan.';
-      return { success: false, message: statusMsg };
-    }
-
-    // Guard 2: cek presensi ganda (klien-side, Firestore rules juga mencegah via create-only)
-    const attendanceId = `${sessionId}_${profile.id}`;
-    try {
-      const existingSnap = await getDoc(doc(getDb(), COLLECTIONS.attendance, attendanceId));
-      if (existingSnap.exists()) {
-        return { success: false, message: 'Kamu sudah melakukan presensi di sesi ini.' };
-      }
-    } catch {
-      // Abaikan jika pengecekan dokumen gagal (misal belum dibuat)
-    }
-
-    // Tulis dokumen presensi
-    const payload: Omit<AttendanceDoc, 'id'> = {
-      sessionId,
-      userId: profile.id,
-      userName: profile.name,
-      userNim: profile.nim,
-      recordedAt: serverTimestamp(),
-    };
-
-    await setDoc(doc(getDb(), COLLECTIONS.attendance, attendanceId), payload);
-
-    await logAction(
-      'SUBMIT_ATTENDANCE',
-      COLLECTIONS.attendance,
-      attendanceId,
-      null,
-      payload,
-    );
-
-    return { success: true, message: 'Presensi berhasil dicatat.' };
-  } catch (err: unknown) {
-    // Firestore menolak setDoc jika doc sudah ada (create-only rule) → tangkap sebagai duplikat
-    if (err instanceof Error && err.message.includes('already exists')) {
-      return { success: false, message: 'Kamu sudah melakukan presensi di sesi ini.' };
-    }
-    console.error('[attendance-service] submitAttendance gagal:', err);
-    return { success: false, message: 'Gagal mencatat presensi. Coba lagi.' };
-  }
 }
 
 // ─── Realtime: semua kehadiran dalam satu sesi (untuk rekap asisten) ──────────

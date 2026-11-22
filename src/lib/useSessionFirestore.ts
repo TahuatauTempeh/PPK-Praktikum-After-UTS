@@ -11,7 +11,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { listenMyAttendance, listenSessionAttendance, submitAttendance, type AttendanceDoc } from '@/lib/attendance-service';
+import { listenMyAttendance, listenSessionAttendance, type AttendanceDoc } from '@/lib/attendance-service';
 import { closeSession, listenAllSessions, listenSession, openSession, type ActionResult, type FirestoreSession } from '@/lib/session-actions';
 import type { UserProfile } from '@/types';
 
@@ -74,15 +74,13 @@ export function useSessionManage(sessionId: string): UseSessionManageResult {
   };
 }
 
-// ─── Praktikan: status presensi diri sendiri di satu sesi ────────────────────
+// ─── Praktikan: status presensi diri sendiri di satu sesi (baca saja) ───────
+// Presensi dikirim dari halaman presensi lewat usePresensi, bukan dari hook ini.
 
 export interface UseMyAttendanceResult {
   session: FirestoreSession | null;
   sessionLoading: boolean;
   myRecord: AttendanceDoc | null;
-  submitting: boolean;
-  submitResult: ActionResult | null;
-  handleSubmitAttendance: () => Promise<void>;
 }
 
 export function useMyAttendance(
@@ -92,8 +90,6 @@ export function useMyAttendance(
   const [session, setSession] = useState<FirestoreSession | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [myRecord, setMyRecord] = useState<AttendanceDoc | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitResult, setSubmitResult] = useState<ActionResult | null>(null);
 
   // Realtime: status sesi
   useEffect(() => {
@@ -111,31 +107,9 @@ export function useMyAttendance(
     return unsub;
   }, [sessionId, profile]);
 
-  const handleSubmitAttendance = useCallback(async () => {
-    if (!profile || submitting) return;
-    setSubmitting(true);
-    setSubmitResult(null);
-    const result = await submitAttendance(sessionId, profile);
-    setSubmitResult(result);
-    if (result.success) {
-      setMyRecord({
-        id: `${sessionId}_${profile.id}`,
-        sessionId,
-        userId: profile.id,
-        userName: profile.name,
-        userNim: profile.nim,
-        recordedAt: new Date().toISOString(),
-      });
-    }
-    setSubmitting(false);
-  }, [profile, sessionId, submitting]);
-
   return {
     session,
     sessionLoading,
     myRecord,
-    submitting,
-    submitResult,
-    handleSubmitAttendance,
   };
 }
