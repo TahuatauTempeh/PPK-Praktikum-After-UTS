@@ -44,6 +44,15 @@ jobs:
       - name: Test
         run: npm run test:ci
 
+      - name: Install functions dependencies
+        run: npm ci --prefix functions
+
+      - name: Test functions
+        run: npm --prefix functions test -- --ci --runInBand
+
+      - name: Build functions
+        run: npm --prefix functions run build
+
       - name: Check whitespace
         run: |
           BASE="${{ github.event.pull_request.base.sha || github.event.before }}"
