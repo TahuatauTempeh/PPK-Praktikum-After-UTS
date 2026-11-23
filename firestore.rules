@@ -140,11 +140,45 @@ service cloud.firestore {
     // Setelah callable aktif (CP4), ganti baris `allow create` menjadi `allow create: if false;`
     // dan deploy ulang rules. Jangan membalik urutan ini.
 
+    // Fallback presensi berbasis lokasi tanpa Cloud Functions (PRD 14.1, keputusan tim
+    // 23 November 2026, project masih Spark). Rules memeriksa yang bisa diperiksa server:
+    // pemilik, ID, sesi dibuka, enrollment, lab aktif, dan kelengkapan bukti lokasi.
+    // Jarak Haversine tidak bisa dihitung di rules (tidak ada sin/cos), jadi jarak,
+    // akurasi, dan lokasi palsu tetap client-enforced. Setelah callable `submitAttendance`
+    // ter-deploy, ganti create menjadi `false` (PRD D-02).
+    function validAttendanceCreate(attendanceId) {
+      let d = request.resource.data;
+      let sesiPath = /databases/$(database)/documents/sessions/$(d.sessionId);
+      return getUserData().role == 'praktikan'
+        && d.keys().hasOnly([
+          'sessionId', 'userId', 'userName', 'userNim', 'recordedAt', 'latitude', 'longitude',
+          'accuracyMeters', 'distanceMeters', 'radiusMeters', 'laboratoryId',
+          'locationVerifiedAt', 'mocked', 'source'
+        ])
+        && d.sessionId is string
+        && d.userId == request.auth.uid
+        && attendanceId == d.sessionId + '_' + request.auth.uid
+        && d.userName is string
+        && d.userNim is string
+        && d.recordedAt == request.time
+        && d.locationVerifiedAt == request.time
+        && d.source == 'location'
+        && d.mocked == false
+        && d.latitude is number && d.latitude >= -90 && d.latitude <= 90
+        && d.longitude is number && d.longitude >= -180 && d.longitude <= 180
+        && d.accuracyMeters is number && d.accuracyMeters >= 0 && d.accuracyMeters <= 100
+        && exists(sesiPath)
+        && get(sesiPath).data.status == 'open'
+        && exists(/databases/$(database)/documents/enrollments/$(get(sesiPath).data.classId + '_' + request.auth.uid))
+        && d.laboratoryId == get(sesiPath).data.laboratoryId
+        && laboratoryIsActive(d.laboratoryId)
+        && d.radiusMeters == get(/databases/$(database)/documents/laboratories/$(d.laboratoryId)).data.radiusMeters
+        && d.distanceMeters is number && d.distanceMeters >= 0 && d.distanceMeters <= d.radiusMeters;
+    }
+
     match /attendance/{attendanceId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated()
-        && request.resource.data.userId == request.auth.uid
-        && attendanceId == request.resource.data.sessionId + '_' + request.auth.uid;
+      allow create: if isAuthenticated() && validAttendanceCreate(attendanceId);
       allow update, delete: if isAsisten();
     }
 
