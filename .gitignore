@@ -43,6 +43,7 @@ serviceAccount*.json
 praktikum-ppk-3-firebase-adminsdk-*.json
 .firebase/
 firebase-debug.log
+firestore-debug.log
 
 # typescript
 *.tsbuildinfo

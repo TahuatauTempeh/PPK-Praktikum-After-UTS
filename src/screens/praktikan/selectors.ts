@@ -1,10 +1,9 @@
 /**
- * Turunan data dari SessionContext untuk sisi praktikan.
- * Semua fungsi murni, state tetap dimiliki context.
+ * Turunan data untuk sisi praktikan.
+ * Semua fungsi murni, state tetap dimiliki hook/context.
  */
 
 import { toDateInputValue } from '@/lib/praktikum-helpers';
-import { formatJamWIB } from '@/screens/praktikan/format';
 import {
   AttendanceRecord,
   Enrollment,
@@ -125,12 +124,13 @@ export function describePresensi(status: PresensiStatus) {
         aksi: 'nonaktif',
         ringkas: 'Presensi belum dibuka',
         note: 'Presensi dapat diisi setelah asisten membuka sesi.',
+        alasan: 'Sesi belum dibuka',
       } as const;
     case 'bisa-presensi':
       return {
         aksi: 'presensi',
         ringkas: 'Presensi sedang dibuka',
-        note: 'Isi presensi sebelum asisten menutup sesi.',
+        note: 'Presensi diisi di halaman presensi setelah lokasi kamu diperiksa.',
       } as const;
     case 'sudah-hadir':
       return { aksi: 'riwayat', ringkas: 'Kamu sudah hadir', note: '' } as const;
@@ -138,18 +138,10 @@ export function describePresensi(status: PresensiStatus) {
       return { aksi: 'tidak-ada', ringkas: 'Hadir', note: 'Sesi ditutup · hasil akhir' } as const;
     case 'ditutup-tanpa-catatan':
       return {
-        aksi: 'tidak-ada',
+        aksi: 'nonaktif',
         ringkas: 'Tidak hadir',
         note: 'Sesi ditutup sebelum presensi kamu tercatat.',
+        alasan: 'Sesi sudah ditutup',
       } as const;
   }
-}
-
-/** Pesan galat saat presensi ditolak, diturunkan dari state yang sama dengan yang dipakai reducer */
-export function alasanPenolakan(session: Session, record?: AttendanceRecord) {
-  if (record) {
-    return { pesan: `Presensi kamu sudah tercatat pukul ${formatJamWIB(record.timestamp)} WIB.`, tutup: true };
-  }
-  if (session.status !== 'open') return { pesan: 'Sesi tidak lagi menerima presensi.', tutup: true };
-  return { pesan: 'Presensi belum tercatat. Coba lagi.', tutup: false };
 }

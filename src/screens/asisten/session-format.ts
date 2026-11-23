@@ -33,5 +33,6 @@ export function sapaanWIB(now: Date = new Date()) {
 
 /** Nama praktikum: mata kuliah + kode praktikum, mis. "Basis Data C2". */
 export function formatPraktikumName(session: Pick<AssistantSession, 'course' | 'code'>) {
-  return `${session.course} ${session.code}`;
+  // Sesi Firestore tidak punya kode terpisah (code kosong), jadi spasi sisa dibuang.
+  return `${session.course} ${session.code}`.trim();
 }

@@ -1,5 +1,6 @@
 /**
- * Modul AI izin (task 4.2): menilai sentimen alasan izin dengan model EDOM lokal di folder ai/.
+ * Modul AI sentimen: menilai nada teks dengan model EDOM lokal di folder ai/.
+ * Dipakai untuk alasan izin (task 4.2) dan kesan pesan sesi.
  *
  * Model berjalan di perangkat, jadi tidak butuh internet. Labelnya positif/netral/negatif,
  * bukan valid/invalid: model dilatih dari komentar evaluasi perkuliahan, sehingga hasilnya
@@ -33,9 +34,9 @@ function keyakinan(scores: number[], indeks: number): number {
   return Math.round((eksponen[indeks] / total) * 100) / 100;
 }
 
-function jalankanModel(alasan: string): AiResult {
+function jalankanModel(teks: string): AiResult {
   classify ??= createSentimentClassifier(model);
-  const prediksi = classify(alasan);
+  const prediksi = classify(teks);
   if (prediksi.label === null || prediksi.scores === null) return TANPA_HASIL;
   const indeks = prediksi.scores.indexOf(Math.max(...prediksi.scores));
   return { label: prediksi.label, confidence: keyakinan(prediksi.scores, indeks) };
@@ -43,9 +44,10 @@ function jalankanModel(alasan: string): AiResult {
 
 /**
  * Hasil gagal, timeout, atau kata yang tidak dikenali model semuanya menjadi label null,
- * supaya izin tetap tersimpan dan layar menampilkan "Hasil AI tidak tersedia".
+ * supaya data tetap tersimpan dan layar menampilkan "Hasil AI tidak tersedia".
+ * null berarti tidak terbaca, bukan netral.
  */
-export async function analisisAlasan(alasan: string, batasMs: number = AI_TIMEOUT_MS): Promise<AiResult> {
+export async function analisisSentimen(teks: string, batasMs: number = AI_TIMEOUT_MS): Promise<AiResult> {
   let penanda: ReturnType<typeof setTimeout> | undefined;
   const habisWaktu = new Promise<AiResult>((resolve) => {
     penanda = setTimeout(() => resolve(TANPA_HASIL), batasMs);
@@ -53,9 +55,9 @@ export async function analisisAlasan(alasan: string, batasMs: number = AI_TIMEOU
   const analisis = new Promise<AiResult>((resolve) => {
     setTimeout(() => {
       try {
-        resolve(jalankanModel(alasan));
+        resolve(jalankanModel(teks));
       } catch (error) {
-        console.warn('[ai] analisis alasan gagal', error);
+        console.warn('[ai] analisis sentimen gagal', error);
         resolve(TANPA_HASIL);
       }
     }, 0);
@@ -67,3 +69,6 @@ export async function analisisAlasan(alasan: string, batasMs: number = AI_TIMEOU
     clearTimeout(penanda);
   }
 }
+
+/** Nama lama untuk fitur izin; perilakunya sama dengan analisisSentimen. */
+export const analisisAlasan = analisisSentimen;

@@ -1,17 +1,16 @@
 /**
- * Detail Sesi: info lengkap sesi dan aksi presensi (UC-03, UC-04, DESIGN.md bagian 10 dan 11).
- * Perubahan data hanya lewat submitAttendance dari context, tampilan dibaca dari state.
+ * Detail Sesi: info lengkap sesi dan status presensi (UC-03, DESIGN.md bagian 10 dan 11).
+ * Sprint 3 (PRD 8.3): layar ini tidak menulis presensi. Bila sesi dibuka dan belum
+ * presensi, tombol membuka halaman presensi berbasis lokasi `/praktikan/presensi/[id]`.
  *
- * Dev 3: Jika user sudah login via Firebase Auth (useAuth().profile tersedia),
- * screen menggunakan Firestore realtime (useMyAttendance hook) untuk data presensi
- * dan session status. Jika belum, fallback ke data dummy dari SessionContext.
+ * Jika user sudah login via Firebase Auth (useAuth().profile tersedia), data sesi dan
+ * presensi dibaca realtime lewat useMyAttendance. Jika belum, fallback ke data dummy.
  */
 
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { BottomSheet } from '@/components/BottomSheet';
 import { useAuth } from '@/context/auth-context';
 import { useSession } from '@/context/session-context';
 import { allUsers } from '@/data/dummy';
@@ -29,14 +28,9 @@ import {
   formatTanggalPendek,
 } from '@/screens/praktikan/format';
 import { useUserPraktikan } from '@/screens/praktikan/guard';
-import { bukaJadwal, bukaRiwayat } from '@/screens/praktikan/navigasi';
-import {
-  alasanPenolakan,
-  describePresensi,
-  findOwnAttendance,
-  pecahJudul,
-  presensiStatus,
-} from '@/screens/praktikan/selectors';
+import { KesanPesanSesi } from '@/screens/praktikan/kesan-pesan/kesan-pesan-sesi';
+import { bukaJadwal, bukaPresensi, bukaRiwayat } from '@/screens/praktikan/navigasi';
+import { describePresensi, findOwnAttendance, pecahJudul, presensiStatus } from '@/screens/praktikan/selectors';
 import { fonts, typography, useTheme } from '@/theme';
 
 const SEMUA_TEPI = ['top', 'left', 'right', 'bottom'] as const;
@@ -44,21 +38,11 @@ const SEMUA_TEPI = ['top', 'left', 'right', 'bottom'] as const;
 export default function DetailSesiScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
-  const { state, submitAttendance } = useSession();
+  const { state } = useSession();
   const { profile } = useAuth();
-  const [sheetTampil, setSheetTampil] = useState(false);
-  const [sedangProses, setSedangProses] = useState(false);
-  const [galat, setGalat] = useState<{ pesan: string; tutup: boolean } | null>(null);
-  // state di callback bisa basi sampai render ulang, jadi ketukan ganda dicegah di sini
-  const sedangKirim = useRef(false);
 
-  // ── Firestore realtime (Dev 3) ──────────────────────────────────────────────
   // Hook selalu dipanggil (Rules of Hooks), tapi hasilnya hanya dipakai jika profile ada.
-  const {
-    session: fsSession,
-    myRecord: fsRecord,
-    handleSubmitAttendance: fsSubmit,
-  } = useMyAttendance(id ?? '', profile);
+  const { session: fsSession, myRecord: fsRecord } = useMyAttendance(id ?? '', profile);
 
   const useFirestore = profile !== null && id !== undefined;
 
@@ -135,44 +119,12 @@ export default function DetailSesiScreen() {
   const status = presensiStatus(session, record);
   const info = describePresensi(status);
   const { mataKuliah, sesi } = pecahJudul(session);
-  const asisten = allUsers.find((u) => u.id === session.assistantId)?.name ?? 'Belum ditentukan';
+  // Sesi Firestore menyimpan nama asisten; data dummy hanya untuk mode tanpa login.
+  const asisten =
+    (useFirestore ? fsSession?.assistantName?.trim() : undefined) ||
+    allUsers.find((u) => u.id === session.assistantId)?.name ||
+    'Belum ditentukan';
   const bentuk = record ? 'sukses' : status === 'ditutup-tanpa-catatan' ? 'galat' : 'aksen';
-
-  const bukaSheet = () => {
-    sedangKirim.current = false;
-    setSedangProses(false);
-    setGalat(null);
-    setSheetTampil(true);
-  };
-
-  const konfirmasi = async () => {
-    if (sedangKirim.current) return;
-    sedangKirim.current = true;
-    setSedangProses(true);
-
-    if (useFirestore) {
-      // Firestore path
-      await fsSubmit();
-      // fsResult akan diupdate dari hook; tutup sheet jika berhasil
-      setSheetTampil(false);
-      sedangKirim.current = false;
-      setSedangProses(false);
-      return;
-    }
-
-    // Dummy/legacy path
-    const hasil = submitAttendance(session.id);
-    if (hasil.success) {
-      setSheetTampil(false);
-      return;
-    }
-    const alasan = alasanPenolakan(session, record);
-    setGalat(alasan);
-    if (!alasan.tutup) {
-      sedangKirim.current = false;
-      setSedangProses(false);
-    }
-  };
 
   const rincian: { ikon: IkonNama; label: string; nilai: string }[] = [
     { ikon: 'jadwal', label: 'Tanggal', nilai: formatTanggal(session.date) },
@@ -184,17 +136,19 @@ export default function DetailSesiScreen() {
   const footer =
     info.aksi === 'tidak-ada' ? undefined : (
       <View style={styles.footer}>
-        {info.aksi === 'presensi' ? <Tombol label="Presensi sekarang" onPress={bukaSheet} /> : null}
+        {info.aksi === 'presensi' ? (
+          <Tombol label="Buka halaman presensi" panah onPress={() => bukaPresensi(session.id)} />
+        ) : null}
         {info.aksi === 'nonaktif' ? (
           <>
             <Tombol
-              label="Presensi sekarang"
+              label="Buka halaman presensi"
               disabled
-              petunjuk="Menunggu sesi dibuka"
-              onPress={bukaSheet}
+              petunjuk={info.alasan}
+              onPress={() => bukaPresensi(session.id)}
             />
             <Text style={[typography.caption, styles.tengah, { color: theme.colors.textSecondary }]}>
-              Menunggu sesi dibuka
+              {info.alasan}
             </Text>
           </>
         ) : null}
@@ -208,40 +162,6 @@ export default function DetailSesiScreen() {
     <Layar
       edges={SEMUA_TEPI}
       footer={footer}
-      sembunyikan={sheetTampil}
-      overlay={
-        <BottomSheet visible={sheetTampil} title="Konfirmasi presensi" onClose={() => setSheetTampil(false)}>
-          <View style={styles.sheet}>
-            <Text style={[typography.label, styles.tengah, { color: theme.colors.textPrimary }]}>{mataKuliah}</Text>
-            {sesi ? <Text style={[typography.body, styles.tengah, { color: theme.colors.textSecondary }]}>{sesi}</Text> : null}
-            <Text style={[typography.body, styles.tengah, { color: theme.colors.textSecondary }]}>
-              {formatTanggal(session.date)}, {formatRentangWIB(session.time)}
-            </Text>
-            <Text style={[typography.body, styles.tengah, { color: theme.colors.textSecondary }]}>{session.room}</Text>
-            <Text style={[typography.label, styles.tengah, { color: theme.colors.textPrimary }]}>
-              Presensi sebagai {currentUser.name} · {currentUser.nim}
-            </Text>
-            <Text style={[typography.body, styles.tengah, { color: theme.colors.textSecondary }]}>
-              Waktu presensi dicatat saat kamu menekan tombol di bawah.
-            </Text>
-            {galat ? (
-              <View accessibilityRole="alert" style={[styles.notice, { backgroundColor: theme.colors.errorSoft }]}>
-                <Text style={[typography.body, { color: theme.colors.error }]}>{galat.pesan}</Text>
-              </View>
-            ) : null}
-            <View style={styles.aksi}>
-              {galat?.tutup ? null : (
-                <Tombol label="Ya, presensi sekarang" disabled={sedangProses} onPress={konfirmasi} />
-              )}
-              <Tombol
-                label={galat?.tutup ? 'Tutup' : 'Batal'}
-                varian="lembut"
-                onPress={() => setSheetTampil(false)}
-              />
-            </View>
-          </View>
-        </BottomSheet>
-      }
     >
       {header}
 
@@ -306,6 +226,9 @@ export default function DetailSesiScreen() {
         )}
       </View>
 
+      {/* Kesan pesan hanya untuk sesi Firestore yang sudah ditutup dan presensinya tercatat. */}
+      {useFirestore && status === 'ditutup-hadir' ? <KesanPesanSesi sessionId={session.id} user={currentUser} /> : null}
+
       <Text accessibilityRole="header" style={[typography.sectionHeading, { color: theme.colors.textPrimary }]}>
         Informasi sesi
       </Text>
@@ -345,13 +268,10 @@ const styles = StyleSheet.create({
   tanggal: { fontFamily: fonts.semibold, letterSpacing: 0.6 },
   materi: { gap: 6 },
   kapsul: { borderRadius: 24, padding: 18, gap: 4 },
-  notice: { borderRadius: 16, padding: 14 },
   daftar: { borderRadius: 24, borderWidth: 1, paddingHorizontal: 16 },
   rincian: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14 },
   ikonBulat: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   teksRincian: { flex: 1, gap: 2 },
   footer: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 12, width: '100%', maxWidth: 648, alignSelf: 'center', gap: 8 },
-  sheet: { gap: 8 },
   tengah: { textAlign: 'center' },
-  aksi: { gap: 10, marginTop: 8 },
 });
