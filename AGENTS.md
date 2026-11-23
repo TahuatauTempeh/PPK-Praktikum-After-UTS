@@ -117,20 +117,25 @@ Later promotions go through the Admin screen and are recorded in `auditLogs`.
 
 ## Verification
 
-CI runs lint, typecheck, tests, and a whitespace check. Reproduce them locally
-before opening a pull request:
+CI runs lint, typecheck, tests, the Firestore rules E2E, and a whitespace check.
+Reproduce them locally before opening a pull request:
 
 ```bash
 npm run lint
 npm run typecheck
 npm run test:ci
+npm run test:rules
 npm --prefix functions test -- --ci --runInBand
 npm --prefix functions run build
 git diff --check
 ```
 
+`npm run test:rules` needs Java 21+ and the Firebase Emulator. If the default
+`java` is older, point `JAVA_HOME`/`PATH` at a newer JDK first.
+
 `npm run verify` runs lint, typecheck, and `test:ci` in order. CI also installs,
-tests, and builds `functions/`. CI uses Node 24 (Expo SDK 58 accepts
+tests, and builds `functions/`, and runs `npm run test:rules` in the `rules-e2e`
+job with Temurin 21. CI uses Node 24 (Expo SDK 58 accepts
 `^22.13.0 || ^24.3.0`).
 
 Test stack:
@@ -145,11 +150,13 @@ Test stack:
 - RNTL 14 renders asynchronously: use `await render(...)` and
   `await fireEvent.press(...)` or `await user.press(...)`.
 
-There is no browser/native end-to-end suite. Firestore rules are not covered by
-Jest; changes to `firestore.rules` must be reviewed and deployed against a test
-project manually. `npx expo-doctor` is advisory: this checkout currently has
-known patch/minor drift from the SDK’s expected package versions, and it requires
-network access. Do not make it a merge gate without fixing the versions first.
+Firestore rules have an emulator E2E harness: run `npm run test:rules`.
+The harness is not part of Jest and needs Java 21+. Browser and native
+end-to-end suites are not available yet; changes to `firestore.rules` still
+need review and a deploy against a test project. `npx expo-doctor` is advisory:
+this checkout currently has known patch/minor drift from the SDK’s expected
+package versions, and it requires network access. Do not make it a merge gate
+without fixing the versions first.
 
 ## Architecture
 
@@ -322,7 +329,7 @@ directly from screens.
   `auditLogs`, and `invitationCodes`. Fallback attendance rules are active; the
   callable attendance lock-down is still pending.
 - Deploy rules to the team project after any change and test the affected role
-  paths. CI does not run a Firestore emulator.
+  paths. CI runs `npm run test:rules` in the `rules-e2e` job.
 - Firestore has no schema. Keep `src/types/index.ts`, converters, and service
   payloads synchronized with the collections in `README.md`.
 - `google-services.json` is ignored by Git. It is only needed for Sprint 3 push
@@ -367,8 +374,9 @@ Profiles live in `eas.json`: `development` (development client, internal),
   Do not initialize Firebase in a unit test.
 - Prefer behavior assertions (result, message, callback, rendered text) over
   snapshots. Snapshot UI tests rot quickly and are not used here.
-- If a test needs a real device, a native module, or Firestore rules, it is not a
-  unit test; document it as a manual UAT step instead.
+- If a test needs a real device or a native module, it is not a unit test;
+  document it as a manual UAT step instead. Firestore rules tests belong in
+  `e2e/rules/` and run with `npm run test:rules`.
 
 ## Known limitations and gotchas
 
