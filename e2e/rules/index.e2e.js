@@ -18,6 +18,7 @@ const {
 } = require('firebase/firestore');
 
 const RULES = path.join(__dirname, '../../firestore.rules');
+const EXPECTED_SCENARIOS = 18;
 const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8080';
 const [host, portText] = emulatorHost.split(':');
 const port = Number(portText ?? 8080);
@@ -180,6 +181,12 @@ function validAttendance(sessionId, overrides = {}) {
 
     for (const [name, status] of hasil) {
       console.log(`${status}  ${name}`);
+    }
+    if (hasil.length !== EXPECTED_SCENARIOS) {
+      console.error(
+        `Expected ${EXPECTED_SCENARIOS} scenarios, ran ${hasil.length}`
+      );
+      process.exitCode = 1;
     }
     const gagal = hasil.filter(([, status]) => status.startsWith('FAIL'));
     if (gagal.length) process.exitCode = 1;
