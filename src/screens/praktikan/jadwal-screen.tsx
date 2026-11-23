@@ -1,7 +1,7 @@
 /**
- * Jadwal Praktikan: daftar sesi dari SessionContext (UC-02, DESIGN.md bagian 9).
- * Banner meringkas tanggal aktif, kartu biru menonjolkan sesi yang bisa dipresensi,
- * chip memfilter berdasarkan status.
+ * Jadwal Praktikan: daftar sesi dan status presensi realtime dari Firestore
+ * (UC-02, DESIGN.md bagian 9). Banner meringkas tanggal aktif, kartu biru
+ * menonjolkan sesi yang bisa dipresensi, chip memfilter berdasarkan status.
  */
 
 import React, { useMemo, useState } from 'react';

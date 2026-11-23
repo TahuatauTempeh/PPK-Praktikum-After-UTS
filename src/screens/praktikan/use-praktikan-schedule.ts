@@ -1,27 +1,15 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { listenUserAttendance, type AttendanceDoc } from '@/lib/attendance-service';
+import {
+  listenUserAttendance,
+  toAttendanceRecordsForUser,
+  type AttendanceDoc,
+} from '@/lib/attendance-service';
 import { getAllClasses } from '@/lib/class-service';
-import { toDate } from '@/lib/praktikum-helpers';
 import { getSessionsForPraktikan } from '@/lib/session-service';
 import { toPraktikanSession } from '@/screens/praktikan/selectors';
-import { AttendanceRecord, Session, TimestampValue } from '@/types';
-
-function toAttendanceRecord(doc: AttendanceDoc): AttendanceRecord {
-  const parsed = toDate(doc.recordedAt as TimestampValue | null | undefined);
-  const timestamp = Number.isNaN(parsed.getTime())
-    ? new Date().toISOString()
-    : parsed.toISOString();
-
-  return {
-    id: doc.id,
-    sessionId: doc.sessionId,
-    userId: doc.userId,
-    userName: doc.userName,
-    timestamp,
-  };
-}
+import type { Session } from '@/types';
 
 /** Memuat daftar sesi dan kehadiran realtime praktikan dari Firestore. */
 export function usePraktikanSchedule(userId: string) {
@@ -36,12 +24,7 @@ export function usePraktikanSchedule(userId: string) {
   }, [userId]);
 
   const attendance = useMemo(
-    () =>
-      userId
-        ? attendanceDocs
-            .filter((item) => item.userId === userId)
-            .map(toAttendanceRecord)
-        : [],
+    () => (userId ? toAttendanceRecordsForUser(attendanceDocs, userId) : []),
     [attendanceDocs, userId]
   );
 

@@ -18,7 +18,8 @@ import {
 
 import { logAction } from '@/lib/firebase/audit';
 import { COLLECTIONS, getDb } from '@/lib/firebase/firestore';
-import type { UserProfile } from '@/types';
+import { toIsoString } from '@/lib/praktikum-helpers';
+import type { AttendanceRecord, UserProfile } from '@/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -35,6 +36,25 @@ export interface AttendanceDoc {
 export interface SubmitResult {
   success: boolean;
   message: string;
+}
+
+/** Mengubah dokumen attendance Firestore menjadi record yang dipakai UI. */
+export function toAttendanceRecord(doc: AttendanceDoc): AttendanceRecord {
+  return {
+    id: doc.id,
+    sessionId: doc.sessionId,
+    userId: doc.userId,
+    userName: doc.userName,
+    timestamp: toIsoString(doc.recordedAt) ?? '',
+  };
+}
+
+/** Memfilter record milik satu praktikan dan memetakannya untuk UI. */
+export function toAttendanceRecordsForUser(
+  docs: readonly AttendanceDoc[],
+  userId: string,
+): AttendanceRecord[] {
+  return docs.filter((doc) => doc.userId === userId).map(toAttendanceRecord);
 }
 
 // ─── Submit presensi ──────────────────────────────────────────────────────────

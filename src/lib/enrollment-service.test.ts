@@ -1,15 +1,16 @@
 import type { DocumentData, DocumentSnapshot } from 'firebase/firestore';
-import { getDoc, getDocs, writeBatch } from 'firebase/firestore';
+import { collection, getDoc, getDocs, onSnapshot, writeBatch } from 'firebase/firestore';
 
 import { logActionInBatch } from '@/lib/firebase/audit';
 
-import { addEnrollment, removeEnrollment } from './enrollment-service';
+import { addEnrollment, listenAllEnrollments, removeEnrollment } from './enrollment-service';
 
 jest.mock('firebase/firestore', () => ({
   collection: jest.fn(),
   doc: jest.fn((_db: unknown, collectionName: string, id: string) => ({ collectionName, id })),
   getDoc: jest.fn(),
   getDocs: jest.fn(),
+  onSnapshot: jest.fn(),
   query: jest.fn(),
   serverTimestamp: jest.fn(() => 'SERVER_TS'),
   where: jest.fn(),
@@ -126,5 +127,44 @@ describe('removeEnrollment', () => {
 
     await expect(removeEnrollment('c1_u1')).rejects.toThrow('Data peserta tidak ditemukan.');
     expect(writeBatchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('listenAllEnrollments', () => {
+  const collectionMock = jest.mocked(collection);
+  const onSnapshotMock = jest.mocked(onSnapshot);
+
+  it('memetakan snapshot enrollment dan mengembalikan unsubscribe', () => {
+    const unsubscribe = jest.fn();
+    collectionMock.mockReturnValue({ kind: 'collection' } as never);
+    onSnapshotMock.mockImplementation(((...args: unknown[]) => {
+      const onNext = args[1] as (snapshot: unknown) => void;
+      onNext({
+        docs: [
+          snapshot('c1_u1', {
+            classId: 'c1',
+            userId: 'u1',
+            userName: 'Bunga',
+            enrolledAt: 'SERVER_TS',
+          }),
+        ],
+      });
+      return unsubscribe;
+    }) as never);
+
+    const callback = jest.fn();
+    const result = listenAllEnrollments(callback);
+
+    expect(collectionMock).toHaveBeenCalledWith({}, 'enrollments');
+    expect(callback).toHaveBeenCalledWith([
+      {
+        id: 'c1_u1',
+        classId: 'c1',
+        userId: 'u1',
+        userName: 'Bunga',
+        enrolledAt: 'SERVER_TS',
+      },
+    ]);
+    expect(result).toBe(unsubscribe);
   });
 });
