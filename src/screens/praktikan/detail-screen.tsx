@@ -28,6 +28,7 @@ import {
   formatTanggalPendek,
 } from '@/screens/praktikan/format';
 import { useUserPraktikan } from '@/screens/praktikan/guard';
+import { KesanPesanSesi } from '@/screens/praktikan/kesan-pesan/kesan-pesan-sesi';
 import { bukaJadwal, bukaPresensi, bukaRiwayat } from '@/screens/praktikan/navigasi';
 import { describePresensi, findOwnAttendance, pecahJudul, presensiStatus } from '@/screens/praktikan/selectors';
 import { fonts, typography, useTheme } from '@/theme';
@@ -224,6 +225,9 @@ export default function DetailSesiScreen() {
           </Text>
         )}
       </View>
+
+      {/* Kesan pesan hanya untuk sesi Firestore yang sudah ditutup dan presensinya tercatat. */}
+      {useFirestore && status === 'ditutup-hadir' ? <KesanPesanSesi sessionId={session.id} user={currentUser} /> : null}
 
       <Text accessibilityRole="header" style={[typography.sectionHeading, { color: theme.colors.textPrimary }]}>
         Informasi sesi
