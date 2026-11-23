@@ -75,7 +75,7 @@ export function SesiCard({ session, record, onPress }: SesiCardProps) {
           <View style={[styles.kehadiran, { borderTopColor: theme.colors.hairline }]}>
             {record ? (
               <Text style={[typography.caption, styles.tebal, { color: theme.colors.success }]}>
-                Hadir {formatJamWIB(record.timestamp)} WIB
+                Hadir{record.timestamp ? ` ${formatJamWIB(record.timestamp)} WIB` : ''}
               </Text>
             ) : dibuka ? (
               <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>Belum presensi</Text>

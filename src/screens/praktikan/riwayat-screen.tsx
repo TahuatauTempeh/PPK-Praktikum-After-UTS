@@ -7,7 +7,6 @@
 import React, { useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
-import { useSession } from '@/context/session-context';
 import { Hero } from '@/screens/praktikan/components/hero';
 import { Kosong } from '@/screens/praktikan/components/kosong';
 import { Layar } from '@/screens/praktikan/components/layar';
@@ -21,8 +20,9 @@ import { typography, useTheme } from '@/theme';
 export default function RiwayatScreen() {
   const theme = useTheme();
   const currentUser = useUserPraktikan();
-  const { attendance } = useSession().state;
-  const { sessions, loading, error, refresh } = usePraktikanSchedule(currentUser?.id ?? '');
+  const { sessions, attendance, loading, error, refresh } = usePraktikanSchedule(
+    currentUser?.id ?? ''
+  );
 
   const ringkas = useMemo(
     () => ringkasRiwayat(sessions, attendance, currentUser?.id ?? ''),

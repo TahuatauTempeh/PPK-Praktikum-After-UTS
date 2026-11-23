@@ -1,16 +1,32 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import {
+  listenUserAttendance,
+  toAttendanceRecordsForUser,
+  type AttendanceDoc,
+} from '@/lib/attendance-service';
 import { getAllClasses } from '@/lib/class-service';
 import { getSessionsForPraktikan } from '@/lib/session-service';
 import { toPraktikanSession } from '@/screens/praktikan/selectors';
-import { Session } from '@/types';
+import type { Session } from '@/types';
 
-/** Memuat daftar sesi praktikan yang sudah difilter berdasarkan enrollment kelasnya. */
+/** Memuat daftar sesi dan kehadiran realtime praktikan dari Firestore. */
 export function usePraktikanSchedule(userId: string) {
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [attendanceDocs, setAttendanceDocs] = useState<AttendanceDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!userId) return;
+    return listenUserAttendance(userId, setAttendanceDocs);
+  }, [userId]);
+
+  const attendance = useMemo(
+    () => (userId ? toAttendanceRecordsForUser(attendanceDocs, userId) : []),
+    [attendanceDocs, userId]
+  );
 
   const loadData = useCallback(async () => {
     if (!userId) return [];
@@ -63,5 +79,5 @@ export function usePraktikanSchedule(userId: string) {
     }, [loadData, userId])
   );
 
-  return { sessions, loading, error, refresh };
+  return { sessions, attendance, loading, error, refresh };
 }

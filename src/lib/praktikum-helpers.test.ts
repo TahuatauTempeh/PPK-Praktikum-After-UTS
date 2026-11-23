@@ -9,6 +9,7 @@ import {
   toDate,
   toDateInputValue,
   toFirestoreTimestamp,
+  toIsoString,
   toMillis,
   validateTimeRange,
 } from './praktikum-helpers';
@@ -115,6 +116,24 @@ describe('konversi waktu', () => {
     expect(toMillis(null)).toBe(0);
     expect(formatShortDate(null)).toBe('-');
     expect(toDateInputValue(null)).toBe('');
+  });
+
+  it('mengubah Date, string, dan objek toDate menjadi ISO', () => {
+    const date = new Date('2026-11-20T01:05:00.000Z');
+
+    expect(toIsoString(date)).toBe(date.toISOString());
+    expect(toIsoString('2026-11-20T01:05:00.000Z')).toBe(date.toISOString());
+    expect(toIsoString(Timestamp.fromDate(date))).toBe(date.toISOString());
+    expect(toIsoString({ toDate: () => date })).toBe(date.toISOString());
+  });
+
+  it('mengembalikan null untuk nilai waktu yang tidak dikenali', () => {
+    expect(toIsoString(null)).toBeNull();
+    expect(toIsoString(undefined)).toBeNull();
+    expect(toIsoString('bukan tanggal')).toBeNull();
+    expect(toIsoString(0)).toBeNull();
+    expect(toIsoString({})).toBeNull();
+    expect(toIsoString({ toDate: () => { throw new Error('rusak'); } })).toBeNull();
   });
 
   it('mengubah waktu menjadi tanggal input WIB', () => {
