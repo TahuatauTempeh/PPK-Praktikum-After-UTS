@@ -523,13 +523,15 @@ Aturan penting:
   menginisialisasi Firebase asli.
 - Jangan menguji teks implementasi internal atau memakai snapshot. Uji hasil yang
   terlihat pengguna dan efek samping yang penting.
-- Test yang butuh perangkat, modul native, atau rules Firestore bukan unit test;
-  catat sebagai langkah UAT manual.
+- Test yang butuh perangkat atau modul native bukan unit test; catat sebagai
+  langkah UAT manual. Test rules Firestore ditambahkan ke `e2e/rules/` dan
+  dijalankan dengan `npm run test:rules`.
 
 Firestore rules E2E sudah dicakup otomatis lewat `npm run test:rules`
 (Firestore emulator + Java 21+). Yang belum dicakup otomatis: seluruh jalur CRUD
 Firestore end-to-end, E2E web/Android (Playwright/Maestro), dan build native.
-Perubahan pada area itu tetap memerlukan pengujian manual.
+Perubahan pada area itu tetap memerlukan pengujian manual. Saat ini skenario
+harness fokus pada rules `attendance`; rules koleksi lain belum dicakup.
 
 ## Menjalankan Verifikasi Lokal
 
@@ -651,6 +653,8 @@ npm run typecheck
 npm run test:ci
 ```
 
+Job `rules-e2e` menjalankan `npm run test:rules` dengan Java 21.
+
 CI memakai Node 24 dan cache npm. Tidak ada secret Firebase yang diperlukan
 karena unit test memock Firebase.
 
@@ -663,6 +667,8 @@ npm ci --prefix functions
 npm --prefix functions test -- --ci --runInBand
 npm --prefix functions run build
 ```
+
+Untuk kegagalan job `rules-e2e`, jalankan `npm run test:rules` dengan Java 21+.
 
 Yang tidak dijalankan CI: `expo-doctor`, E2E web/Android, dan EAS build. Rules
 Firestore dijalankan lewat `npm run test:rules` di job `rules-e2e`; perubahan
@@ -870,6 +876,7 @@ anggota lain, koordinasikan dulu.
 - [ ] Tidak ada impor `firebase/firestore` baru di layar.
 - [ ] Test ditambahkan atau diperbarui untuk logika yang berubah.
 - [ ] `npm run verify` lulus.
+- [ ] `npm run test:rules` lulus (butuh Java 21+).
 - [ ] Tidak ada secret, `.env`, file generate, atau debug log.
 - [ ] `git diff` dan `git diff --staged` sudah ditinjau.
 - [ ] Pesan commit mengikuti Conventional Commits dan bahasa Indonesia.

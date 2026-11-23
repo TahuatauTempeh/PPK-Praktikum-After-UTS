@@ -117,20 +117,25 @@ Later promotions go through the Admin screen and are recorded in `auditLogs`.
 
 ## Verification
 
-CI runs lint, typecheck, tests, and a whitespace check. Reproduce them locally
-before opening a pull request:
+CI runs lint, typecheck, tests, the Firestore rules E2E, and a whitespace check.
+Reproduce them locally before opening a pull request:
 
 ```bash
 npm run lint
 npm run typecheck
 npm run test:ci
+npm run test:rules
 npm --prefix functions test -- --ci --runInBand
 npm --prefix functions run build
 git diff --check
 ```
 
+`npm run test:rules` needs Java 21+ and the Firebase Emulator. If the default
+`java` is older, point `JAVA_HOME`/`PATH` at a newer JDK first.
+
 `npm run verify` runs lint, typecheck, and `test:ci` in order. CI also installs,
-tests, and builds `functions/`. CI uses Node 24 (Expo SDK 58 accepts
+tests, and builds `functions/`, and runs `npm run test:rules` in the `rules-e2e`
+job with Temurin 21. CI uses Node 24 (Expo SDK 58 accepts
 `^22.13.0 || ^24.3.0`).
 
 Test stack:
@@ -369,8 +374,9 @@ Profiles live in `eas.json`: `development` (development client, internal),
   Do not initialize Firebase in a unit test.
 - Prefer behavior assertions (result, message, callback, rendered text) over
   snapshots. Snapshot UI tests rot quickly and are not used here.
-- If a test needs a real device, a native module, or Firestore rules, it is not a
-  unit test; document it as a manual UAT step instead.
+- If a test needs a real device or a native module, it is not a unit test;
+  document it as a manual UAT step instead. Firestore rules tests belong in
+  `e2e/rules/` and run with `npm run test:rules`.
 
 ## Known limitations and gotchas
 
