@@ -18,4 +18,5 @@ export const homeMenu: HomeMenuItem[] = [
   { id: 'peta', title: 'Peta', icon: 'pin', href: '/asisten/peta' as Href },
   { id: 'atur-sesi', title: 'Atur Sesi', icon: 'clock', href: '/asisten/atur-sesi' as Href },
   { id: 'izin', title: 'Izin', icon: 'formInfo', href: '/asisten/izin' },
+  { id: 'kesan-pesan', title: 'Kesan Pesan', icon: 'formCheck', href: '/asisten/kesan-pesan' as Href },
 ];
