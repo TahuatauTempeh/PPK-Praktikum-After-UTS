@@ -126,26 +126,22 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ─── 5. Attendance Collection (Dev 3) ───────────────────────────────────
+    // ─── 5. Attendance Collection (Dev 1 rules / Dev 2 callable) ────────────
     // ID dokumen: {sessionId}_{uid}
     // Aturan pencegahan:
-    //  - Read diperbolehkan untuk semua user yang login (untuk cek kehadiran)
+    //  - Read hanya untuk pemilik catatan atau asisten. Koordinat presensi adalah
+    //    data pribadi; jangan membuka seluruh koleksi ke semua user yang login.
     //  - userId harus sesuai auth.uid
     //  - docId harus gabungan sessionId + '_' + uid
     //  - Praktikan hanya bisa create (update ditolak -> cegah presensi ganda)
     //  - Hanya asisten yang bisa update/delete catatan presensi
     //
-    // CATATAN DEPLOY SPRINT 3: aturan create di bawah masih aturan Sprint 2 supaya
-    // presensi tetap berjalan sebelum callable `submitAttendance` ter-deploy.
-    // Setelah callable aktif (CP4), ganti baris `allow create` menjadi `allow create: if false;`
-    // dan deploy ulang rules. Jangan membalik urutan ini.
-
-    // Fallback presensi berbasis lokasi tanpa Cloud Functions (PRD 14.1, keputusan tim
-    // 23 November 2026, project masih Spark). Rules memeriksa yang bisa diperiksa server:
-    // pemilik, ID, sesi dibuka, enrollment, lab aktif, dan kelengkapan bukti lokasi.
-    // Jarak Haversine tidak bisa dihitung di rules (tidak ada sin/cos), jadi jarak,
-    // akurasi, dan lokasi palsu tetap client-enforced. Setelah callable `submitAttendance`
-    // ter-deploy, ganti create menjadi `false` (PRD D-02).
+    // Selama project masih Spark (PRD 14.1), create memakai `validAttendanceCreate`
+    // dari transaksi klien. Rules memeriksa pemilik, ID, sesi dibuka, enrollment,
+    // lab aktif, dan kelengkapan bukti lokasi; jarak, akurasi, dan deteksi lokasi
+    // palsu tetap client-enforced. Setelah callable `submitAttendance` ter-deploy,
+    // ganti create menjadi `false` (PRD D-02) dan deploy ulang rules. Jangan
+    // membalik urutan deploy.
     function validAttendanceCreate(attendanceId) {
       let d = request.resource.data;
       let sesiPath = /databases/$(database)/documents/sessions/$(d.sessionId);
@@ -177,7 +173,8 @@ service cloud.firestore {
     }
 
     match /attendance/{attendanceId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated()
+        && (resource.data.userId == request.auth.uid || isAsisten());
       allow create: if isAuthenticated() && validAttendanceCreate(attendanceId);
       allow update, delete: if isAsisten();
     }
