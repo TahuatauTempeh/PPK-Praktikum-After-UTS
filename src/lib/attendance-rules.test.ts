@@ -191,6 +191,12 @@ describe('kelayakanPresensi: state tambahan SRS 7.2', () => {
     );
   });
 
+  it('menulis jarak jauh dalam kilometer', () => {
+    expect(kelayakan({ lokasi: { tahap: 'siap', posisi: POSISI_BAIK, distanceMeters: 13_751_698 } }).alasan).toBe(
+      'Kamu berada 13751,7 km dari lab, radius 100 m'
+    );
+  });
+
   it('mengaktifkan tombol tepat di batas radius', () => {
     expect(kelayakan({ lokasi: { tahap: 'siap', posisi: POSISI_BAIK, distanceMeters: 100 } }).tombolAktif).toBe(true);
   });

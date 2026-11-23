@@ -4,6 +4,7 @@
  * file ini mengubahnya menjadi AttendanceSubmitResult dengan pesan Bahasa Indonesia.
  */
 
+import { formatDistanceMeters } from '@/lib/geo';
 import type { AttendanceFailureCode, AttendanceSubmitResult } from '@/types';
 
 export type { AttendanceFailureCode, AttendanceSubmitResult };
@@ -50,9 +51,6 @@ function angkaValid(nilai: unknown): nilai is number {
   return typeof nilai === 'number' && Number.isFinite(nilai) && nilai >= 0;
 }
 
-function meter(nilai: number): string {
-  return `${Math.round(nilai)} m`;
-}
 
 export function pesanGagalPresensi(code: AttendanceFailureCode, detail: DetailGagal = {}): string {
   if (code !== 'OUT_OF_RADIUS') return PESAN_TETAP[code];
@@ -62,7 +60,7 @@ export function pesanGagalPresensi(code: AttendanceFailureCode, detail: DetailGa
     return 'Kamu berada di luar radius laboratorium.';
   }
   const tujuan = laboratoryName?.trim() ? laboratoryName.trim() : 'laboratorium';
-  return `Kamu berada ${meter(distanceMeters)} dari ${tujuan}. Radius yang diizinkan ${meter(radiusMeters)}.`;
+  return `Kamu berada ${formatDistanceMeters(distanceMeters)} dari ${tujuan}. Radius yang diizinkan ${formatDistanceMeters(radiusMeters)}.`;
 }
 
 export function buatGagal(code: AttendanceFailureCode, detail: DetailGagal = {}): AttendanceFailure {

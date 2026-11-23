@@ -1,13 +1,15 @@
 /**
  * Aturan presensi berbasis lokasi sebagai fungsi murni (PRD Sprint 3 bagian 7.1, 7.2, 11.2).
  *
- * File ini sengaja tanpa import supaya dapat disalin apa adanya ke `functions/src/`
- * untuk callable `submitAttendance`, dengan test yang sama. Jarak dihitung pemanggil
- * (Haversine di `geo.ts`), jadi aturan di sini hanya membandingkan angka.
+ * File ini hanya mengimpor `./geo`, yang juga ada di `functions/src/`, supaya dapat disalin
+ * apa adanya untuk callable `submitAttendance`, dengan test yang sama. Jarak dihitung
+ * pemanggil (Haversine di `geo.ts`), jadi aturan di sini hanya membandingkan angka.
  *
  * - `validasiPresensi`: lapis pencatatan (callable, atau fallback klien bila tanpa Blaze).
  * - `kelayakanPresensi`: lapis tampilan, menentukan tombol dan alasan di halaman presensi.
  */
+
+import { formatDistanceMeters } from './geo';
 
 /** Sama dengan MAX_ACCURACY_METERS di `geo.ts` (PRD BR-06) */
 export const BATAS_AKURASI_METER = 100;
@@ -171,10 +173,6 @@ function tolak(state: StateKelayakan, alasan: string, aksi: AksiLokasi | null = 
   return { state, tombolAktif: false, alasan, aksi };
 }
 
-function meter(nilai: number): string {
-  return `${Math.round(nilai)} m`;
-}
-
 /**
  * Status data sesi lebih dulu, lalu lokasi perangkat. Presensi yang sudah tercatat
  * selalu menang supaya praktikan melihat jam presensinya, apa pun status sesi.
@@ -219,7 +217,7 @@ export function kelayakanPresensi(input: InputKelayakan): Kelayakan {
   }
   if (!dalamRadius(lokasi.distanceMeters, lab.radiusMeters)) {
     const alasan = angka(lokasi.distanceMeters)
-      ? `Kamu berada ${meter(lokasi.distanceMeters)} dari lab, radius ${meter(lab.radiusMeters)}`
+      ? `Kamu berada ${formatDistanceMeters(lokasi.distanceMeters)} dari lab, radius ${formatDistanceMeters(lab.radiusMeters)}`
       : 'Kamu berada di luar radius lab';
     return tolak('out-of-radius', alasan, 'periksa-lagi');
   }

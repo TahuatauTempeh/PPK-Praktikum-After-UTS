@@ -4,6 +4,7 @@
  */
 
 import type { AksiLokasi, Kelayakan, StateKelayakan } from '@/lib/attendance-rules';
+import { formatDistanceMeters } from '@/lib/geo';
 import type { SessionStatus } from '@/types';
 
 export interface SesiPresensiTampil {
@@ -83,6 +84,7 @@ export function tahapLokasi(state: StateKelayakan): boolean {
   return STATE_LOKASI.includes(state);
 }
 
+/** "85 m" di bawah 1 km, "1,2 km" di atasnya (format bersama dari `geo.ts`) */
 export function formatMeter(nilai: number): string {
-  return `${Math.round(nilai)} m`;
+  return formatDistanceMeters(nilai);
 }

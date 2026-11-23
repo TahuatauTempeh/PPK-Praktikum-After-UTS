@@ -16,6 +16,12 @@ describe('pesanGagalPresensi', () => {
     ).toBe('Kamu berada 140 m dari Lab A201. Radius yang diizinkan 100 m.');
   });
 
+  it('menulis jarak jauh dalam kilometer', () => {
+    expect(
+      pesanGagalPresensi('OUT_OF_RADIUS', { distanceMeters: 13_751_698, radiusMeters: 500, laboratoryName: 'Dapur Informatika' })
+    ).toBe('Kamu berada 13751,7 km dari Dapur Informatika. Radius yang diizinkan 500 m.');
+  });
+
   it('memakai kata laboratorium bila nama lab kosong', () => {
     expect(pesanGagalPresensi('OUT_OF_RADIUS', { distanceMeters: 233, radiusMeters: 100, laboratoryName: '  ' })).toBe(
       'Kamu berada 233 m dari laboratorium. Radius yang diizinkan 100 m.'
