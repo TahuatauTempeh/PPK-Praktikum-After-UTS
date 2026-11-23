@@ -139,7 +139,24 @@ describe('usePresensi', () => {
       tahap: 'gagal',
       pesan: 'Kamu berada 140 m dari Lab A201. Radius yang diizinkan 100 m.',
     });
-    expect(getFreshPosition).toHaveBeenCalledTimes(1);
+    // Satu pembacaan segar sebelum kirim, lalu satu lagi untuk memulihkan state setelah ditolak.
+    expect(getFreshPosition).toHaveBeenCalledTimes(2);
+  });
+
+  it('memakai posisi segar dan menolak bila sudah di luar radius saat konfirmasi', async () => {
+    const { result } = await mulai();
+    jest.mocked(getFreshPosition).mockResolvedValueOnce({
+      ok: true,
+      position: { ...DI_LAB, latitude: -7.054 },
+    });
+
+    await act(async () => {
+      result.current.onKirim();
+    });
+
+    expect(submitAttendanceWithLocation).not.toHaveBeenCalled();
+    expect(result.current.model.kelayakan.state).toBe('out-of-radius');
+    expect(result.current.model.kirim).toMatchObject({ tahap: 'gagal' });
   });
 
   it('tidak mengirim apa pun saat di luar radius', async () => {

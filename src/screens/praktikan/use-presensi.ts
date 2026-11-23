@@ -28,10 +28,11 @@ import type { Laboratory, UserProfile } from '@/types';
 
 /** Seperti KondisiLokasi, tetapi posisi disimpan mentah; jarak dihitung saat lab tersedia */
 type TahapLokasi = Exclude<KondisiLokasi, { tahap: 'siap' }> | { tahap: 'ada'; posisi: DevicePosition };
+type TahapLokasiGagal = Exclude<TahapLokasi, { tahap: 'ada' }>;
 
 const KODE_PERLU_PERIKSA_ULANG = ['OUT_OF_RADIUS', 'LOCATION_INACCURATE', 'MOCK_LOCATION'];
 
-function dariGagalLokasi(code: DeviceLocationFailureCode): TahapLokasi {
+function dariGagalLokasi(code: DeviceLocationFailureCode): TahapLokasiGagal {
   switch (code) {
     case 'PERMISSION_DENIED':
       return { tahap: 'izin', izin: 'denied' };
@@ -247,11 +248,63 @@ export function usePresensi(sessionId: string, profile: UserProfile | null): Pre
 
   const namaLab = lab?.name ?? null;
   const onKirim = useCallback(() => {
-    if (!profile || !posisi || !kelayakan.tombolAktif || sedangKirim.current) return;
+    const laboratorium = lab;
+    if (!profile || !laboratorium || !kelayakan.tombolAktif || sedangKirim.current) return;
+
     sedangKirim.current = true;
     setKirim({ tahap: 'mengirim' });
-    void submitAttendanceWithLocation(sessionId, posisi, profile, namaLab ?? undefined)
-      .then((hasil) => {
+
+    const dataSesi = sesi ? { status: sesi.status } : sesi;
+
+    void (async () => {
+      try {
+        // Jangan memakai posisi lama yang mungkin sudah tidak berlaku ketika
+        // praktikan berpindah tempat setelah pemeriksaan awal.
+        const segar = await getFreshPosition();
+        if (!segar.ok) {
+          const tahap = dariGagalLokasi(segar.code);
+          setLokasi(tahap);
+          const alasan = kelayakanPresensi({
+            sesi: dataSesi,
+            terdaftar,
+            lab: laboratorium,
+            jamPresensi: catatan?.jam ?? null,
+            lokasi: tahap,
+          }).alasan;
+          setKirim({ tahap: 'gagal', pesan: alasan });
+          return;
+        }
+
+        setLokasi({ tahap: 'ada', posisi: segar.position });
+        const jarakSegar = labTerpasang(laboratorium)
+          ? haversineMeters(segar.position, laboratorium)
+          : Number.NaN;
+        const kelayakanSegar = kelayakanPresensi({
+          sesi: dataSesi,
+          terdaftar,
+          lab: laboratorium,
+          jamPresensi: catatan?.jam ?? null,
+          lokasi: {
+            tahap: 'siap',
+            posisi: {
+              accuracyMeters: segar.position.accuracyMeters,
+              mocked: segar.position.mocked,
+            },
+            distanceMeters: jarakSegar,
+          },
+        });
+
+        if (!kelayakanSegar.tombolAktif) {
+          setKirim({ tahap: 'gagal', pesan: kelayakanSegar.alasan });
+          return;
+        }
+
+        const hasil = await submitAttendanceWithLocation(
+          sessionId,
+          segar.position,
+          profile,
+          namaLab ?? undefined,
+        );
         if (hasil.ok) {
           setKirim({
             tahap: 'berhasil',
@@ -263,11 +316,23 @@ export function usePresensi(sessionId: string, profile: UserProfile | null): Pre
         }
         setKirim({ tahap: 'gagal', pesan: hasil.message });
         if (KODE_PERLU_PERIKSA_ULANG.includes(hasil.code)) void periksaLokasi();
-      })
-      .finally(() => {
+      } catch {
+        setKirim({ tahap: 'gagal', pesan: 'Lokasi belum bisa diperiksa. Coba lagi.' });
+      } finally {
         sedangKirim.current = false;
-      });
-  }, [profile, posisi, kelayakan.tombolAktif, sessionId, namaLab, periksaLokasi]);
+      }
+    })();
+  }, [
+    profile,
+    lab,
+    kelayakan.tombolAktif,
+    sesi,
+    terdaftar,
+    catatan,
+    sessionId,
+    namaLab,
+    periksaLokasi,
+  ]);
 
   const onMuatUlang = useCallback(() => {
     setGalat(null);
