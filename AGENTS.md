@@ -10,8 +10,8 @@ Sources of truth:
 - `README.md` — setup, routes, Firestore collections, current behavior, known
   limitations.
 - `PRD.md` — Sprint 3 scope, SRS, UAT, and four-developer ownership. The Sprint 3
-  foundation is implemented; the map, location attendance, and notification
-  features are still in progress. See “Sprint boundaries” below.
+  foundation and location attendance (client fallback) are implemented; the map
+  and notification features are still in progress. See “Sprint boundaries” below.
 - `DESIGN.md` — visual system, tokens, component patterns, accessibility.
 
 The sprint archives in `docs/` (`sprint-1-rancangan-pembagian-tugas.md` and
@@ -32,13 +32,14 @@ Sprint 3 features still in progress:
 
 - Map screens are placeholders; `react-native-maps` is installed but no
   `MapView` is rendered yet.
-- `expo-location` and `device-location.ts` exist, but location-based attendance
-  is not active. The `/praktikan/presensi/[id]` route is a placeholder and the
-  `submitAttendance` callable still throws `unimplemented`.
+- Location-based attendance is active through the client fallback in
+  `src/lib/attendance-fallback.ts` while the Firebase project is on Spark. The
+  `/praktikan/presensi/[id]` route is implemented, and the `submitAttendance`
+  callable is implemented but not deployed. See `PRD.md` 14.1.
 - Notification rules exist (`notificationLogs` is read-only for assistants and
   written by Cloud Functions), but the callable attendance lock-down is not
-  finalized. Do not make the client reject direct attendance writes until Dev 2's
-  callable path is ready.
+  finalized. The fallback rules reject direct writes without the required
+  evidence; do not weaken them before the callable path is ready.
 
 ## Expo has changed — do not trust your training data
 
@@ -123,11 +124,14 @@ before opening a pull request:
 npm run lint
 npm run typecheck
 npm run test:ci
+npm --prefix functions test -- --ci --runInBand
+npm --prefix functions run build
 git diff --check
 ```
 
-`npm run verify` runs lint, typecheck, and `test:ci` in order. CI uses `npm ci`
-and Node 24 (Expo SDK 58 accepts `^22.13.0 || ^24.3.0`).
+`npm run verify` runs lint, typecheck, and `test:ci` in order. CI also installs,
+tests, and builds `functions/`. CI uses Node 24 (Expo SDK 58 accepts
+`^22.13.0 || ^24.3.0`).
 
 Test stack:
 
@@ -251,12 +255,15 @@ directly from screens.
 - A praktikan can have one record per session. The document ID is
   `{sessionId}_{uid}`; `submitAttendance` and Firestore rules both prevent a
   second create.
-- The app filters sessions by `enrollments`, but current Firestore rules do not
-  verify enrollment on attendance create. Do not claim server-side enrollment
-  enforcement until the Sprint 3 callable replaces direct writes.
+- The fallback rules verify enrollment, an open session, an active lab, the
+  attendance ID, the server timestamps, and the location evidence shape. Haversine
+  distance, accuracy, and mock detection remain client-enforced until the callable
+  is deployed (PRD 14.1). Do not claim those three are server-verified.
 - Closing a session does not delete attendance records. Attendance cannot be
   undone by a praktikan; only an assistant may update or delete a record.
 - Recorded times use `serverTimestamp()` and are displayed in WIB.
+- Attendance is readable only by its owner or an assistant because it contains
+  location coordinates.
 
 ### Permissions and AI
 
@@ -311,8 +318,9 @@ directly from screens.
 - `firestore.rules` is the authoritative access control layer. Client checks are
   UX guards, not a substitute.
 - The rules cover `users`, `classes`, `enrollments`, `sessions`, `laboratories`,
-  `notificationLogs`, `attendance`, `permissionRequests`, `auditLogs`, and
-  `invitationCodes`. The callable attendance lock-down is still pending.
+  `notificationLogs`, `attendance`, `permissionRequests`, `kesanPesan`,
+  `auditLogs`, and `invitationCodes`. Fallback attendance rules are active; the
+  callable attendance lock-down is still pending.
 - Deploy rules to the team project after any change and test the affected role
   paths. CI does not run a Firestore emulator.
 - Firestore has no schema. Keep `src/types/index.ts`, converters, and service
@@ -326,7 +334,10 @@ directly from screens.
 
 The sentiment model lives in `ai/` (`model-edom.json`, `sentiment.js`) and runs
 on-device without network access. `src/lib/ai-service.ts` is the only app wrapper;
-use `analisisAlasan` rather than importing the model directly. The model was
+use `analisisSentimen` (permissions still call its alias `analisisAlasan`) rather
+than importing the model directly. It labels permission reasons and session
+"kesan pesan" (`kesanPesan` collection); labels are shown to assistants only and
+`null` means unreadable, not neutral. The model was
 trained on course-evaluation comments, not practicum reasons, so treat its output
 as a weak signal. The training files mentioned in `ai/README.md` are not present
 in this repository.
@@ -362,9 +373,9 @@ Profiles live in `eas.json`: `development` (development client, internal),
 ## Known limitations and gotchas
 
 - **Sprint 3 is partially implemented.** Laboratory CRUD, session-to-lab
-  integration, geo helpers, and lab/session rules exist. Map screens, location
-  attendance, and notifications are still in progress; do not treat all
-  `PRD.md` acceptance criteria as current behavior.
+  integration, geo helpers, lab/session rules, and location attendance (client
+  fallback) exist. Map screens and notifications are still in progress; do not
+  treat all `PRD.md` acceptance criteria as current behavior.
 - **Map screens are placeholders.** The tab/menu routes exist, but no `MapView`
   is rendered. The Android Google Maps key comes from `GOOGLE_MAPS_API_KEY`.
 - **Firebase project is on Spark.** `praktikum-ppk-3` does not have billing
@@ -385,9 +396,12 @@ Profiles live in `eas.json`: `development` (development client, internal),
   writes it.
 - **`listenSessionsByClass` needs a composite index** (`classId`, `date`,
   `startTime`) and is currently unused. Add the index before relying on it.
-- **Attendance enrollment is not enforced by rules.** This is a known security
-  gap until the Sprint 3 callable attendance path lands. Direct attendance
-  writes still work while `submitAttendance` is a stub.
+- **Attendance location is client-enforced in the fallback.** Firestore rules
+  check ownership, session status, enrollment, active lab, radius, accuracy
+  bounds, server timestamps, and the document shape. Haversine distance, the
+  reported accuracy, and mock-location detection remain trusted from the client
+  until the callable is deployed (PRD 14.1). Rules now read attendance only for
+  its owner or an assistant.
 - **`docs/` is local-only, except the sprint archives.** `.gitignore` ignores
   `docs/*` but tracks `docs/sprint-*.md`. Those archives
   (`docs/sprint-1-rancangan-pembagian-tugas.md`, `docs/sprint-2-plan.md`) describe

@@ -126,25 +126,56 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ─── 5. Attendance Collection (Dev 3) ───────────────────────────────────
+    // ─── 5. Attendance Collection (Dev 1 rules / Dev 2 callable) ────────────
     // ID dokumen: {sessionId}_{uid}
     // Aturan pencegahan:
-    //  - Read diperbolehkan untuk semua user yang login (untuk cek kehadiran)
+    //  - Read hanya untuk pemilik catatan atau asisten. Koordinat presensi adalah
+    //    data pribadi; jangan membuka seluruh koleksi ke semua user yang login.
     //  - userId harus sesuai auth.uid
     //  - docId harus gabungan sessionId + '_' + uid
     //  - Praktikan hanya bisa create (update ditolak -> cegah presensi ganda)
     //  - Hanya asisten yang bisa update/delete catatan presensi
     //
-    // CATATAN DEPLOY SPRINT 3: aturan create di bawah masih aturan Sprint 2 supaya
-    // presensi tetap berjalan sebelum callable `submitAttendance` ter-deploy.
-    // Setelah callable aktif (CP4), ganti baris `allow create` menjadi `allow create: if false;`
-    // dan deploy ulang rules. Jangan membalik urutan ini.
+    // Selama project masih Spark (PRD 14.1), create memakai `validAttendanceCreate`
+    // dari transaksi klien. Rules memeriksa pemilik, ID, sesi dibuka, enrollment,
+    // lab aktif, dan kelengkapan bukti lokasi; jarak, akurasi, dan deteksi lokasi
+    // palsu tetap client-enforced. Setelah callable `submitAttendance` ter-deploy,
+    // ganti create menjadi `false` (PRD D-02) dan deploy ulang rules. Jangan
+    // membalik urutan deploy.
+    function validAttendanceCreate(attendanceId) {
+      let d = request.resource.data;
+      let sesiPath = /databases/$(database)/documents/sessions/$(d.sessionId);
+      return getUserData().role == 'praktikan'
+        && d.keys().hasOnly([
+          'sessionId', 'userId', 'userName', 'userNim', 'recordedAt', 'latitude', 'longitude',
+          'accuracyMeters', 'distanceMeters', 'radiusMeters', 'laboratoryId',
+          'locationVerifiedAt', 'mocked', 'source'
+        ])
+        && d.sessionId is string
+        && d.userId == request.auth.uid
+        && attendanceId == d.sessionId + '_' + request.auth.uid
+        && d.userName is string
+        && d.userNim is string
+        && d.recordedAt == request.time
+        && d.locationVerifiedAt == request.time
+        && d.source == 'location'
+        && d.mocked == false
+        && d.latitude is number && d.latitude >= -90 && d.latitude <= 90
+        && d.longitude is number && d.longitude >= -180 && d.longitude <= 180
+        && d.accuracyMeters is number && d.accuracyMeters >= 0 && d.accuracyMeters <= 100
+        && exists(sesiPath)
+        && get(sesiPath).data.status == 'open'
+        && exists(/databases/$(database)/documents/enrollments/$(get(sesiPath).data.classId + '_' + request.auth.uid))
+        && d.laboratoryId == get(sesiPath).data.laboratoryId
+        && laboratoryIsActive(d.laboratoryId)
+        && d.radiusMeters == get(/databases/$(database)/documents/laboratories/$(d.laboratoryId)).data.radiusMeters
+        && d.distanceMeters is number && d.distanceMeters >= 0 && d.distanceMeters <= d.radiusMeters;
+    }
 
     match /attendance/{attendanceId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated()
-        && request.resource.data.userId == request.auth.uid
-        && attendanceId == request.resource.data.sessionId + '_' + request.auth.uid;
+      allow read: if isAuthenticated()
+        && (resource.data.userId == request.auth.uid || isAsisten());
+      allow create: if isAuthenticated() && validAttendanceCreate(attendanceId);
       allow update, delete: if isAsisten();
     }
 
@@ -175,6 +206,40 @@ service cloud.firestore {
     match /notificationLogs/{logKey} {
       allow read: if isAsisten();
       allow write: if false;
+    }
+
+    // ─── 8a. KesanPesan Collection (kesan pesan sesi + label AI) ────────────
+    // ID dokumen {sessionId}_{uid}, sama dengan attendance, jadi:
+    //  - satu kesan pesan per praktikan per sesi (create kedua dianggap update -> ditolak)
+    //  - hanya praktikan yang presensinya tercatat di sesi itu
+    //  - sesi harus sudah ditutup
+    //  - label AI dari aplikasi hanya bahan pertimbangan asisten (null = tidak terbaca)
+    //  - tidak bisa diubah atau dihapus
+
+    match /kesanPesan/{kesanId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAsisten());
+      allow create: if isAuthenticated()
+        && request.resource.data.keys().hasOnly([
+          'sessionId', 'classId', 'userId', 'userName', 'text', 'aiLabel', 'aiConfidence', 'createdAt'
+        ])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.sessionId is string
+        && kesanId == request.resource.data.sessionId + '_' + request.auth.uid
+        && exists(/databases/$(database)/documents/attendance/$(kesanId))
+        && get(/databases/$(database)/documents/sessions/$(request.resource.data.sessionId)).data.status == 'closed'
+        && request.resource.data.classId is string
+        && request.resource.data.userName is string
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 10
+        && request.resource.data.text.size() <= 500
+        && (request.resource.data.aiLabel == null
+          || request.resource.data.aiLabel in ['negatif', 'netral', 'positif'])
+        && (request.resource.data.aiConfidence == null
+          || (request.resource.data.aiConfidence is number
+            && request.resource.data.aiConfidence >= 0
+            && request.resource.data.aiConfidence <= 1))
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
     }
 
     // ─── 9. InvitationCodes Collection (Dev 1) ──────────────────────────────

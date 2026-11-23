@@ -365,8 +365,9 @@ platform secara langsung dari layar.
 - Sesi baru selalu `scheduled`.
 - Presensi hanya saat sesi `open`; satu catatan per sesi dengan ID
   `{sessionId}_{uid}`.
-- Presensi saat ini difilter lewat enrollment di aplikasi, bukan di rules. Jangan
-  mengklaim pemeriksaan enrollment di server sampai callable Sprint 3 ada.
+- Jalur fallback presensi (PRD 14.1) memeriksa enrollment di rules. Jangan
+  mengklaim jarak, akurasi, atau deteksi mock juga diperiksa server selama
+  fallback aktif; nilai itu masih client-enforced sampai callable ter-deploy.
 - Izin berstatus `pending`, `approved`, atau `rejected`; praktikan hanya membuat
   `pending`, asisten yang meninjau.
 - Label AI bersifat saran. `null` berarti hasil tidak tersedia, bukan `netral`.
@@ -387,8 +388,9 @@ platform secara langsung dari layar.
 - Jangan mencatat password, token, connection string, atau data sensitif lain.
 - Perubahan `firestore.rules` harus diuji pada project uji dan dijelaskan di PR.
   CI tidak menjalankan Firestore emulator.
-- Jangan menambah penulisan langsung ke `attendance` untuk fitur Sprint 3 sebelum
-  callable dan rules barunya tersedia.
+- Penulisan langsung ke `attendance` hanya boleh lewat jalur fallback
+  `src/lib/attendance-fallback.ts` selama project masih Spark. Jangan menambah
+  jalur tulis lain, dan jangan menghapus pemeriksaan rules pada fallback.
 
 ### Test
 
@@ -536,11 +538,14 @@ Jalankan pemeriksaan yang sama dengan CI:
 npm run lint
 npm run typecheck
 npm run test:ci
+npm --prefix functions test -- --ci --runInBand
+npm --prefix functions run build
 git diff --check
 ```
 
 `npm run verify` menjalankan lint, typecheck, dan `test:ci` sekaligus. `typecheck`
-memakai `tsc --noEmit`; `lint` memakai `expo lint`.
+memakai `tsc --noEmit`; `lint` memakai `expo lint`. CI juga menginstal, menguji,
+dan membangun `functions/`.
 
 `npx expo-doctor` boleh dijalankan saat menaikkan SDK atau menambah dependency,
 tetapi saat ini dapat melaporkan drift patch/minor dan membutuhkan akses ke
@@ -648,6 +653,9 @@ Cara mereproduksi kegagalan CI:
 ```bash
 npm ci
 npm run verify
+npm ci --prefix functions
+npm --prefix functions test -- --ci --runInBand
+npm --prefix functions run build
 ```
 
 Yang tidak dijalankan CI: `expo-doctor`, Firestore emulator/rules, E2E, dan EAS

@@ -133,6 +133,11 @@ export interface PraktikumSession {
   endTime: string; // "10:00"
   room: string;
   assistantId: string;
+  /**
+   * Nama asisten saat sesi dibuat. Disimpan di sesi karena praktikan tidak boleh
+   * membaca `users` milik orang lain. Kosong/tidak ada pada sesi lama.
+   */
+  assistantName?: string;
   status: SessionStatus;
   /** Kosong untuk sesi lama yang belum punya laboratorium. */
   laboratoryId: string;

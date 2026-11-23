@@ -1,6 +1,6 @@
 import { createSentimentClassifier, type SentimentPrediction } from '../../ai/sentiment';
 
-import { analisisAlasan } from './ai-service';
+import { analisisAlasan, analisisSentimen } from './ai-service';
 
 jest.mock('../../ai/sentiment', () => ({
   createSentimentClassifier: jest.fn(),
@@ -65,5 +65,11 @@ describe('analisisAlasan', () => {
       label: null,
       confidence: null,
     });
+  });
+});
+
+describe('analisisSentimen', () => {
+  it('memakai fungsi yang sama dengan analisisAlasan untuk fitur izin', () => {
+    expect(analisisAlasan).toBe(analisisSentimen);
   });
 });

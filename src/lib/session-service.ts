@@ -9,6 +9,7 @@ import {
   writeBatch,
   type DocumentData,
   type DocumentSnapshot,
+  type Firestore,
 } from 'firebase/firestore';
 
 import { getEnrollmentsByUser } from '@/lib/enrollment-service';
@@ -48,11 +49,26 @@ function toPraktikumSession(snapshot: DocumentSnapshot<DocumentData>): Praktikum
     endTime: typeof data.endTime === 'string' ? data.endTime : '00:00',
     room: typeof data.room === 'string' ? data.room : '',
     assistantId: typeof data.assistantId === 'string' ? data.assistantId : '',
+    assistantName: typeof data.assistantName === 'string' ? data.assistantName : '',
     status: normalizeStatus(data.status),
     // Sesi lama (Sprint 2) belum punya laboratorium: dibaca sebagai string kosong.
     laboratoryId: typeof data.laboratoryId === 'string' ? data.laboratoryId : '',
     createdAt: data.createdAt ?? '',
   };
+}
+
+/**
+ * Nama asisten untuk disimpan di sesi. Asisten boleh membaca `users`; bila gagal,
+ * sesi tetap dibuat tanpa nama karena nama hanya pelengkap tampilan praktikan.
+ */
+async function readAssistantName(db: Firestore, assistantId: string): Promise<string> {
+  try {
+    const snap = await getDoc(doc(db, COLLECTIONS.users, assistantId));
+    const name = snap.exists() ? snap.data()?.name : undefined;
+    return typeof name === 'string' ? name.trim() : '';
+  } catch {
+    return '';
+  }
 }
 
 function sortSessionsChronologically(items: PraktikumSession[]): PraktikumSession[] {
@@ -151,6 +167,7 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
     if (!laboratorySnapshot.exists() || laboratorySnapshot.data()?.isActive !== true) {
       throw new Error('Laboratorium tidak aktif. Pilih laboratorium lain.');
     }
+    const assistantName = await readAssistantName(db, assistantId);
 
     const sessionRef = doc(collection(db, COLLECTIONS.sessions));
     const payload = {
@@ -161,6 +178,7 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
       endTime,
       room,
       assistantId,
+      assistantName,
       laboratoryId,
       status: 'scheduled' as SessionStatus,
       createdAt: serverTimestamp(),
@@ -200,6 +218,7 @@ export async function createSession(input: CreateSessionInput): Promise<Praktiku
           endTime,
           room,
           assistantId,
+          assistantName,
           laboratoryId,
           status: 'scheduled',
           createdAt: new Date().toISOString(),

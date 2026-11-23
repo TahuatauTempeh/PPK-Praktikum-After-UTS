@@ -12,7 +12,9 @@ import { type Laboratory, type PracticumClass, type PraktikumSession } from '@/t
 
 import { AssistantSheet } from '../components/assistant-sheet';
 import { AssistantText } from '../components/assistant-text';
+import { DateField } from '../components/date-field';
 import { ScheduleIcon } from '../components/schedule-icon';
+import { TimeField } from '../components/time-field';
 
 export type SessionFormValues = {
   classId: string;
@@ -184,18 +186,14 @@ export function SessionFormSheet({
             </View>
 
             <View style={styles.field}>
-              <AssistantText variant="label" style={styles.fieldLabel}>Tanggal (YYYY-MM-DD) *</AssistantText>
-              <TextInput
+              <AssistantText variant="label" style={styles.fieldLabel}>Tanggal *</AssistantText>
+              <DateField
                 value={date}
-                onChangeText={value => {
+                onChange={value => {
                   setDate(value);
                   if (error) setError(null);
                 }}
-                placeholder="2026-11-20"
-                placeholderTextColor={theme.colors.textSecondary}
-                editable={!submitting}
-                maxLength={10}
-                keyboardType="numbers-and-punctuation"
+                disabled={submitting}
                 style={styles.input}
                 accessibilityLabel="Tanggal Sesi"
               />
@@ -204,17 +202,13 @@ export function SessionFormSheet({
             <View style={styles.timeRow}>
               <View style={[styles.field, styles.timeField]}>
                 <AssistantText variant="label" style={styles.fieldLabel}>Jam Mulai *</AssistantText>
-                <TextInput
+                <TimeField
                   value={startTime}
-                  onChangeText={value => {
+                  onChange={value => {
                     setStartTime(value);
                     if (error) setError(null);
                   }}
-                  placeholder="08:00"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  editable={!submitting}
-                  maxLength={5}
-                  keyboardType="numbers-and-punctuation"
+                  disabled={submitting}
                   style={styles.input}
                   accessibilityLabel="Jam Mulai"
                 />
@@ -222,17 +216,13 @@ export function SessionFormSheet({
 
               <View style={[styles.field, styles.timeField]}>
                 <AssistantText variant="label" style={styles.fieldLabel}>Jam Selesai *</AssistantText>
-                <TextInput
+                <TimeField
                   value={endTime}
-                  onChangeText={value => {
+                  onChange={value => {
                     setEndTime(value);
                     if (error) setError(null);
                   }}
-                  placeholder="10:00"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  editable={!submitting}
-                  maxLength={5}
-                  keyboardType="numbers-and-punctuation"
+                  disabled={submitting}
                   style={styles.input}
                   accessibilityLabel="Jam Selesai"
                 />

@@ -1,25 +1,21 @@
 /**
- * attendance-service.ts – Dev 3
- * Submit presensi ke Firestore dengan pencegahan presensi ganda,
- * dan realtime listeners untuk rekap asisten & status praktikan.
+ * attendance-service.ts
+ * Sprint 3: presensi berbasis lokasi lewat `submitAttendanceWithLocation`, yang memilih
+ * jalur callable atau fallback transaksi (PRD 14.1) menurut `JALUR_PRESENSI`.
+ * Realtime listeners untuk rekap asisten dan status presensi praktikan.
  */
 
-import {
-  doc,
-  setDoc,
-  getDoc,
-  serverTimestamp,
-  onSnapshot,
-  collection,
-  query,
-  where,
-  type Unsubscribe,
-} from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, where, type Unsubscribe } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
-import { logAction } from '@/lib/firebase/audit';
+import { hasilGagalDariGalat } from '@/lib/attendance-errors';
+import { submitAttendanceViaTransaction, type ProfilPresensi } from '@/lib/attendance-fallback';
+import type { DevicePosition } from '@/lib/device-location';
+import { getFirebaseApp } from '@/lib/firebase/app';
+import { mapFirebaseError } from '@/lib/firebase/errors';
 import { COLLECTIONS, getDb } from '@/lib/firebase/firestore';
 import { toIsoString } from '@/lib/praktikum-helpers';
-import type { AttendanceRecord, UserProfile } from '@/types';
+import type { AttendanceRecord, AttendanceSubmitResult } from '@/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -31,6 +27,90 @@ export interface AttendanceDoc {
   userName: string;
   userNim: string;
   recordedAt: unknown; // Firestore Timestamp (serverTimestamp)
+  // Bukti lokasi Sprint 3, ditulis callable. Catatan Sprint 2 tidak memilikinya.
+  latitude?: number;
+  longitude?: number;
+  accuracyMeters?: number;
+  distanceMeters?: number;
+  radiusMeters?: number;
+  laboratoryId?: string;
+  mocked?: boolean;
+  source?: string;
+}
+
+// ─── Sprint 3: presensi berbasis lokasi lewat callable ───────────────────────
+
+/** Region callable, sama dengan `functions/src/attendance.ts` */
+const FUNCTIONS_REGION = 'asia-southeast2';
+
+interface SubmitAttendanceRequest {
+  sessionId: string;
+  latitude: number;
+  longitude: number;
+  accuracyMeters: number;
+  mocked: boolean;
+}
+
+interface SubmitAttendanceResponse {
+  attendanceId: string;
+  recordedAt: string;
+  distanceMeters: number;
+  radiusMeters: number;
+  laboratoryId: string;
+  laboratoryName: string;
+}
+
+/**
+ * Jalur pencatatan presensi.
+ * - `fallback`: transaksi Firestore dari aplikasi (PRD 14.1). Dipakai selama project masih
+ *   Spark, sesuai keputusan tim 23 November 2026. Jarak, akurasi, dan lokasi palsu hanya
+ *   diperiksa di aplikasi; rules memeriksa sesi, enrollment, lab, dan bukti lokasi.
+ * - `callable`: Cloud Function `submitAttendance`. Pakai setelah project Blaze, callable
+ *   ter-deploy, dan rules `attendance` diubah menjadi `create: false`.
+ *
+ * Tidak ada retry otomatis dan tidak ada antrean offline (BR-16) di kedua jalur.
+ */
+export const JALUR_PRESENSI = 'fallback' as 'callable' | 'fallback';
+
+/** `laboratoryName` hanya dipakai untuk pesan "di luar radius". */
+export function submitAttendanceWithLocation(
+  sessionId: string,
+  position: DevicePosition,
+  profile: ProfilPresensi,
+  laboratoryName?: string,
+): Promise<AttendanceSubmitResult> {
+  return JALUR_PRESENSI === 'callable'
+    ? submitAttendanceViaCallable(sessionId, position, laboratoryName)
+    : submitAttendanceViaTransaction(sessionId, position, profile, laboratoryName);
+}
+
+/** Kirim ke callable `submitAttendance` (PRD 10.3); server yang memvalidasi dan menulis. */
+export async function submitAttendanceViaCallable(
+  sessionId: string,
+  position: DevicePosition,
+  laboratoryName?: string,
+): Promise<AttendanceSubmitResult> {
+  try {
+    const kirim = httpsCallable<SubmitAttendanceRequest, SubmitAttendanceResponse>(
+      getFunctions(getFirebaseApp(), FUNCTIONS_REGION),
+      'submitAttendance',
+    );
+    const { data } = await kirim({
+      sessionId,
+      latitude: position.latitude,
+      longitude: position.longitude,
+      accuracyMeters: position.accuracyMeters,
+      mocked: position.mocked,
+    });
+    return {
+      ok: true,
+      recordedAt: data.recordedAt,
+      distanceMeters: data.distanceMeters,
+      radiusMeters: data.radiusMeters,
+    };
+  } catch (error) {
+    return hasilGagalDariGalat(error, laboratoryName);
+  }
 }
 
 export interface SubmitResult {
@@ -55,78 +135,6 @@ export function toAttendanceRecordsForUser(
   userId: string,
 ): AttendanceRecord[] {
   return docs.filter((doc) => doc.userId === userId).map(toAttendanceRecord);
-}
-
-// ─── Submit presensi ──────────────────────────────────────────────────────────
-
-/**
- * Catat kehadiran praktikan ke koleksi `attendance`.
- *
- * Doc ID = `{sessionId}_{uid}` → setDoc tanpa merge membuat duplikat langsung ditolak
- * oleh Firestore (error ALREADY_EXISTS).
- *
- * Guard tambahan di sisi klien:
- *  1. Sesi harus berstatus 'open'
- *  2. Belum ada doc dengan ID yang sama (presensi ganda)
- */
-export async function submitAttendance(
-  sessionId: string,
-  profile: UserProfile,
-): Promise<SubmitResult> {
-  try {
-    // Guard 1: cek status sesi
-    const sessionSnap = await getDoc(doc(getDb(), COLLECTIONS.sessions, sessionId));
-    if (!sessionSnap.exists()) {
-      return { success: false, message: 'Sesi tidak ditemukan.' };
-    }
-    const sessionData = sessionSnap.data();
-    if (sessionData.status !== 'open') {
-      const statusMsg =
-        sessionData.status === 'scheduled'
-          ? 'Sesi belum dibuka oleh asisten.'
-          : 'Sesi sudah ditutup, presensi tidak bisa dilakukan.';
-      return { success: false, message: statusMsg };
-    }
-
-    // Guard 2: cek presensi ganda (klien-side, Firestore rules juga mencegah via create-only)
-    const attendanceId = `${sessionId}_${profile.id}`;
-    try {
-      const existingSnap = await getDoc(doc(getDb(), COLLECTIONS.attendance, attendanceId));
-      if (existingSnap.exists()) {
-        return { success: false, message: 'Kamu sudah melakukan presensi di sesi ini.' };
-      }
-    } catch {
-      // Abaikan jika pengecekan dokumen gagal (misal belum dibuat)
-    }
-
-    // Tulis dokumen presensi
-    const payload: Omit<AttendanceDoc, 'id'> = {
-      sessionId,
-      userId: profile.id,
-      userName: profile.name,
-      userNim: profile.nim,
-      recordedAt: serverTimestamp(),
-    };
-
-    await setDoc(doc(getDb(), COLLECTIONS.attendance, attendanceId), payload);
-
-    await logAction(
-      'SUBMIT_ATTENDANCE',
-      COLLECTIONS.attendance,
-      attendanceId,
-      null,
-      payload,
-    );
-
-    return { success: true, message: 'Presensi berhasil dicatat.' };
-  } catch (err: unknown) {
-    // Firestore menolak setDoc jika doc sudah ada (create-only rule) → tangkap sebagai duplikat
-    if (err instanceof Error && err.message.includes('already exists')) {
-      return { success: false, message: 'Kamu sudah melakukan presensi di sesi ini.' };
-    }
-    console.error('[attendance-service] submitAttendance gagal:', err);
-    return { success: false, message: 'Gagal mencatat presensi. Coba lagi.' };
-  }
 }
 
 // ─── Realtime: semua kehadiran milik satu praktikan ───────────────────────────
@@ -196,6 +204,7 @@ export function listenMyAttendance(
   sessionId: string,
   uid: string,
   callback: (record: AttendanceDoc | null) => void,
+  onError?: (message: string) => void,
 ): Unsubscribe {
   const attendanceId = `${sessionId}_${uid}`;
   return onSnapshot(
@@ -209,6 +218,7 @@ export function listenMyAttendance(
     },
     (err) => {
       console.warn('[listenMyAttendance] error:', err);
+      onError?.(mapFirebaseError(err).message);
     },
   );
 }
