@@ -364,6 +364,7 @@ Keterbatasan yang perlu diketahui:
 | `npm run typecheck` | Periksa tipe TypeScript (`tsc --noEmit`) |
 | `npm test` | Jalankan test Jest |
 | `npm run test:ci` | Jalankan test sekali seperti CI |
+| `npm run test:rules` | Jalankan E2E Firestore rules di emulator (butuh Java 21+) |
 | `npm run verify` | Lint, typecheck, dan test sekaligus |
 | `npm --prefix functions test` | Jalankan test Cloud Functions |
 | `npm --prefix functions run build` | Build Cloud Functions |
@@ -371,7 +372,7 @@ Keterbatasan yang perlu diketahui:
 | `npx expo install --fix` | Samakan versi paket dengan SDK |
 | `npx expo install <paket>` | Pasang paket dengan versi yang cocok dengan SDK |
 
-Jalankan `npm run verify`, `npm --prefix functions test`, `npm --prefix functions run build`, dan `git diff --check` sebelum membuka pull request. CI menjalankan langkah yang sama; lihat `.github/workflows/ci.yml`.
+Jalankan `npm run verify`, `npm run test:rules`, `npm --prefix functions test`, `npm --prefix functions run build`, dan `git diff --check` sebelum membuka pull request. `test:rules` membutuhkan Java 21+ dan Firebase Emulator. CI menjalankan langkah yang sama; lihat `.github/workflows/ci.yml`.
 
 ## 11. Build dengan EAS
 

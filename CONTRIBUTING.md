@@ -387,7 +387,7 @@ platform secara langsung dari layar.
   perubahan terlihat berhasil.
 - Jangan mencatat password, token, connection string, atau data sensitif lain.
 - Perubahan `firestore.rules` harus diuji pada project uji dan dijelaskan di PR.
-  CI tidak menjalankan Firestore emulator.
+  CI menjalankan `npm run test:rules` di job `rules-e2e`.
 - Penulisan langsung ke `attendance` hanya boleh lewat jalur fallback
   `src/lib/attendance-fallback.ts` selama project masih Spark. Jangan menambah
   jalur tulis lain, dan jangan menghapus pemeriksaan rules pada fallback.
@@ -526,9 +526,10 @@ Aturan penting:
 - Test yang butuh perangkat, modul native, atau rules Firestore bukan unit test;
   catat sebagai langkah UAT manual.
 
-Yang belum dicakup otomatis: seluruh jalur CRUD Firestore, Firestore emulator,
-security rules, E2E Maestro/Detox, dan build native. Perubahan pada area itu tetap
-memerlukan pengujian manual.
+Firestore rules E2E sudah dicakup otomatis lewat `npm run test:rules`
+(Firestore emulator + Java 21+). Yang belum dicakup otomatis: seluruh jalur CRUD
+Firestore end-to-end, E2E web/Android (Playwright/Maestro), dan build native.
+Perubahan pada area itu tetap memerlukan pengujian manual.
 
 ## Menjalankan Verifikasi Lokal
 
@@ -538,10 +539,15 @@ Jalankan pemeriksaan yang sama dengan CI:
 npm run lint
 npm run typecheck
 npm run test:ci
+npm run test:rules
 npm --prefix functions test -- --ci --runInBand
 npm --prefix functions run build
 git diff --check
 ```
+
+`npm run test:rules` membutuhkan Java 21+ dan Firebase Emulator. Bila `java`
+default masih 17, set `JAVA_HOME`/`PATH` ke JDK 21 atau lebih baru sebelum
+menjalankan perintah.
 
 `npm run verify` menjalankan lint, typecheck, dan `test:ci` sekaligus. `typecheck`
 memakai `tsc --noEmit`; `lint` memakai `expo lint`. CI juga menginstal, menguji,
@@ -658,9 +664,9 @@ npm --prefix functions test -- --ci --runInBand
 npm --prefix functions run build
 ```
 
-Yang tidak dijalankan CI: `expo-doctor`, Firestore emulator/rules, E2E, dan EAS
-build. Untuk perubahan pada area itu, lakukan verifikasi manual dan tulis
-hasilnya di PR.
+Yang tidak dijalankan CI: `expo-doctor`, E2E web/Android, dan EAS build. Rules
+Firestore dijalankan lewat `npm run test:rules` di job `rules-e2e`; perubahan
+pada area lain tetap memerlukan verifikasi manual dan hasilnya ditulis di PR.
 
 ## Build dan Distribusi dengan EAS
 

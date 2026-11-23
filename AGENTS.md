@@ -145,11 +145,13 @@ Test stack:
 - RNTL 14 renders asynchronously: use `await render(...)` and
   `await fireEvent.press(...)` or `await user.press(...)`.
 
-There is no browser/native end-to-end suite. Firestore rules are not covered by
-Jest; changes to `firestore.rules` must be reviewed and deployed against a test
-project manually. `npx expo-doctor` is advisory: this checkout currently has
-known patch/minor drift from the SDK’s expected package versions, and it requires
-network access. Do not make it a merge gate without fixing the versions first.
+Firestore rules have an emulator E2E harness: run `npm run test:rules`.
+The harness is not part of Jest and needs Java 21+. Browser and native
+end-to-end suites are not available yet; changes to `firestore.rules` still
+need review and a deploy against a test project. `npx expo-doctor` is advisory:
+this checkout currently has known patch/minor drift from the SDK’s expected
+package versions, and it requires network access. Do not make it a merge gate
+without fixing the versions first.
 
 ## Architecture
 
@@ -322,7 +324,7 @@ directly from screens.
   `auditLogs`, and `invitationCodes`. Fallback attendance rules are active; the
   callable attendance lock-down is still pending.
 - Deploy rules to the team project after any change and test the affected role
-  paths. CI does not run a Firestore emulator.
+  paths. CI runs `npm run test:rules` in the `rules-e2e` job.
 - Firestore has no schema. Keep `src/types/index.ts`, converters, and service
   payloads synchronized with the collections in `README.md`.
 - `google-services.json` is ignored by Git. It is only needed for Sprint 3 push
