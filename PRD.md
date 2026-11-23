@@ -951,6 +951,8 @@ Ini bukan jalur utama dan hanya dipakai bila R-01 terbukti. Fallback harus diset
 - Notifikasi dikirim dari aplikasi asisten setelah aksi sukses, memakai token penerima dan Expo Push API. Keandalan hanya selama aplikasi asisten aktif.
 - Semua dokumen PRD/SRS/UAT harus mencatat penurunan ini. Jangan mencampur fallback dengan jalur utama dalam satu demo.
 
+> **Status 23 November 2026: fallback presensi aktif.** Tim memutuskan tetap memakai paket Spark. Presensi dicatat lewat transaksi Firestore dari aplikasi (`src/lib/attendance-fallback.ts`) dengan validasi yang sama dengan callable. Rules `attendance` memeriksa enrollment, sesi `open`, lab aktif, radius lab, akurasi ≤ 100 m, `distanceMeters ≤ radiusMeters`, `mocked == false`, dan waktu server. Jarak, akurasi, dan deteksi lokasi palsu bersifat **client-enforced**. Akibatnya, UAT-ATT-13 (tulis langsung ditolak) hanya berlaku untuk tulisan yang tidak lolos pemeriksaan rules di atas. Callable `submitAttendance` sudah diimplementasikan dan diuji; aktifkan dengan mengganti `JALUR_PRESENSI` setelah project Blaze. Fallback notifikasi tidak termasuk keputusan ini.
+
 ---
 
 ## 15. Rencana rilis dan demo

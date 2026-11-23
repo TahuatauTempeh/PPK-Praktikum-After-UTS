@@ -119,7 +119,7 @@ Ringkasan aturan:
 
 Catatan: rules `sessions` mengizinkan semua pengguna yang login membaca semua sesi. Pembatasan praktikan hanya melihat sesi kelasnya sendiri dilakukan di sisi aplikasi (lewat `enrollments`), bukan di rules.
 
-Sprint 3 sudah menambahkan rules `laboratories`, `notificationLogs`, dan validasi laboratorium aktif pada sesi. Penolakan create langsung `attendance` masih menunggu fitur callable attendance selesai; lihat [`PRD.md`](PRD.md).
+Sprint 3 sudah menambahkan rules `laboratories`, `notificationLogs`, dan validasi laboratorium aktif pada sesi. Rules `attendance` memakai jalur **fallback** (PRD 14.1) selama project masih Spark: create hanya diterima dari praktikan terdaftar, saat sesi `open`, untuk lab aktif, dengan bukti lokasi lengkap. Rules ini baru berlaku setelah dideploy ulang; lihat bagian 9.
 
 ## 4. Menjalankan aplikasi
 
@@ -182,7 +182,7 @@ Ada dua peran: `praktikan` dan `asisten`, ditambah penanda `isAdmin` untuk asist
 │   │   ├── (auth)/              login, register
 │   │   ├── (praktikan)/         tab Praktikan: jadwal, riwayat, izin, peta, profil
 │   │   ├── praktikan/sesi/[id]  detail sesi Praktikan
-│   │   ├── praktikan/presensi/[id]  placeholder halaman presensi lokasi (Dev 2)
+│   │   ├── praktikan/presensi/[id]  halaman presensi berbasis lokasi (Dev 2)
 │   │   └── asisten/
 │   │       ├── (tabs)/          tab Asisten: beranda, jadwal, rekap, admin, profil
 │   │       ├── kelas/           kelola kelas (Dev 2)
@@ -209,7 +209,7 @@ Ada dua peran: `praktikan` dan `asisten`, ditambah penanda `isAdmin` untuk asist
 │   │   ├── praktikum-helpers.ts    Validasi tanggal dan jam, format WIB, pemetaan galat layanan (Dev 2)
 │   │   ├── session-actions.ts      Buka/tutup sesi + listener Firestore
 │   │   ├── useSessionFirestore.ts  Hook realtime untuk jadwal, sesi, presensi
-│   │   ├── attendance-service.ts   Presensi (cegah ganda lewat ID dokumen)
+│   │   ├── attendance-service.ts   Presensi lokasi: pilih jalur callable atau fallback, listener
 │   │   ├── permission-service.ts   Pengajuan dan peninjauan izin
 │   │   ├── ai-service.ts        Pembungkus model sentimen (timeout + fallback)
 │   │   └── validation/          Validasi form login/registrasi
@@ -264,8 +264,8 @@ Aturan umum:
 | `/asisten/izin` dan `/asisten/izin/[id]` | Daftar dan tinjau izin |
 | `/(praktikan)` | Jadwal Praktikan |
 | `/(praktikan)/riwayat`, `/(praktikan)/izin`, `/(praktikan)/peta`, `/(praktikan)/profil` | Riwayat, izin, peta, profil |
-| `/praktikan/sesi/[id]` | Detail sesi dan tombol presensi |
-| `/praktikan/presensi/[id]` | Placeholder halaman presensi berbasis lokasi |
+| `/praktikan/sesi/[id]` | Detail sesi dan tautan ke halaman presensi |
+| `/praktikan/presensi/[id]` | Presensi berbasis lokasi: izin lokasi, jarak ke lab, konfirmasi |
 
 Penjagaan rute ada di `src/app/_layout.tsx` (`Stack.Protected`): pengguna tanpa profil hanya melihat grup `(auth)`, praktikan hanya area praktikan, asisten hanya area asisten. Rute `kelas`, `peserta`, `lab`, `peta`, dan `atur-sesi` terdaftar di dalam grup asisten.
 
@@ -336,8 +336,10 @@ Berdasarkan isi kode saat ini.
 Keterbatasan yang perlu diketahui:
 
 - **Peta masih placeholder.** Tab/menu Peta sudah bisa dibuka, tetapi layarnya belum memuat `MapView`; implementasi marker dan panel ada di Dev 3. Build Android yang memakai peta native memerlukan `GOOGLE_MAPS_API_KEY` yang valid.
-- **Presensi berbasis lokasi belum aktif.** Halaman `/praktikan/presensi/[id]` masih placeholder dan callable `submitAttendance` masih melempar `unimplemented`; presensi saat ini memakai jalur langsung yang lama. Validasi jarak/akurasi/mock location baru berlaku setelah Dev 2 menyelesaikan callable.
-- **Rules `attendance` masih mengizinkan create langsung**; penolakan create menunggu fitur callable selesai. Rules `notificationLogs` sudah ditambahkan, tetapi baru berlaku setelah rules dideploy ulang.
+- **Presensi berbasis lokasi memakai jalur fallback (PRD 14.1).** Project masih Spark, jadi callable `submitAttendance` belum bisa dideploy. Aplikasi mencatat presensi lewat transaksi Firestore dengan validasi yang sama (`validasiPresensi`). Keputusan tim 23 November 2026.
+- **Klaim keamanan presensi diturunkan menjadi client-enforced untuk lokasi.** Setelah rules dideploy, server memeriksa: praktikan terdaftar di kelas, sesi `open`, lab aktif dan sama dengan sesi, radius sama dengan lab, akurasi ≤ 100 m, `distanceMeters ≤ radiusMeters`, `mocked == false`, waktu server, dan tidak ada presensi ganda. Jarak Haversine tidak bisa dihitung di rules, sehingga koordinat dan jarak dipercaya dari aplikasi. Jalur callable juga menerima koordinat dari perangkat, jadi tidak ada jalur yang bisa membuktikan koordinat asli.
+- **Pindah ke callable** setelah project Blaze: deploy `submitAttendance`, ganti `JALUR_PRESENSI` di `src/lib/attendance-service.ts` menjadi `'callable'`, lalu ubah rules create `attendance` menjadi `false`. Urutan ini penting supaya presensi tidak mati di tengah jalan.
+- Rules `attendance` (fallback) dan `notificationLogs` baru berlaku setelah rules dideploy ulang.
 - **Sebagian layar masih memakai data contoh**: beranda dan rekap Asisten (`AssistantPreviewProvider`), serta sebagian detail dan presensi Praktikan (`SessionContext` yang diisi `src/data/dummy.ts`). Data ini hilang saat aplikasi dimuat ulang. Jadwal Asisten (`/asisten/jadwal`) memakai Firestore bila ada sesi, dan kembali ke data contoh bila koleksi `sessions` kosong.
 - Layar jadwal Asisten menampilkan satu tanggal saja (tanggal sesi pertama dari Firestore). Untuk melihat semua sesi dan mengelolanya, pakai layar **Atur Sesi**.
 - Layar **Atur Sesi** tanpa filter kelas hanya menampilkan sesi milik asisten yang sedang login (`assistantId`).
