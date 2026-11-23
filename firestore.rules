@@ -211,6 +211,40 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ─── 8a. KesanPesan Collection (kesan pesan sesi + label AI) ────────────
+    // ID dokumen {sessionId}_{uid}, sama dengan attendance, jadi:
+    //  - satu kesan pesan per praktikan per sesi (create kedua dianggap update -> ditolak)
+    //  - hanya praktikan yang presensinya tercatat di sesi itu
+    //  - sesi harus sudah ditutup
+    //  - label AI dari aplikasi hanya bahan pertimbangan asisten (null = tidak terbaca)
+    //  - tidak bisa diubah atau dihapus
+
+    match /kesanPesan/{kesanId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAsisten());
+      allow create: if isAuthenticated()
+        && request.resource.data.keys().hasOnly([
+          'sessionId', 'classId', 'userId', 'userName', 'text', 'aiLabel', 'aiConfidence', 'createdAt'
+        ])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.sessionId is string
+        && kesanId == request.resource.data.sessionId + '_' + request.auth.uid
+        && exists(/databases/$(database)/documents/attendance/$(kesanId))
+        && get(/databases/$(database)/documents/sessions/$(request.resource.data.sessionId)).data.status == 'closed'
+        && request.resource.data.classId is string
+        && request.resource.data.userName is string
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 10
+        && request.resource.data.text.size() <= 500
+        && (request.resource.data.aiLabel == null
+          || request.resource.data.aiLabel in ['negatif', 'netral', 'positif'])
+        && (request.resource.data.aiConfidence == null
+          || (request.resource.data.aiConfidence is number
+            && request.resource.data.aiConfidence >= 0
+            && request.resource.data.aiConfidence <= 1))
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
     // ─── 9. InvitationCodes Collection (Dev 1) ──────────────────────────────
 
     match /invitationCodes/{code} {
