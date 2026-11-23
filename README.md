@@ -212,6 +212,7 @@ Ada dua peran: `praktikan` dan `asisten`, ditambah penanda `isAdmin` untuk asist
 │   │   ├── attendance-service.ts   Presensi lokasi: pilih jalur callable atau fallback, listener
 │   │   ├── permission-service.ts   Pengajuan dan peninjauan izin
 │   │   ├── ai-service.ts        Pembungkus model sentimen (timeout + fallback)
+│   │   ├── kesan-pesan-service.ts  Kesan pesan sesi + label sentimen AI
 │   │   └── validation/          Validasi form login/registrasi
 │   ├── screens/                 Isi layar, dipisah per area
 │   │   ├── asisten/             Beranda, jadwal, sesi, rekap, admin, izin + components/
@@ -262,6 +263,7 @@ Aturan umum:
 | `/asisten/atur-sesi` | Kelola jadwal dan sesi: tambah, ubah, hapus, filter per kelas; sesi baru wajib memilih lab |
 | `/asisten/sesi/[id]` | Kelola sesi: buka/tutup dan daftar hadir |
 | `/asisten/izin` dan `/asisten/izin/[id]` | Daftar dan tinjau izin |
+| `/asisten/kesan-pesan` dan `/asisten/kesan-pesan/[sessionId]` | Kesan pesan praktikan per sesi beserta label sentimen AI |
 | `/(praktikan)` | Jadwal Praktikan |
 | `/(praktikan)/riwayat`, `/(praktikan)/izin`, `/(praktikan)/peta`, `/(praktikan)/profil` | Riwayat, izin, peta, profil |
 | `/praktikan/sesi/[id]` | Detail sesi dan tautan ke halaman presensi |
@@ -280,6 +282,7 @@ Penjagaan rute ada di `src/app/_layout.tsx` (`Stack.Protected`): pengguna tanpa 
 | `sessions/{id}` | `classId`, `title`, `date` (`YYYY-MM-DD`), `startTime`, `endTime` (`HH:MM`), `room`, `assistantId`, `assistantName` (nama asisten saat sesi dibuat, kosong pada sesi lama), `laboratoryId`, `status` (`scheduled` / `open` / `closed`), `createdAt`, `openedAt`, `closedAt` |
 | `attendance/{sessionId}_{uid}` | `sessionId`, `userId`, `userName`, `userNim`, `recordedAt` |
 | `permissionRequests/{id}` | `userId`, `userName`, `sessionId`, `reason`, `status` (`pending` / `approved` / `rejected`), hasil AI (`aiLabel`, `aiConfidence`), peninjauan (`reviewedBy`, `reviewedAt`, `reviewNote`), `createdAt` |
+| `kesanPesan/{sessionId}_{uid}` | `sessionId`, `classId`, `userId`, `userName`, `text` (10 sampai 500 karakter), hasil AI (`aiLabel`, `aiConfidence`; `null` berarti tidak terbaca), `createdAt`. Diisi praktikan yang hadir setelah sesi ditutup, satu kali per sesi; label AI hanya ditampilkan ke asisten |
 | `auditLogs/{id}` | `action`, `collection`, `docId`, `actorUid`, `actorRole`, `before`, `after`, `timestamp` |
 
 Alur status sesi: `scheduled → open → closed` (tidak ada transisi lain). Sesi baru dari layar Atur Sesi selalu berstatus `scheduled` dan wajib memilih laboratorium aktif. Sesi lama tanpa `laboratoryId` tetap bisa dibaca, tetapi tidak dapat dibuka sebelum lab diisi.

@@ -311,8 +311,8 @@ directly from screens.
 - `firestore.rules` is the authoritative access control layer. Client checks are
   UX guards, not a substitute.
 - The rules cover `users`, `classes`, `enrollments`, `sessions`, `laboratories`,
-  `notificationLogs`, `attendance`, `permissionRequests`, `auditLogs`, and
-  `invitationCodes`. The callable attendance lock-down is still pending.
+  `notificationLogs`, `attendance`, `permissionRequests`, `kesanPesan`,
+  `auditLogs`, and `invitationCodes`. The callable attendance lock-down is still pending.
 - Deploy rules to the team project after any change and test the affected role
   paths. CI does not run a Firestore emulator.
 - Firestore has no schema. Keep `src/types/index.ts`, converters, and service
@@ -326,7 +326,10 @@ directly from screens.
 
 The sentiment model lives in `ai/` (`model-edom.json`, `sentiment.js`) and runs
 on-device without network access. `src/lib/ai-service.ts` is the only app wrapper;
-use `analisisAlasan` rather than importing the model directly. The model was
+use `analisisSentimen` (permissions still call its alias `analisisAlasan`) rather
+than importing the model directly. It labels permission reasons and session
+"kesan pesan" (`kesanPesan` collection); labels are shown to assistants only and
+`null` means unreadable, not neutral. The model was
 trained on course-evaluation comments, not practicum reasons, so treat its output
 as a weak signal. The training files mentioned in `ai/README.md` are not present
 in this repository.
