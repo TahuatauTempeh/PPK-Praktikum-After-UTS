@@ -1,13 +1,18 @@
-import { onSnapshot, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, setDoc, where } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 import { submitAttendanceViaTransaction } from '@/lib/attendance-fallback';
 
 import {
   JALUR_PRESENSI,
+  listenAllAttendance,
   listenMyAttendance,
+  listenUserAttendance,
   submitAttendanceViaCallable,
   submitAttendanceWithLocation,
+  toAttendanceRecord,
+  toAttendanceRecordsForUser,
+  type AttendanceDoc,
 } from './attendance-service';
 
 jest.mock('firebase/firestore', () => ({
@@ -19,6 +24,7 @@ jest.mock('firebase/firestore', () => ({
   collection: jest.fn(),
   query: jest.fn(),
   where: jest.fn(),
+  Timestamp: class Timestamp {},
 }));
 
 jest.mock('firebase/functions', () => ({
@@ -137,5 +143,137 @@ describe('listenMyAttendance', () => {
     listenMyAttendance('s1', 'u1', jest.fn(), onError);
 
     expect(onError).toHaveBeenCalledWith('Kamu tidak punya akses untuk tindakan ini.');
+  });
+});
+
+describe('pemetaan attendance', () => {
+  const base: AttendanceDoc = {
+    id: 's1_u1',
+    sessionId: 's1',
+    userId: 'u1',
+    userName: 'Bunga',
+    userNim: '231110002',
+    recordedAt: '2026-11-20T01:05:00.000Z',
+  };
+
+  it('mengubah dokumen attendance menjadi record UI', () => {
+    expect(toAttendanceRecord(base)).toEqual({
+      id: 's1_u1',
+      sessionId: 's1',
+      userId: 'u1',
+      userName: 'Bunga',
+      timestamp: '2026-11-20T01:05:00.000Z',
+    });
+  });
+
+  it('mengosongkan timestamp yang tidak dikenali tanpa melempar error', () => {
+    expect(toAttendanceRecord({ ...base, recordedAt: 123 }).timestamp).toBe('');
+    expect(toAttendanceRecord({ ...base, recordedAt: { toDate: () => new Date(NaN) } }).timestamp).toBe(
+      ''
+    );
+  });
+
+  it('menyaring record milik user yang diminta', () => {
+    const other = { ...base, id: 's1_u2', userId: 'u2', userName: 'Aditya' };
+
+    expect(toAttendanceRecordsForUser([base, other], 'u1')).toEqual([
+      expect.objectContaining({ id: 's1_u1', userId: 'u1' }),
+    ]);
+  });
+});
+
+describe('listener attendance', () => {
+  const onSnapshotMock = jest.mocked(onSnapshot);
+  const collectionMock = jest.mocked(collection);
+  const queryMock = jest.mocked(query);
+  const whereMock = jest.mocked(where);
+
+  beforeEach(() => {
+    onSnapshotMock.mockReset();
+    collectionMock.mockReturnValue({ kind: 'collection' } as never);
+    whereMock.mockReturnValue({ kind: 'where' } as never);
+    queryMock.mockReturnValue({ kind: 'query' } as never);
+  });
+
+  it('listenUserAttendance memakai filter userId dan memetakan dokumen', () => {
+    const unsubscribe = jest.fn();
+    onSnapshotMock.mockImplementation(((...args: unknown[]) => {
+      const onNext = args[1] as (snapshot: unknown) => void;
+      onNext({
+        docs: [
+          {
+            id: 's1_u1',
+            data: () => ({
+              sessionId: 's1',
+              userId: 'u1',
+              userName: 'Bunga',
+              userNim: '231110002',
+              recordedAt: '2026-11-20T01:05:00.000Z',
+            }),
+          },
+        ],
+      });
+      return unsubscribe;
+    }) as never);
+
+    const callback = jest.fn();
+    const result = listenUserAttendance('u1', callback);
+
+    expect(whereMock).toHaveBeenCalledWith('userId', '==', 'u1');
+    expect(queryMock).toHaveBeenCalledWith({ kind: 'collection' }, { kind: 'where' });
+    expect(callback).toHaveBeenCalledWith([
+      {
+        id: 's1_u1',
+        sessionId: 's1',
+        userId: 'u1',
+        userName: 'Bunga',
+        userNim: '231110002',
+        recordedAt: '2026-11-20T01:05:00.000Z',
+      },
+    ]);
+    expect(result).toBe(unsubscribe);
+  });
+
+  it('listenAllAttendance membaca seluruh koleksi dan memetakan dokumen', () => {
+    const unsubscribe = jest.fn();
+    onSnapshotMock.mockImplementation(((...args: unknown[]) => {
+      const onNext = args[1] as (snapshot: unknown) => void;
+      onNext({
+        docs: [
+          {
+            id: 's1_u1',
+            data: () => ({
+              sessionId: 's1',
+              userId: 'u1',
+              userName: 'Bunga',
+              userNim: '231110002',
+              recordedAt: '2026-11-20T01:05:00.000Z',
+            }),
+          },
+        ],
+      });
+      return unsubscribe;
+    }) as never);
+
+    const callback = jest.fn();
+    const result = listenAllAttendance(callback);
+
+    expect(queryMock).not.toHaveBeenCalled();
+    expect(onSnapshotMock).toHaveBeenCalledWith(
+      { kind: 'collection' },
+      expect.any(Function),
+      expect.any(Function)
+    );
+    expect(callback).toHaveBeenCalledWith([
+      {
+        id: 's1_u1',
+        sessionId: 's1',
+        userId: 'u1',
+        userName: 'Bunga',
+        userNim: '231110002',
+        recordedAt: '2026-11-20T01:05:00.000Z',
+      },
+    ]);
+    expect(result).toBe(unsubscribe);
   });
 });

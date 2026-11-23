@@ -1,6 +1,6 @@
 /**
- * Turunan data dari SessionContext untuk sisi praktikan.
- * Semua fungsi murni, state tetap dimiliki context.
+ * Turunan data untuk sisi praktikan.
+ * Semua fungsi murni, state tetap dimiliki hook/context.
  */
 
 import { toDateInputValue } from '@/lib/praktikum-helpers';

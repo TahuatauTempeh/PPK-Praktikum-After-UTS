@@ -23,6 +23,31 @@ export function toDate(value: TimestampValue | null | undefined): Date {
   return value.toDate();
 }
 
+/**
+ * Mengubah nilai waktu dari Firestore (Timestamp, string ISO, atau Date)
+ * menjadi ISO 8601. Mengembalikan null untuk nilai yang tidak dikenali.
+ */
+export function toIsoString(value: unknown): string | null {
+  let date: Date | null = null;
+  if (value instanceof Date) {
+    date = value;
+  } else if (typeof value === 'string') {
+    date = new Date(value);
+  } else if (value !== null && typeof value === 'object' && 'toDate' in value) {
+    const candidate = value as { toDate?: () => Date };
+    if (typeof candidate.toDate === 'function') {
+      try {
+        const converted = candidate.toDate();
+        date = converted instanceof Date ? converted : null;
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  return date && !Number.isNaN(date.getTime()) ? date.toISOString() : null;
+}
+
 /** Mengonversi TimestampValue menjadi epoch milidetik untuk pengurutan. */
 export function toMillis(value: TimestampValue | null | undefined): number {
   const ms = toDate(value).getTime();

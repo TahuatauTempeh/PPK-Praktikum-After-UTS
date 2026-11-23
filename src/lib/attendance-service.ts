@@ -14,7 +14,8 @@ import type { DevicePosition } from '@/lib/device-location';
 import { getFirebaseApp } from '@/lib/firebase/app';
 import { mapFirebaseError } from '@/lib/firebase/errors';
 import { COLLECTIONS, getDb } from '@/lib/firebase/firestore';
-import type { AttendanceSubmitResult } from '@/types';
+import { toIsoString } from '@/lib/praktikum-helpers';
+import type { AttendanceRecord, AttendanceSubmitResult } from '@/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -115,6 +116,64 @@ export async function submitAttendanceViaCallable(
 export interface SubmitResult {
   success: boolean;
   message: string;
+}
+
+/** Mengubah dokumen attendance Firestore menjadi record yang dipakai UI. */
+export function toAttendanceRecord(doc: AttendanceDoc): AttendanceRecord {
+  return {
+    id: doc.id,
+    sessionId: doc.sessionId,
+    userId: doc.userId,
+    userName: doc.userName,
+    timestamp: toIsoString(doc.recordedAt) ?? '',
+  };
+}
+
+/** Memfilter record milik satu praktikan dan memetakannya untuk UI. */
+export function toAttendanceRecordsForUser(
+  docs: readonly AttendanceDoc[],
+  userId: string,
+): AttendanceRecord[] {
+  return docs.filter((doc) => doc.userId === userId).map(toAttendanceRecord);
+}
+
+// ─── Realtime: semua kehadiran milik satu praktikan ───────────────────────────
+
+export function listenUserAttendance(
+  userId: string,
+  callback: (records: AttendanceDoc[]) => void,
+): Unsubscribe {
+  const q = query(
+    collection(getDb(), COLLECTIONS.attendance),
+    where('userId', '==', userId),
+  );
+  return onSnapshot(
+    q,
+    (snap) => {
+      const records = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as AttendanceDoc);
+      callback(records);
+    },
+    (err) => {
+      console.warn('[listenUserAttendance] error:', err);
+    },
+  );
+}
+
+// ─── Realtime: semua kehadiran (untuk ringkasan jadwal asisten) ───────────────
+
+export function listenAllAttendance(
+  callback: (records: AttendanceDoc[]) => void,
+): Unsubscribe {
+  return onSnapshot(
+    collection(getDb(), COLLECTIONS.attendance),
+    (snap) => {
+      const records = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as AttendanceDoc);
+      callback(records);
+    },
+    (err) => {
+      console.warn('[listenAllAttendance] error:', err);
+    },
+  );
 }
 
 // ─── Realtime: semua kehadiran dalam satu sesi (untuk rekap asisten) ──────────
