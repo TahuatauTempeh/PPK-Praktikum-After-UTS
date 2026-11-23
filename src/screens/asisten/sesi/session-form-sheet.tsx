@@ -12,6 +12,7 @@ import { type Laboratory, type PracticumClass, type PraktikumSession } from '@/t
 
 import { AssistantSheet } from '../components/assistant-sheet';
 import { AssistantText } from '../components/assistant-text';
+import { DateField } from '../components/date-field';
 import { ScheduleIcon } from '../components/schedule-icon';
 import { TimeField } from '../components/time-field';
 
@@ -185,18 +186,14 @@ export function SessionFormSheet({
             </View>
 
             <View style={styles.field}>
-              <AssistantText variant="label" style={styles.fieldLabel}>Tanggal (YYYY-MM-DD) *</AssistantText>
-              <TextInput
+              <AssistantText variant="label" style={styles.fieldLabel}>Tanggal *</AssistantText>
+              <DateField
                 value={date}
-                onChangeText={value => {
+                onChange={value => {
                   setDate(value);
                   if (error) setError(null);
                 }}
-                placeholder="2026-11-20"
-                placeholderTextColor={theme.colors.textSecondary}
-                editable={!submitting}
-                maxLength={10}
-                keyboardType="numbers-and-punctuation"
+                disabled={submitting}
                 style={styles.input}
                 accessibilityLabel="Tanggal Sesi"
               />
