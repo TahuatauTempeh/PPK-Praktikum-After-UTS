@@ -247,10 +247,10 @@ export function usePresensi(sessionId: string, profile: UserProfile | null): Pre
 
   const namaLab = lab?.name ?? null;
   const onKirim = useCallback(() => {
-    if (!posisi || !kelayakan.tombolAktif || sedangKirim.current) return;
+    if (!profile || !posisi || !kelayakan.tombolAktif || sedangKirim.current) return;
     sedangKirim.current = true;
     setKirim({ tahap: 'mengirim' });
-    void submitAttendanceWithLocation(sessionId, posisi, namaLab ?? undefined)
+    void submitAttendanceWithLocation(sessionId, posisi, profile, namaLab ?? undefined)
       .then((hasil) => {
         if (hasil.ok) {
           setKirim({
@@ -267,7 +267,7 @@ export function usePresensi(sessionId: string, profile: UserProfile | null): Pre
       .finally(() => {
         sedangKirim.current = false;
       });
-  }, [posisi, kelayakan.tombolAktif, sessionId, namaLab, periksaLokasi]);
+  }, [profile, posisi, kelayakan.tombolAktif, sessionId, namaLab, periksaLokasi]);
 
   const onMuatUlang = useCallback(() => {
     setGalat(null);

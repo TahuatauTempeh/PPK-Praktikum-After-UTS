@@ -44,6 +44,7 @@ const PESAN_TETAP: Record<Exclude<AttendanceFailureCode, 'OUT_OF_RADIUS'>, strin
 };
 
 const PESAN_SESI_BERAKHIR = 'Sesi login sudah berakhir. Silakan masuk kembali.';
+const PESAN_DITOLAK = 'Presensi ditolak server. Pastikan sesi masih dibuka, lalu periksa lokasi dan coba lagi.';
 
 function angkaValid(nilai: unknown): nilai is number {
   return typeof nilai === 'number' && Number.isFinite(nilai) && nilai >= 0;
@@ -109,6 +110,9 @@ export function hasilGagalDariGalat(error: unknown, laboratoryName?: string): At
       return buatGagal('NETWORK');
     case 'unauthenticated':
       return { ok: false, code: 'UNKNOWN', message: PESAN_SESI_BERAKHIR };
+    // Ditolak rules atau server tanpa kode domain, mis. sesi baru saja ditutup.
+    case 'permission-denied':
+      return { ok: false, code: 'UNKNOWN', message: PESAN_DITOLAK };
     default:
       return buatGagal('UNKNOWN');
   }

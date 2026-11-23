@@ -1,7 +1,7 @@
 /**
  * attendance-service.ts
- * Sprint 3: presensi berbasis lokasi lewat callable `submitAttendanceWithLocation`.
- * Klien tidak menulis `attendance` langsung (PRD D-02).
+ * Sprint 3: presensi berbasis lokasi lewat `submitAttendanceWithLocation`, yang memilih
+ * jalur callable atau fallback transaksi (PRD 14.1) menurut `JALUR_PRESENSI`.
  * Realtime listeners untuk rekap asisten dan status presensi praktikan.
  */
 
@@ -9,6 +9,7 @@ import { collection, doc, onSnapshot, query, where, type Unsubscribe } from 'fir
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 import { hasilGagalDariGalat } from '@/lib/attendance-errors';
+import { submitAttendanceViaTransaction, type ProfilPresensi } from '@/lib/attendance-fallback';
 import type { DevicePosition } from '@/lib/device-location';
 import { getFirebaseApp } from '@/lib/firebase/app';
 import { mapFirebaseError } from '@/lib/firebase/errors';
@@ -59,13 +60,31 @@ interface SubmitAttendanceResponse {
 }
 
 /**
- * Kirim presensi ke callable `submitAttendance` (PRD 10.3). Server yang memvalidasi
- * dan menulis; klien tidak menulis `attendance`. Tidak ada retry otomatis dan tidak
- * ada antrean offline (BR-16): kegagalan dikembalikan agar pengguna mencoba lagi.
+ * Jalur pencatatan presensi.
+ * - `fallback`: transaksi Firestore dari aplikasi (PRD 14.1). Dipakai selama project masih
+ *   Spark, sesuai keputusan tim 23 November 2026. Jarak, akurasi, dan lokasi palsu hanya
+ *   diperiksa di aplikasi; rules memeriksa sesi, enrollment, lab, dan bukti lokasi.
+ * - `callable`: Cloud Function `submitAttendance`. Pakai setelah project Blaze, callable
+ *   ter-deploy, dan rules `attendance` diubah menjadi `create: false`.
  *
- * `laboratoryName` hanya dipakai untuk pesan "di luar radius".
+ * Tidak ada retry otomatis dan tidak ada antrean offline (BR-16) di kedua jalur.
  */
-export async function submitAttendanceWithLocation(
+export const JALUR_PRESENSI = 'fallback' as 'callable' | 'fallback';
+
+/** `laboratoryName` hanya dipakai untuk pesan "di luar radius". */
+export function submitAttendanceWithLocation(
+  sessionId: string,
+  position: DevicePosition,
+  profile: ProfilPresensi,
+  laboratoryName?: string,
+): Promise<AttendanceSubmitResult> {
+  return JALUR_PRESENSI === 'callable'
+    ? submitAttendanceViaCallable(sessionId, position, laboratoryName)
+    : submitAttendanceViaTransaction(sessionId, position, profile, laboratoryName);
+}
+
+/** Kirim ke callable `submitAttendance` (PRD 10.3); server yang memvalidasi dan menulis. */
+export async function submitAttendanceViaCallable(
   sessionId: string,
   position: DevicePosition,
   laboratoryName?: string,

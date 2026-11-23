@@ -118,7 +118,7 @@ describe('usePresensi', () => {
       result.current.onKirim();
     });
 
-    expect(submitAttendanceWithLocation).toHaveBeenCalledWith('s1', DI_LAB, 'Lab A201');
+    expect(submitAttendanceWithLocation).toHaveBeenCalledWith('s1', DI_LAB, PROFIL, 'Lab A201');
     expect(result.current.model.kirim).toEqual({ tahap: 'berhasil', jam: '08.07', distanceMeters: 0, radiusMeters: 100 });
   });
 

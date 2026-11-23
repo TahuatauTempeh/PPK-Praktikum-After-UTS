@@ -1,7 +1,14 @@
 import { onSnapshot, setDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
-import { listenMyAttendance, submitAttendanceWithLocation } from './attendance-service';
+import { submitAttendanceViaTransaction } from '@/lib/attendance-fallback';
+
+import {
+  JALUR_PRESENSI,
+  listenMyAttendance,
+  submitAttendanceViaCallable,
+  submitAttendanceWithLocation,
+} from './attendance-service';
 
 jest.mock('firebase/firestore', () => ({
   doc: jest.fn((_db: unknown, collectionName: string, id: string) => ({ collectionName, id })),
@@ -19,6 +26,10 @@ jest.mock('firebase/functions', () => ({
   httpsCallable: jest.fn(),
 }));
 
+jest.mock('@/lib/attendance-fallback', () => ({
+  submitAttendanceViaTransaction: jest.fn(),
+}));
+
 jest.mock('@/lib/firebase/app', () => ({
   getFirebaseApp: jest.fn(() => 'APP'),
 }));
@@ -30,7 +41,7 @@ jest.mock('@/lib/firebase/firestore', () => ({
 
 const setDocMock = jest.mocked(setDoc);
 
-describe('submitAttendanceWithLocation', () => {
+describe('submitAttendanceViaCallable', () => {
   const httpsCallableMock = jest.mocked(httpsCallable);
   const posisi = { latitude: -7.0519, longitude: 110.4383, accuracyMeters: 12, mocked: false, timestamp: 1 };
 
@@ -52,7 +63,7 @@ describe('submitAttendanceWithLocation', () => {
       },
     }));
 
-    await expect(submitAttendanceWithLocation('s1', posisi)).resolves.toEqual({
+    await expect(submitAttendanceViaCallable('s1', posisi)).resolves.toEqual({
       ok: true,
       recordedAt: '2026-11-23T01:07:00.000Z',
       distanceMeters: 23,
@@ -78,7 +89,7 @@ describe('submitAttendanceWithLocation', () => {
       });
     });
 
-    await expect(submitAttendanceWithLocation('s1', posisi, 'Lab A201')).resolves.toEqual({
+    await expect(submitAttendanceViaCallable('s1', posisi, 'Lab A201')).resolves.toEqual({
       ok: false,
       code: 'OUT_OF_RADIUS',
       message: 'Kamu berada 140 m dari Lab A201. Radius yang diizinkan 100 m.',
@@ -92,11 +103,25 @@ describe('submitAttendanceWithLocation', () => {
       throw Object.assign(new Error('internal'), { code: 'functions/internal' });
     });
 
-    await expect(submitAttendanceWithLocation('s1', posisi)).resolves.toMatchObject({
+    await expect(submitAttendanceViaCallable('s1', posisi)).resolves.toMatchObject({
       ok: false,
       code: 'NETWORK',
       message: 'Koneksi bermasalah. Presensi tidak tercatat. Coba lagi.',
     });
+  });
+});
+
+describe('submitAttendanceWithLocation', () => {
+  it('memakai fallback transaksi selama project masih Spark', async () => {
+    const posisi = { latitude: -7.0519, longitude: 110.4383, accuracyMeters: 12, mocked: false, timestamp: 1 };
+    const profil = { id: 'u1', name: 'Bunga', nim: '24060123' };
+    const hasil = { ok: true as const, recordedAt: '2026-11-23T01:07:00.000Z', distanceMeters: 0, radiusMeters: 100 };
+    jest.mocked(submitAttendanceViaTransaction).mockResolvedValueOnce(hasil);
+
+    expect(JALUR_PRESENSI).toBe('fallback');
+    await expect(submitAttendanceWithLocation('s1', posisi, profil, 'Lab A201')).resolves.toEqual(hasil);
+    expect(submitAttendanceViaTransaction).toHaveBeenCalledWith('s1', posisi, profil, 'Lab A201');
+    expect(httpsCallable).not.toHaveBeenCalled();
   });
 });
 
