@@ -29,4 +29,10 @@ module.exports = defineConfig([
       globals: globals.jest,
     },
   },
+  {
+    files: ['e2e/**/*.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
 ]);
