@@ -16,6 +16,13 @@ jest.mock('@/context/session-context', () => ({ useSession: () => ({ state: { se
 jest.mock('@/data/dummy', () => ({ allUsers: [] }));
 jest.mock('@/lib/useSessionFirestore', () => ({ useMyAttendance: jest.fn() }));
 jest.mock('@/screens/praktikan/guard', () => ({ useUserPraktikan: () => ({ id: 'u1', name: 'Bunga', nim: '24060123' }) }));
+// Kartu kesan pesan punya test sendiri; di sini cukup diketahui apakah ia dirender.
+jest.mock('@/screens/praktikan/kesan-pesan/kesan-pesan-sesi', () => ({
+  KesanPesanSesi: () => {
+    const { Text } = jest.requireActual('react-native');
+    return <Text>Kartu kesan pesan</Text>;
+  },
+}));
 jest.mock('@/screens/praktikan/navigasi', () => ({
   bukaJadwal: jest.fn(),
   bukaPresensi: jest.fn(),
@@ -103,5 +110,31 @@ describe('<DetailSesiScreen /> Sprint 3', () => {
     siapkan(SESI);
     const { getByText } = await render(<DetailSesiScreen />);
     expect(getByText('Belum ditentukan')).toBeTruthy();
+  });
+});
+
+describe('<DetailSesiScreen /> kartu kesan pesan', () => {
+  const HADIR = {
+    id: 's1_u1',
+    sessionId: 's1',
+    userId: 'u1',
+    userName: 'Bunga',
+    userNim: '24060123',
+    recordedAt: '2026-11-23T01:07:00.000Z',
+  };
+
+  it('tampil saat sesi sudah ditutup dan praktikan hadir', async () => {
+    siapkan({ ...SESI, status: 'closed' }, HADIR);
+    const { getByText } = await render(<DetailSesiScreen />);
+    expect(getByText('Kartu kesan pesan')).toBeTruthy();
+  });
+
+  it.each([
+    ['sesi masih dibuka', { ...SESI, status: 'open' }, HADIR],
+    ['praktikan tidak hadir', { ...SESI, status: 'closed' }, null],
+  ] as const)('tidak tampil saat %s', async (_, sesi, record) => {
+    siapkan(sesi as FirestoreSession, record);
+    const { queryByText } = await render(<DetailSesiScreen />);
+    expect(queryByText('Kartu kesan pesan')).toBeNull();
   });
 });
