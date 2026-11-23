@@ -1,6 +1,7 @@
 /**
  * use-map-location.ts: mengelola izin lokasi foreground, status layanan GPS,
- * dan pemantauan posisi pengguna hanya selama layar peta aktif/fokus.
+ * dan pemantauan posisi pengguna hanya selama layar peta aktif/fokus
+ * (baik di Android/iOS lewat expo-location maupun di Web lewat Geolocation API).
  */
 
 import { useFocusEffect } from 'expo-router';
@@ -29,13 +30,57 @@ export interface MapLocationState {
   openSettings: () => Promise<void>;
 }
 
+const WEB_GEO_OPTIONS: PositionOptions = {
+  enableHighAccuracy: true,
+  timeout: 10_000,
+  maximumAge: 5_000,
+};
+
+function toWebDevicePosition(pos: GeolocationPosition): DevicePosition {
+  return {
+    latitude: pos.coords.latitude,
+    longitude: pos.coords.longitude,
+    accuracyMeters:
+      typeof pos.coords.accuracy === 'number' && Number.isFinite(pos.coords.accuracy)
+        ? pos.coords.accuracy
+        : 25,
+    mocked: false,
+    timestamp: pos.timestamp,
+  };
+}
+
+function mapWebGeoError(err: GeolocationPositionError): {
+  permission: MapPermissionState;
+  code: DeviceLocationFailureCode;
+} {
+  if (err.code === 1) {
+    return { permission: 'blocked', code: 'PERMISSION_BLOCKED' };
+  }
+  if (err.code === 3) {
+    return { permission: 'granted', code: 'TIMEOUT' };
+  }
+  return { permission: 'granted', code: 'UNAVAILABLE' };
+}
+
+async function queryWebGeolocationPermission(): Promise<PermissionState | null> {
+  if (typeof navigator === 'undefined' || !navigator.permissions?.query) {
+    return null;
+  }
+  try {
+    const status = await navigator.permissions.query({ name: 'geolocation' });
+    return status.state;
+  } catch {
+    return null;
+  }
+}
+
 export function useMapLocation(enabled: boolean = true): MapLocationState {
   const isWeb = Platform.OS === 'web';
 
   const [permissionStatus, setPermissionStatus] = useState<MapPermissionState>(() =>
-    isWeb || !enabled ? 'denied' : 'checking'
+    !enabled ? 'denied' : 'checking'
   );
-  const [servicesEnabled, setServicesEnabled] = useState(!isWeb);
+  const [servicesEnabled, setServicesEnabled] = useState(true);
   const [position, setPosition] = useState<DevicePosition | null>(null);
   const [locationError, setLocationError] = useState<DeviceLocationFailureCode | null>(null);
 
@@ -55,9 +100,85 @@ export function useMapLocation(enabled: boolean = true): MapLocationState {
     watchRef.current = null;
   }, []);
 
-  const syncLocation = useCallback(
+  const syncWebLocation = useCallback(
+    async (allowPrompt: boolean, forcePrompt: boolean = false) => {
+      if (!enabled || !mountedRef.current || !isFocusedRef.current) return;
+
+      stopWatch();
+
+      if (typeof navigator === 'undefined' || !navigator.geolocation) {
+        updatePermissionState('blocked');
+        setServicesEnabled(false);
+        setPosition(null);
+        setLocationError('UNAVAILABLE');
+        return;
+      }
+
+      const browserPerm = await queryWebGeolocationPermission();
+      if (!mountedRef.current || !isFocusedRef.current) return;
+
+      if (browserPerm === 'denied') {
+        updatePermissionState('blocked');
+        setServicesEnabled(true);
+        setPosition(null);
+        setLocationError('PERMISSION_BLOCKED');
+        return;
+      }
+
+      if (browserPerm === 'prompt' && !forcePrompt) {
+        if (!allowPrompt || hasAutoRequestedRef.current) {
+          updatePermissionState('denied');
+          setServicesEnabled(true);
+          setPosition(null);
+          setLocationError('PERMISSION_DENIED');
+          return;
+        }
+        hasAutoRequestedRef.current = true;
+      } else if (browserPerm === null && !forcePrompt && allowPrompt) {
+        if (hasAutoRequestedRef.current) {
+          updatePermissionState('denied');
+          setServicesEnabled(true);
+          setPosition(null);
+          setLocationError('PERMISSION_DENIED');
+          return;
+        }
+        hasAutoRequestedRef.current = true;
+      }
+
+      const geo = navigator.geolocation;
+      const onSuccess = (pos: GeolocationPosition) => {
+        if (!mountedRef.current || !isFocusedRef.current) return;
+        updatePermissionState('granted');
+        setServicesEnabled(true);
+        setPosition(toWebDevicePosition(pos));
+        setLocationError(null);
+      };
+      const onError = (err: GeolocationPositionError) => {
+        if (!mountedRef.current || !isFocusedRef.current) return;
+        const mapped = mapWebGeoError(err);
+        updatePermissionState(mapped.permission);
+        setServicesEnabled(true);
+        if (mapped.permission !== 'granted') {
+          setPosition(null);
+          stopWatch();
+        }
+        setLocationError(mapped.code);
+      };
+
+      const watchId = geo.watchPosition(onSuccess, onError, WEB_GEO_OPTIONS);
+      watchRef.current = {
+        remove() {
+          geo.clearWatch(watchId);
+        },
+      };
+      geo.getCurrentPosition(onSuccess, onError, WEB_GEO_OPTIONS);
+    },
+    [enabled, stopWatch, updatePermissionState]
+  );
+
+  const syncNativeLocation = useCallback(
     async (allowPrompt: boolean) => {
-      if (isWeb || !enabled || !mountedRef.current || !isFocusedRef.current) return;
+      if (!enabled || !mountedRef.current || !isFocusedRef.current) return;
 
       stopWatch();
 
@@ -133,27 +254,38 @@ export function useMapLocation(enabled: boolean = true): MapLocationState {
         setLocationError((prev) => prev ?? fresh.code);
       }
     },
-    [enabled, isWeb, stopWatch, updatePermissionState]
+    [enabled, stopWatch, updatePermissionState]
+  );
+
+  const syncLocation = useCallback(
+    async (allowPrompt: boolean, forcePrompt: boolean = false) => {
+      if (isWeb) {
+        await syncWebLocation(allowPrompt, forcePrompt);
+      } else {
+        await syncNativeLocation(allowPrompt);
+      }
+    },
+    [isWeb, syncNativeLocation, syncWebLocation]
   );
 
   useFocusEffect(
     useCallback(() => {
       isFocusedRef.current = true;
       mountedRef.current = true;
-      if (!isWeb && enabled) {
+      if (enabled) {
         void syncLocation(true);
       }
       return () => {
         isFocusedRef.current = false;
         stopWatch();
       };
-    }, [enabled, isWeb, stopWatch, syncLocation])
+    }, [enabled, stopWatch, syncLocation])
   );
 
   useEffect(() => {
     mountedRef.current = true;
     const subscription = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'active' && isFocusedRef.current && !isWeb && enabled) {
+      if (nextState === 'active' && isFocusedRef.current && enabled) {
         void syncLocation(false);
       } else if (nextState !== 'active') {
         stopWatch();
@@ -164,30 +296,35 @@ export function useMapLocation(enabled: boolean = true): MapLocationState {
       subscription.remove();
       stopWatch();
     };
-  }, [enabled, isWeb, stopWatch, syncLocation]);
+  }, [enabled, stopWatch, syncLocation]);
 
   const requestPermission = useCallback(async () => {
-    if (isWeb || !enabled) return;
+    if (!enabled) return;
+    if (isWeb) {
+      await syncWebLocation(true, true);
+      return;
+    }
     const requested = await requestForegroundPermission();
     if (!mountedRef.current) return;
     if (requested === 'granted') {
       updatePermissionState('granted');
-      await syncLocation(false);
+      await syncNativeLocation(false);
       return;
     }
     updatePermissionState(requested);
     setPosition(null);
     setLocationError(requested === 'blocked' ? 'PERMISSION_BLOCKED' : 'PERMISSION_DENIED');
-  }, [enabled, isWeb, syncLocation, updatePermissionState]);
+  }, [enabled, isWeb, syncNativeLocation, syncWebLocation, updatePermissionState]);
 
   const refreshLocation = useCallback(async () => {
-    if (isWeb || !enabled) return;
-    await syncLocation(false);
+    if (!enabled) return;
+    await syncLocation(false, isWeb);
   }, [enabled, isWeb, syncLocation]);
 
   const openSettings = useCallback(async () => {
+    if (isWeb) return;
     await Linking.openSettings();
-  }, []);
+  }, [isWeb]);
 
   return {
     permissionStatus,

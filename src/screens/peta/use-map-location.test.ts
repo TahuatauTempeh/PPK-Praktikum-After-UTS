@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react-native';
-import { AppState, Linking } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 
 import {
   getForegroundPermission,
@@ -123,5 +123,61 @@ describe('useMapLocation', () => {
       await result.current.openSettings();
     });
     expect(settingsSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('mendukung geolocation browser di Web dan membersihkan clearWatch saat unmount', async () => {
+    const originalOS = Platform.OS;
+    const originalNav = globalThis.navigator;
+    Object.defineProperty(Platform, 'OS', { value: 'web', configurable: true });
+
+    const clearWatch = jest.fn();
+    const watchPositionWeb = jest.fn((onSuccess: PositionCallback) => {
+      onSuccess({
+        coords: {
+          latitude: -7.052,
+          longitude: 110.438,
+          accuracy: 15,
+          altitude: null,
+          altitudeAccuracy: null,
+          heading: null,
+          speed: null,
+          toJSON: () => ({}),
+        },
+        timestamp: 1_700_000_000_000,
+        toJSON: () => ({}),
+      });
+      return 42;
+    });
+    const getCurrentPositionWeb = jest.fn();
+
+    Object.defineProperty(globalThis, 'navigator', {
+      value: {
+        geolocation: {
+          watchPosition: watchPositionWeb,
+          getCurrentPosition: getCurrentPositionWeb,
+          clearWatch,
+        },
+      },
+      configurable: true,
+    });
+
+    try {
+      const { result, unmount } = await renderHook(() => useMapLocation(true));
+      await flushMicrotasks();
+
+      expect(result.current.permissionStatus).toBe('granted');
+      expect(result.current.position?.latitude).toBe(-7.052);
+      expect(result.current.position?.longitude).toBe(110.438);
+      expect(watchPositionWeb).toHaveBeenCalledTimes(1);
+
+      await unmount();
+      expect(clearWatch).toHaveBeenCalledWith(42);
+    } finally {
+      Object.defineProperty(Platform, 'OS', { value: originalOS, configurable: true });
+      Object.defineProperty(globalThis, 'navigator', {
+        value: originalNav,
+        configurable: true,
+      });
+    }
   });
 });

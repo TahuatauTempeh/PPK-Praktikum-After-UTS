@@ -34,17 +34,17 @@ export function PetaScreen({ showBackButton = false, onBack }: PetaScreenProps) 
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [mapLoadFailed, setMapLoadFailed] = useState(false);
 
-  const location = useMapLocation(!isWeb);
+  const location = useMapLocation(true);
 
   const effectiveSelectedId = useMemo(() => {
     if (!selectedLabId) return null;
     return items.some((item) => item.lab.id === selectedLabId) ? selectedLabId : null;
   }, [items, selectedLabId]);
 
-  const showListMode = isWeb || viewMode === 'list' || mapLoadFailed;
+  const showListMode = viewMode === 'list' || mapLoadFailed;
 
   function renderLocationOrMapBanner() {
-    if (mapLoadFailed && !isWeb) {
+    if (mapLoadFailed) {
       return (
         <LocationBanner
           tone="error"
@@ -58,9 +58,17 @@ export function PetaScreen({ showBackButton = false, onBack }: PetaScreenProps) 
       );
     }
 
-    if (isWeb) return null;
-
     if (location.permissionStatus === 'blocked') {
+      if (isWeb) {
+        return (
+          <LocationBanner
+            tone="warning"
+            message="Izin lokasi browser diblokir. Aktifkan izin lokasi di pengaturan situs browser, lalu periksa lagi."
+            actionLabel="Periksa lagi"
+            onAction={() => void location.refreshLocation()}
+          />
+        );
+      }
       return (
         <LocationBanner
           tone="warning"
@@ -80,8 +88,8 @@ export function PetaScreen({ showBackButton = false, onBack }: PetaScreenProps) 
           message="Izin lokasi diperlukan untuk menampilkan posisimu di peta."
           actionLabel="Izinkan lokasi"
           onAction={() => void location.requestPermission()}
-          secondaryLabel="Buka pengaturan"
-          onSecondary={() => void location.openSettings()}
+          secondaryLabel={isWeb ? undefined : 'Buka pengaturan'}
+          onSecondary={isWeb ? undefined : () => void location.openSettings()}
         />
       );
     }
@@ -147,7 +155,7 @@ export function PetaScreen({ showBackButton = false, onBack }: PetaScreenProps) 
           </View>
         </View>
 
-        {!isWeb && !loading && !error && items.length > 0 ? (
+        {!loading && !error && items.length > 0 ? (
           <Pressable
             onPress={() => {
               if (mapLoadFailed) {
@@ -194,7 +202,7 @@ export function PetaScreen({ showBackButton = false, onBack }: PetaScreenProps) 
             bottomInset={bottomInset}
             headerSlot={topBanner}
             onFocusOnMap={
-              !isWeb && !mapLoadFailed
+              !mapLoadFailed
                 ? (labId) => {
                     setSelectedLabId(labId);
                     setViewMode('map');
@@ -214,8 +222,12 @@ export function PetaScreen({ showBackButton = false, onBack }: PetaScreenProps) 
             onCenterRequest={() => {
               if (location.permissionStatus === 'denied') {
                 void location.requestPermission();
-              } else if (location.permissionStatus === 'blocked' || !location.servicesEnabled) {
-                void location.openSettings();
+              } else if (
+                location.permissionStatus === 'blocked' ||
+                !location.servicesEnabled
+              ) {
+                if (isWeb) void location.refreshLocation();
+                else void location.openSettings();
               } else {
                 void location.refreshLocation();
               }

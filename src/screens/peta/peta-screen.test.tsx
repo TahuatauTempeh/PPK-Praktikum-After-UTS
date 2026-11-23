@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 
 import { PetaScreen } from './peta-screen';
@@ -6,41 +6,28 @@ import type { LaboratoryMapItem } from './selectors';
 import { useMapData } from './use-map-data';
 import { useMapLocation } from './use-map-location';
 
-jest.mock('react-native-maps', () => {
+let lastWebViewOnMessage: ((event: { nativeEvent: { data: string } }) => void) | undefined;
+
+jest.mock('react-native-webview', () => {
   const mockReact = jest.requireActual<typeof import('react')>('react');
   const { View } = jest.requireActual<typeof import('react-native')>('react-native');
-  const MockMapView = mockReact.forwardRef(
-    ({ children, onMapReady, ...rest }: any, ref: any) => {
+  const MockWebView = mockReact.forwardRef(
+    ({ onMessage, ...rest }: any, ref: any) => {
       mockReact.useImperativeHandle(ref, () => ({
-        animateToRegion: jest.fn(),
+        injectJavaScript: jest.fn(),
       }));
       mockReact.useEffect(() => {
-        onMapReady?.();
-      }, [onMapReady]);
-      return mockReact.createElement(View, { testID: 'native-map', ...rest }, children);
+        lastWebViewOnMessage = onMessage;
+        onMessage?.({ nativeEvent: { data: JSON.stringify({ type: 'ready' }) } });
+      }, [onMessage]);
+      return mockReact.createElement(View, { testID: 'native-map', ...rest });
     }
   );
-  MockMapView.displayName = 'MockMapView';
-  const MockMarker = ({ children, onPress, title, ...rest }: any) =>
-    mockReact.createElement(
-      View,
-      {
-        testID: `marker-${title}`,
-        accessibilityLabel: rest.accessibilityLabel,
-        onTouchEnd: () => onPress?.({ stopPropagation: jest.fn() }),
-      },
-      children
-    );
-  const MockCircle = (props: any) =>
-    mockReact.createElement(View, { testID: 'map-circle', ...props });
-
+  MockWebView.displayName = 'MockWebView';
   return {
     __esModule: true,
-    default: MockMapView,
-    Marker: MockMarker,
-    Circle: MockCircle,
-    PROVIDER_GOOGLE: 'google',
-    PROVIDER_DEFAULT: undefined,
+    default: MockWebView,
+    WebView: MockWebView,
   };
 });
 
@@ -115,6 +102,7 @@ function setupDefaultLocation(overrides: Partial<ReturnType<typeof useMapLocatio
 describe('PetaScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    lastWebViewOnMessage = undefined;
     setupDefaultLocation();
   });
 
@@ -161,7 +149,7 @@ describe('PetaScreen', () => {
     expect(getByText('Belum ada laboratorium')).toBeTruthy();
   });
 
-  it('dapat beralih antara mode peta dan mode daftar serta menampilkan banner izin', async () => {
+  it('membuka panel aktivitas saat marker OpenStreetMap dipilih dan mendukung mode daftar', async () => {
     const requestPermission = jest.fn();
     setupDefaultLocation({
       permissionStatus: 'denied',
@@ -182,15 +170,46 @@ describe('PetaScreen', () => {
     expect(getByTestId('native-map')).toBeTruthy();
     expect(getByText('Izinkan lokasi')).toBeTruthy();
 
+    await act(async () => {
+      lastWebViewOnMessage?.({
+        nativeEvent: { data: JSON.stringify({ type: 'selectLab', labId: 'lab-a' }) },
+      });
+    });
+
+    expect(getByText('SEKARANG')).toBeTruthy();
+    expect(getByText('Basis Data')).toBeTruthy();
+    expect(getByText('Dibuka')).toBeTruthy();
+
     await fireEvent.press(getByText('Izinkan lokasi'));
     expect(requestPermission).toHaveBeenCalledTimes(1);
 
     await fireEvent.press(getByText('Daftar'));
     expect(queryByTestId('native-map')).toBeNull();
     expect(getByText('Lab A201')).toBeTruthy();
-    expect(getByText('Dibuka')).toBeTruthy();
 
     await fireEvent.press(getByText('Peta'));
     expect(getByTestId('native-map')).toBeTruthy();
+  });
+
+  it('beralih ke mode daftar fallback jika peta OpenStreetMap gagal dimuat', async () => {
+    mockUseMapData.mockReturnValue({
+      items: [sampleItem],
+      activeLabs: [sampleItem.lab],
+      loading: false,
+      error: null,
+      retry: jest.fn(),
+    });
+
+    const { getByText, queryByTestId } = await render(<PetaScreen />);
+
+    await act(async () => {
+      lastWebViewOnMessage?.({
+        nativeEvent: { data: JSON.stringify({ type: 'error' }) },
+      });
+    });
+
+    expect(queryByTestId('native-map')).toBeNull();
+    expect(getByText('Peta gagal dimuat. Menampilkan mode daftar laboratorium.')).toBeTruthy();
+    expect(getByText('Lab A201')).toBeTruthy();
   });
 });

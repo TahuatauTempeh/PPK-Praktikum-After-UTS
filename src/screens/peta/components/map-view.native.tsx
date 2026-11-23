@@ -1,51 +1,25 @@
 /**
- * map-view.native.tsx: peta interaktif native (Google Maps di Android,
- * Apple Maps di iOS) dengan marker laboratorium, marker posisi pengguna,
- * panel detail lab, tombol pusatkan lokasi, dan proteksi kegagalan muat.
+ * map-view.native.tsx: peta interaktif OpenStreetMap (Leaflet di WebView)
+ * untuk Android & iOS tanpa membutuhkan Google Maps API Key atau billing.
  */
 
-import React, { Component, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import MapView, {
-  Circle,
-  Marker,
-  PROVIDER_DEFAULT,
-  PROVIDER_GOOGLE,
-} from 'react-native-maps';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import WebView, { type WebViewMessageEvent } from 'react-native-webview';
 
 import { useTheme, useThemedStyles, type Theme } from '@/theme';
 
 import { findSelectedLabItem, getInitialMapRegion } from '../selectors';
 import { LabActivityCard } from './lab-activity-card';
 import type { MapViewProps } from './map-view.types';
+import {
+  buildOsmLeafletHtml,
+  parseOsmMessage,
+  toOsmLabMarkers,
+  type OsmMapStatePayload,
+} from './osm-leaflet-html';
 
-const MAP_READY_TIMEOUT_MS = 10_000;
-
-interface ErrorBoundaryProps {
-  onError: () => void;
-  children: React.ReactNode;
-}
-
-interface ErrorBoundaryState {
-  hasError: boolean;
-}
-
-class MapErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { hasError: false };
-
-  static getDerivedStateFromError(): ErrorBoundaryState {
-    return { hasError: true };
-  }
-
-  componentDidCatch() {
-    this.props.onError();
-  }
-
-  render() {
-    if (this.state.hasError) return null;
-    return this.props.children;
-  }
-}
+const MAP_READY_TIMEOUT_MS = 12_000;
 
 export function PlatformMapView({
   items,
@@ -59,12 +33,41 @@ export function PlatformMapView({
 }: MapViewProps) {
   const theme = useTheme();
   const styles = useThemedStyles(createStyles);
-  const mapRef = useRef<MapView | null>(null);
+  const webViewRef = useRef<WebView<object> | null>(null);
   const [mapReady, setMapReady] = useState(false);
 
-  const initialRegion = useMemo(
-    () => getInitialMapRegion(items.map((item) => item.lab)),
-    // Hanya dipakai untuk region awal saat pertama mount.
+  const mapState = useMemo<OsmMapStatePayload>(
+    () => ({
+      labs: toOsmLabMarkers(items),
+      selectedLabId,
+      userPosition,
+      colors: {
+        primary: theme.colors.primaryFill,
+        success: theme.colors.successFill,
+        surface: theme.colors.surface,
+        text: theme.colors.textPrimary,
+        accent: theme.colors.primary,
+      },
+    }),
+    [
+      items,
+      selectedLabId,
+      theme.colors.primary,
+      theme.colors.primaryFill,
+      theme.colors.successFill,
+      theme.colors.surface,
+      theme.colors.textPrimary,
+      userPosition,
+    ]
+  );
+
+  // HTML hanya dibentuk sekali saat mount agar WebView tidak reload ketika data berubah.
+  const initialHtml = useMemo(
+    () =>
+      buildOsmLeafletHtml(
+        getInitialMapRegion(items.map((item) => item.lab)),
+        mapState
+      ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
@@ -83,28 +86,29 @@ export function PlatformMapView({
   }, [mapReady, onMapError]);
 
   useEffect(() => {
-    if (!mapReady || !selectedItem) return;
-    mapRef.current?.animateToRegion(
-      {
-        latitude: selectedItem.lab.latitude,
-        longitude: selectedItem.lab.longitude,
-        latitudeDelta: 0.004,
-        longitudeDelta: 0.004,
-      },
-      350
+    if (!mapReady) return;
+    const payload = JSON.stringify(mapState);
+    webViewRef.current?.injectJavaScript(
+      `window.__OSM_MAP__ && window.__OSM_MAP__.updateState(${payload}); true;`
     );
-  }, [mapReady, selectedItem]);
+  }, [mapReady, mapState]);
+
+  function handleMessage(event: WebViewMessageEvent) {
+    const msg = parseOsmMessage(event.nativeEvent.data);
+    if (!msg) return;
+    if (msg.type === 'ready') {
+      setMapReady(true);
+    } else if (msg.type === 'error') {
+      onMapError?.();
+    } else if (msg.type === 'selectLab') {
+      onSelectLab(msg.labId);
+    }
+  }
 
   function handleCenterPress() {
     if (userPosition) {
-      mapRef.current?.animateToRegion(
-        {
-          latitude: userPosition.latitude,
-          longitude: userPosition.longitude,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
-        },
-        350
+      webViewRef.current?.injectJavaScript(
+        `window.__OSM_MAP__ && window.__OSM_MAP__.centerTo(${userPosition.latitude}, ${userPosition.longitude}, 17); true;`
       );
       return;
     }
@@ -113,92 +117,17 @@ export function PlatformMapView({
 
   return (
     <View style={styles.container}>
-      <MapErrorBoundary onError={() => onMapError?.()}>
-        <MapView
-          ref={mapRef}
-          style={StyleSheet.absoluteFill}
-          provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
-          initialRegion={initialRegion}
-          onMapReady={() => setMapReady(true)}
-          onPress={() => onSelectLab(null)}
-          showsCompass
-          toolbarEnabled={false}
-        >
-          {items.map((item) => {
-            const isOpen = item.current?.status === 'open';
-            const isSelected = item.lab.id === selectedLabId;
-            const description = item.current
-              ? `${item.current.title} (${item.current.statusLabel})`
-              : item.locationLabel;
-
-            return (
-              <Marker
-                key={item.lab.id}
-                coordinate={{
-                  latitude: item.lab.latitude,
-                  longitude: item.lab.longitude,
-                }}
-                title={item.lab.name}
-                description={description}
-                pinColor={
-                  isSelected || isOpen ? theme.colors.success : theme.colors.primaryFill
-                }
-                accessibilityLabel={`${item.lab.name}, ${
-                  item.current
-                    ? `${item.current.title}, ${item.current.statusLabel}`
-                    : 'Belum ada praktikum terjadwal'
-                }`}
-                onPress={(event) => {
-                  event.stopPropagation();
-                  onSelectLab(item.lab.id);
-                }}
-              />
-            );
-          })}
-
-          {selectedItem ? (
-            <Circle
-              center={{
-                latitude: selectedItem.lab.latitude,
-                longitude: selectedItem.lab.longitude,
-              }}
-              radius={selectedItem.lab.radiusMeters}
-              strokeColor={theme.colors.primary}
-              fillColor={theme.colors.glassGlowBlue}
-              strokeWidth={2}
-            />
-          ) : null}
-
-          {userPosition ? (
-            <>
-              <Circle
-                center={{
-                  latitude: userPosition.latitude,
-                  longitude: userPosition.longitude,
-                }}
-                radius={Math.max(10, Math.min(userPosition.accuracyMeters || 25, 200))}
-                strokeColor={theme.colors.primary}
-                fillColor={theme.colors.glassGlowBlue}
-                strokeWidth={1}
-              />
-              <Marker
-                coordinate={{
-                  latitude: userPosition.latitude,
-                  longitude: userPosition.longitude,
-                }}
-                anchor={{ x: 0.5, y: 0.5 }}
-                title="Posisi kamu"
-                tracksViewChanges={false}
-                accessibilityLabel="Posisi kamu saat ini"
-              >
-                <View style={styles.userDotOuter}>
-                  <View style={styles.userDotInner} />
-                </View>
-              </Marker>
-            </>
-          ) : null}
-        </MapView>
-      </MapErrorBoundary>
+      <WebView<object>
+        ref={webViewRef}
+        originWhitelist={['*']}
+        source={{ html: initialHtml }}
+        style={styles.webview}
+        javaScriptEnabled
+        domStorageEnabled
+        onMessage={handleMessage}
+        onError={() => onMapError?.()}
+        onHttpError={() => onMapError?.()}
+      />
 
       {banner ? (
         <View pointerEvents="box-none" style={styles.bannerOverlay}>
@@ -244,6 +173,11 @@ const createStyles = (theme: Theme) =>
   StyleSheet.create({
     container: {
       flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    webview: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
     },
     bannerOverlay: {
       position: 'absolute',
@@ -281,22 +215,6 @@ const createStyles = (theme: Theme) =>
     },
     detailScroll: {
       maxHeight: 320,
-    },
-    userDotOuter: {
-      width: 22,
-      height: 22,
-      borderRadius: theme.radius.pill,
-      backgroundColor: theme.colors.onPrimary,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 2,
-      borderColor: theme.colors.primaryFill,
-    },
-    userDotInner: {
-      width: 10,
-      height: 10,
-      borderRadius: theme.radius.pill,
-      backgroundColor: theme.colors.primaryFill,
     },
     pressed: {
       opacity: 0.8,
