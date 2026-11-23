@@ -127,7 +127,7 @@ Hasil akhir adalah tiga alur demo yang dapat dijalankan di perangkat Android: pr
 
 | Peran | Kebutuhan utama | Hak akses baru |
 |---|---|---|
-| Praktikan | Melihat sesi, melakukan presensi dari lokasi lab, melihat peta, menerima notifikasi | Baca laboratorium, buat presensi lewat callable, kelola token push sendiri |
+| Praktikan | Melihat sesi, melakukan presensi dari lokasi lab, melihat peta, menerima notifikasi | Baca laboratorium, buat presensi lewat callable (fallback selama Spark), kelola token push sendiri |
 | Asisten | Mengelola laboratorium dan radius, menugaskan lab ke sesi, melihat rekap, melihat peta | CRUD laboratorium, menugaskan `laboratoryId`, membaca log notifikasi |
 | Admin | Tidak berubah | Mewarisi hak asisten karena `isAdmin` juga `asisten` |
 
@@ -144,7 +144,7 @@ Prioritas: **P0** wajib demo, **P1** wajib sebelum rilis, **P2** opsional.
 | Kebutuhan spesifikasi | Wujud Sprint 3 | Prioritas |
 |---|---|---|
 | Halaman presensi terpisah | Rute `/praktikan/presensi/[id]` | P0 |
-| Validasi lokasi presensi | Foreground location + Haversine + callable server | P0 |
+| Validasi lokasi presensi | Foreground location + Haversine + callable server (fallback selama Spark) | P0 |
 | Pengelolaan lokasi laboratorium | Koleksi `laboratories`, layar asisten, `laboratoryId` pada sesi | P0 |
 | Peta laboratorium interaktif | `react-native-maps`, marker lab, marker pengguna | P0 |
 | Informasi aktivitas laboratorium | Praktikum sekarang dan berikutnya, realtime | P0 |
@@ -156,8 +156,8 @@ Prioritas: **P0** wajib demo, **P1** wajib sebelum rilis, **P2** opsional.
 
 | Kode | Keputusan | Alasan | Konsekuensi |
 |---|---|---|---|
-| D-01 | Validasi presensi dilakukan di Cloud Function callable, bukan hanya di UI | Satu jalur tulis, tidak bisa dilewati dengan menonaktifkan tombol | Butuh Firebase Blaze dan deployment Functions |
-| D-02 | Klien tidak lagi menulis `attendance` langsung | Mencegah validasi ganda dan status sesi yang basi | Rules `attendance` create menjadi `false` |
+| D-01 | Validasi presensi dilakukan di Cloud Function callable, bukan hanya di UI | Target: satu jalur tulis yang tidak bisa dilewati dengan menonaktifkan tombol; selama Spark memakai fallback client-enforced (14.1) | Butuh Firebase Blaze dan deployment Functions |
+| D-02 | Target: klien tidak lagi menulis `attendance` langsung setelah callable | Mencegah validasi ganda dan status sesi yang basi | Selama Spark memakai fallback rules; setelah callable, `attendance` create menjadi `false` |
 | D-03 | Radius disimpan per laboratorium, bukan per sesi | Data lebih sederhana, konsisten untuk semua sesi di lab yang sama | Sesi yang pindah ruang harus diubah ke lab lain |
 | D-04 | Sesi wajib memiliki `laboratoryId` sebelum dibuka | Presensi tidak mungkin divalidasi tanpa acuan lokasi | Sesi lama tanpa lab harus dilengkapi asisten |
 | D-05 | Notifikasi dikirim oleh Firestore trigger di Cloud Functions | Tidak bergantung pada aplikasi asisten tetap terbuka | Butuh Functions dan kredensial push |
@@ -706,7 +706,7 @@ interface NotificationLog {
 | Koleksi | Field baru | Aturan |
 |---|---|---|
 | `sessions` | `laboratoryId: string` | Wajib sebelum sesi dibuka |
-| `attendance` | `latitude`, `longitude`, `accuracyMeters`, `distanceMeters`, `radiusMeters`, `laboratoryId`, `locationVerifiedAt`, `mocked`, `source` | Ditulis oleh callable |
+| `attendance` | `latitude`, `longitude`, `accuracyMeters`, `distanceMeters`, `radiusMeters`, `laboratoryId`, `locationVerifiedAt`, `mocked`, `source` | Ditulis oleh callable setelah Blaze, atau fallback transaksi klien selama Spark (14.1) |
 | `users` | `expoPushToken`, `pushPlatform`, `pushUpdatedAt` | Ditulis pemilik profil |
 | `auditLogs` | Tidak berubah | Mencatat aksi lab dan presensi |
 
@@ -777,17 +777,17 @@ type AttendanceSubmitResult =
 
 | Kode | Aturan | Ditegakkan di |
 |---|---|---|
-| BR-01 | Presensi hanya bila sesi `open` | Callable + rules |
-| BR-02 | Hanya praktikan terdaftar yang boleh presensi | Callable |
-| BR-03 | Satu presensi per sesi per praktikan | Callable + ID dokumen |
-| BR-04 | Sesi harus punya laboratorium aktif | Callable + `openSession` |
-| BR-05 | Jarak ≤ radius laboratorium | Callable |
-| BR-06 | Akurasi ≤ 100 m | Callable |
-| BR-07 | Lokasi `mocked` ditolak | Callable |
+| BR-01 | Presensi hanya bila sesi `open` | Callable/fallback + rules |
+| BR-02 | Hanya praktikan terdaftar yang boleh presensi | Callable/fallback rules |
+| BR-03 | Satu presensi per sesi per praktikan | Callable/fallback + ID dokumen |
+| BR-04 | Sesi harus punya laboratorium aktif | Callable/fallback + `openSession` + rules |
+| BR-05 | Jarak ≤ radius laboratorium | Callable; fallback client-enforced |
+| BR-06 | Akurasi ≤ 100 m | Callable; fallback client-enforced + rules |
+| BR-07 | Lokasi `mocked` ditolak | Callable; fallback client-enforced + rules |
 | BR-08 | Radius 10–500 m | Form + rules |
 | BR-09 | Lab tidak dihapus permanen bila dipakai sesi | Service |
 | BR-10 | Sesi tanpa lab tidak dapat dibuka | `openSession` + rules |
-| BR-11 | Klien tidak menulis `attendance` langsung | Rules |
+| BR-11 | Target: klien tidak menulis `attendance` langsung | Fallback rules; `false` setelah callable |
 | BR-12 | Tidak ada status sukses optimistis | UI |
 | BR-13 | Peta menampilkan sesi sekarang/berikutnya sesuai algoritma | Selector |
 | BR-14 | Notifikasi hanya ke penerima dan unik per peristiwa | Functions + log |
@@ -853,7 +853,7 @@ Bila `current` dan `next` kosong, tampilkan empty state. Bila `current` ada dan 
 | NFR-PERF-04 | GPS fix timeout | 15 detik, lalu state error |
 | NFR-SEC-01 | Semua akses butuh autentikasi | Rules |
 | NFR-SEC-02 | Hanya asisten yang menulis lab/sesi | Rules |
-| NFR-SEC-03 | Presensi hanya lewat callable | Rules `create: false` |
+| NFR-SEC-03 | Target: presensi hanya lewat callable; selama Spark memakai fallback client-enforced (14.1) | Rules `create` fallback; `false` setelah callable |
 | NFR-SEC-04 | Callable memeriksa auth, role, enrollment, sesi, lab, jarak, duplikat | Functions |
 | NFR-PRIV-01 | Lokasi foreground saja | Tidak ada izin background |
 | NFR-PRIV-02 | Koordinat hanya disimpan saat presensi | Attendance |
@@ -1064,7 +1064,7 @@ Detail ada di [UAT](#lampiran-b-uat).
 ### 18.2 Sprint
 
 - Tiga alur demo berjalan di Android.
-- Presensi hanya tercatat lewat callable.
+- Presensi tercatat lewat callable setelah Blaze; selama Spark memakai fallback transaksi klien (14.1).
 - Tidak ada catatan ganda.
 - Peta menampilkan lab, pengguna, sekarang, dan berikutnya.
 - Notifikasi sampai ke penerima yang benar dan tidak ke yang salah.
@@ -1197,7 +1197,7 @@ Expo Push Service
 
 | Kelas | Hak |
 |---|---|
-| Praktikan | Baca sesi/kelas/lab, presensi lewat callable, baca presensi sendiri, kelola token push |
+| Praktikan | Baca sesi/kelas/lab, presensi lewat callable (fallback selama Spark), baca presensi sendiri, kelola token push |
 | Asisten | Semua hak praktikan yang relevan, CRUD lab, CRUD sesi, buka/tutup sesi, baca semua presensi, baca notificationLogs |
 | Admin | Asisten dengan `isAdmin=true`; tidak ada fitur baru |
 
@@ -1290,12 +1290,12 @@ Prioritas: **P0** wajib demo, **P1** wajib sebelum rilis, **P2** opsional.
 | FR-ATT-02 | Halaman menampilkan nama praktikum, kelas, tanggal, waktu WIB, ruang, laboratorium, asisten, dan status sesi. | P0 | Semua field tampil; status berupa teks. | Dev 2 |
 | FR-ATT-03 | Tombol presensi hanya aktif bila sesi `open`, pengguna terdaftar, belum presensi, izin/layanan/lokasi valid, dan jarak ≤ radius. | P0 | Tabel keputusan PRD 11.2 terpenuhi. | Dev 2 |
 | FR-ATT-04 | Menekan tombol membuka konfirmasi berisi sesi dan lokasi. | P0 | Tidak ada penulisan sebelum konfirmasi. | Dev 2 |
-| FR-ATT-05 | Presensi dikirim ke callable `submitAttendance` dan divalidasi di server. | P0 | Server memeriksa auth, role, sesi, enrollment, lab, jarak, akurasi, mock, duplikat. | Dev 2 |
+| FR-ATT-05 | Presensi dikirim ke callable `submitAttendance` setelah Blaze; selama Spark, fallback transaksi klien memakai validasi yang sama (14.1). | P0 | Callable memeriksa auth, role, sesi, enrollment, lab, jarak, akurasi, mock, duplikat; fallback memeriksa bagian yang bisa dilakukan rules. | Dev 2 |
 | FR-ATT-06 | Keberhasilan menampilkan waktu, jarak, radius, dan status hadir. | P0 | Data berasal dari respons callable; listener memperbarui status. | Dev 2 |
 | FR-ATT-07 | Presensi ganda ditolak dan catatan lama ditampilkan. | P0 | Tidak ada dokumen kedua; pesan menyebut waktu presensi. | Dev 2 |
 | FR-ATT-08 | Perubahan status sesi terlihat realtime; sesi ditutup menonaktifkan aksi. | P0 | Listener `listenSession` aktif; tombol berubah tanpa reload. | Dev 2 |
 | FR-ATT-09 | Rekap asisten dapat menampilkan bukti lokasi (jarak dan akurasi) bila field tersedia. | P2 | Baris lama tetap tampil; bukti lokasi bukan syarat demo. | Dev 2 |
-| FR-ATT-10 | Klien tidak menulis `attendance` langsung. | P0 | Rules `create: false`; percobaan tulis langsung gagal. | Dev 1 |
+| FR-ATT-10 | Target: klien tidak menulis `attendance` langsung. Selama Spark, satu-satunya jalur tulis adalah fallback dengan rules. | P0 | `validAttendanceCreate` menolak bukti tidak lengkap; `create: false` setelah callable. | Dev 1 |
 | FR-ATT-11 | Kegagalan presensi menampilkan notice inline dan tombol coba lagi. | P0 | Tidak ada status sukses optimistis. | Dev 2 |
 | FR-ATT-12 | QR Code tidak disediakan. | P2 | Tidak ada izin kamera atau UI QR. | Dev 2 |
 
@@ -1399,7 +1399,7 @@ Prioritas: **P0** wajib demo, **P1** wajib sebelum rilis, **P2** opsional.
 |---|---|---|
 | NFR-SEC-01 | Semua koleksi butuh autentikasi, kecuali yang memang publik | Rules review |
 | NFR-SEC-02 | Hanya asisten yang menulis lab, sesi, dan keputusan izin | Rules review |
-| NFR-SEC-03 | `attendance` create hanya lewat Admin SDK/callable | UAT-ATT-13 |
+| NFR-SEC-03 | Target `attendance` create hanya lewat Admin SDK/callable; fallback client-enforced selama Spark (14.1) | UAT-ATT-13 |
 | NFR-SEC-04 | Callable memeriksa auth, role, sesi, enrollment, lab, jarak, akurasi, mock, duplikat | UAT-ATT |
 | NFR-SEC-05 | `notificationLogs` tidak dapat ditulis klien | Rules review |
 | NFR-SEC-06 | Tidak ada service account atau secret di aplikasi | Repo scan |
@@ -1623,7 +1623,7 @@ Aturan:
 |---|---|---|
 | `laboratories` | semua login | asisten |
 | `sessions` | semua login | asisten; status `open` wajib lab |
-| `attendance` | pemilik atau asisten | create: false; update/delete: asisten |
+| `attendance` | pemilik atau asisten | fallback create dengan bukti; target callable `create: false`; update/delete: asisten |
 | `notificationLogs` | asisten | false |
 | `users` | pemilik atau asisten | pemilik (token) atau admin (role) |
 | `enrollments` | pemilik atau asisten | asisten |
@@ -1652,8 +1652,8 @@ Aturan:
 | Ancaman | Mitigasi | Batasan |
 |---|---|---|
 | Mock location | Tolak `mocked=true` | Deteksi tidak sempurna |
-| Client memalsukan koordinat | Server menghitung jarak dari koordinat yang dikirim | Server tidak dapat membuktikan koordinat asli tanpa attestation |
-| Direct Firestore write | Rules create false | Admin SDK tetap bisa |
+| Client memalsukan koordinat | Callable menghitung jarak dari koordinat yang dikirim; fallback memakai nilai klien (14.1) | Tidak ada jalur yang bisa membuktikan koordinat asli tanpa attestation |
+| Direct Firestore write | Rules fallback memeriksa bukti; target callable `create: false` | Admin SDK tetap bisa |
 | Push spam | Hanya Functions yang mengirim | Kredensial Functions harus aman |
 | Token dicuri | Rules pemilik | Token perangkat |
 
@@ -1758,7 +1758,7 @@ Aturan:
 - Semua NFR target terverifikasi kecuali yang ditandai best-effort.
 - Semua UAT P0 lulus.
 - Rules dan Functions ter-deploy.
-- Tidak ada akses tulis langsung ke attendance.
+- Tidak ada tulis langsung tanpa bukti rules (fallback); target callable `create: false`.
 - Dokumentasi diperbarui.
 - `npx tsc --noEmit`, `npx expo lint`, `npx expo-doctor` lulus.
 
@@ -1921,7 +1921,7 @@ Legenda prioritas: **P0** wajib, **P1** wajib sebelum rilis, **P2** opsional.
 | UAT-ATT-10 | `praktikan1` sudah presensi S1 | Buka halaman presensi S1 lagi; tekan tombol bila ada | Tombol nonaktif; pesan **Sudah presensi pukul HH.mm WIB**; tidak ada dokumen kedua | FR-ATT-07, BR-03 | P0 |
 | UAT-ATT-11 | `praktikan2` tidak terdaftar di S1 | Buka halaman presensi S1 | Pesan **Kamu tidak terdaftar di sesi ini**; tombol nonaktif | FR-ATT-03, BR-02 | P0 |
 | UAT-ATT-12 | S1 `open`; perangkat online | Matikan koneksi; tekan presensi | Pesan **Koneksi bermasalah. Presensi tidak tercatat.**; tidak ada dokumen; tombol coba lagi | FR-ATT-11, FR-DEV-04 | P0 |
-| UAT-ATT-13 | S1 `open`; lokasi valid | Coba tulis dokumen `attendance/S1_<uid>` langsung dari klien/Firestore SDK | Penulisan ditolak oleh rules; tidak ada dokumen | FR-ATT-10, NFR-SEC-03 | P0 |
+| UAT-ATT-13 | S1 `open`; lokasi valid | Coba tulis dokumen `attendance/S1_<uid>` langsung tanpa bukti lokasi lengkap (atau tanpa enrollment/sesi `open`) | Penulisan ditolak oleh rules; tidak ada dokumen. Setelah callable aktif, semua tulis langsung juga ditolak | FR-ATT-10, NFR-SEC-03 | P0 |
 | UAT-ATT-14 | UAT-ATT-01 berhasil | Buka rekap asisten S1 | Baris praktikan menampilkan nama, NIM, dan waktu; jumlah hadir bertambah; field lokasi tersimpan di Firestore (tampilan jarak opsional) | — (regresi Sprint 2) | P0 |
 | UAT-ATT-15 | Sesi `open` tanpa lab atau lab nonaktif | Buka halaman presensi; tekan presensi | Pesan **Laboratorium sesi belum diatur** atau **Laboratorium tidak aktif**; tidak ada catatan | FR-LAB-08, FR-DEV-08 | P0 |
 
