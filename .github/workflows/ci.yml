@@ -84,11 +84,19 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Read E2E tool versions
+        id: tool-versions
+        run: |
+          PLAYWRIGHT_VERSION=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")
+          FIREBASE_TOOLS_VERSION=$(node -p "require('./package-lock.json').packages['node_modules/firebase-tools'].version")
+          echo "playwright=$PLAYWRIGHT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "firebase_tools=$FIREBASE_TOOLS_VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Cache Firebase emulator
         uses: actions/cache@v6
         with:
           path: ~/.cache/firebase/emulators
-          key: firebase-emulators-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          key: firebase-emulators-${{ runner.os }}-rules-${{ steps.tool-versions.outputs.firebase_tools }}
           restore-keys: |
             firebase-emulators-${{ runner.os }}-
 
@@ -120,11 +128,19 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Read E2E tool versions
+        id: tool-versions
+        run: |
+          PLAYWRIGHT_VERSION=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")
+          FIREBASE_TOOLS_VERSION=$(node -p "require('./package-lock.json').packages['node_modules/firebase-tools'].version")
+          echo "playwright=$PLAYWRIGHT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "firebase_tools=$FIREBASE_TOOLS_VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Cache Firebase emulator
         uses: actions/cache@v6
         with:
           path: ~/.cache/firebase/emulators
-          key: firebase-emulators-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          key: firebase-emulators-${{ runner.os }}-web-${{ steps.tool-versions.outputs.firebase_tools }}
           restore-keys: |
             firebase-emulators-${{ runner.os }}-
 
@@ -132,15 +148,16 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          key: playwright-${{ runner.os }}-${{ steps.tool-versions.outputs.playwright }}
           restore-keys: |
             playwright-${{ runner.os }}-
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
+      # Headless shell cukup untuk E2E dan menghindari apt-get --with-deps yang lambat.
+      - name: Install Playwright Chromium (headless shell)
+        run: npx playwright install --only-shell chromium
 
       - name: Run web E2E
         run: npm run test:web
