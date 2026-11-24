@@ -11,6 +11,8 @@ module.exports = defineConfig([
       'dist/**',
       'web-build/**',
       'coverage/**',
+      'e2e/web/playwright-report/**',
+      'e2e/web/test-results/**',
       'android/**',
       'ios/**',
       '.codegraph/**',
@@ -30,7 +32,7 @@ module.exports = defineConfig([
     },
   },
   {
-    files: ['e2e/**/*.js'],
+    files: ['e2e/**/*.{js,ts}'],
     languageOptions: {
       globals: globals.node,
     },

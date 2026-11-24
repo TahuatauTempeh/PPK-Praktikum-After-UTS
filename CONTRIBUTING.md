@@ -528,10 +528,11 @@ Aturan penting:
   dijalankan dengan `npm run test:rules`.
 
 Firestore rules E2E sudah dicakup otomatis lewat `npm run test:rules`
-(Firestore emulator + Java 21+). Yang belum dicakup otomatis: seluruh jalur CRUD
-Firestore end-to-end, E2E web/Android (Playwright/Maestro), dan build native.
-Perubahan pada area itu tetap memerlukan pengujian manual. Saat ini skenario
-harness fokus pada rules `attendance`; rules koleksi lain belum dicakup.
+(Firestore emulator + Java 21+). E2E web Playwright tersedia lewat
+`npm run test:web` (Chromium + Java 21+). Yang belum dicakup otomatis: seluruh
+jalur CRUD Firestore end-to-end, E2E Android (Maestro), dan build native.
+Perubahan pada area itu tetap memerlukan pengujian manual. Skenario harness rules
+saat ini fokus pada `attendance`; rules koleksi lain belum dicakup.
 
 ## Menjalankan Verifikasi Lokal
 
@@ -542,6 +543,7 @@ npm run lint
 npm run typecheck
 npm run test:ci
 npm run test:rules
+npm run test:web
 npm --prefix functions test -- --ci --runInBand
 npm --prefix functions run build
 git diff --check
@@ -550,6 +552,16 @@ git diff --check
 `npm run test:rules` membutuhkan Java 21+ dan Firebase Emulator. Bila `java`
 default masih 17, set `JAVA_HOME`/`PATH` ke JDK 21 atau lebih baru sebelum
 menjalankan perintah.
+
+`npm run test:web` juga membutuhkan Chromium:
+
+```bash
+npx playwright install chromium
+```
+
+Akun seed E2E: `praktikan1@test.local`, `praktikan2@test.local`, dan
+`asisten@test.local`, semuanya dengan password `e2e-password`. Seed mereset
+Firestore dan Auth emulator di awal setiap run.
 
 `npm run verify` menjalankan lint, typecheck, dan `test:ci` sekaligus. `typecheck`
 memakai `tsc --noEmit`; `lint` memakai `expo lint`. CI juga menginstal, menguji,
@@ -655,6 +667,8 @@ npm run test:ci
 
 Job `rules-e2e` menjalankan `npm run test:rules` dengan Java 21.
 
+Job `web-e2e` menjalankan `npm run test:web` dengan Java 21 dan Chromium.
+
 CI memakai Node 24 dan cache npm. Tidak ada secret Firebase yang diperlukan
 karena unit test memock Firebase.
 
@@ -670,9 +684,10 @@ npm --prefix functions run build
 
 Untuk kegagalan job `rules-e2e`, jalankan `npm run test:rules` dengan Java 21+.
 
-Yang tidak dijalankan CI: `expo-doctor`, E2E web/Android, dan EAS build. Rules
-Firestore dijalankan lewat `npm run test:rules` di job `rules-e2e`; perubahan
-pada area lain tetap memerlukan verifikasi manual dan hasilnya ditulis di PR.
+Yang tidak dijalankan CI: `expo-doctor`, E2E Android (Maestro), dan EAS build.
+Rules Firestore dan web E2E dijalankan lewat job `rules-e2e` dan `web-e2e`;
+perubahan pada area lain tetap memerlukan verifikasi manual dan hasilnya ditulis
+di PR.
 
 ## Build dan Distribusi dengan EAS
 
@@ -877,6 +892,7 @@ anggota lain, koordinasikan dulu.
 - [ ] Test ditambahkan atau diperbarui untuk logika yang berubah.
 - [ ] `npm run verify` lulus.
 - [ ] `npm run test:rules` lulus (butuh Java 21+).
+- [ ] `npm run test:web` lulus (butuh Java 21+ dan Chromium).
 - [ ] Tidak ada secret, `.env`, file generate, atau debug log.
 - [ ] `git diff` dan `git diff --staged` sudah ditinjau.
 - [ ] Pesan commit mengikuti Conventional Commits dan bahasa Indonesia.

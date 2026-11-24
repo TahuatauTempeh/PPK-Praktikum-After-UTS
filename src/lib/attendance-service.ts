@@ -5,7 +5,7 @@
  * Realtime listeners untuk rekap asisten dan status presensi praktikan.
  */
 
-import { collection, doc, onSnapshot, query, where, type Unsubscribe } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, type Unsubscribe } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 import { hasilGagalDariGalat } from '@/lib/attendance-errors';
@@ -207,14 +207,20 @@ export function listenMyAttendance(
   onError?: (message: string) => void,
 ): Unsubscribe {
   const attendanceId = `${sessionId}_${uid}`;
+  const q = query(
+    collection(getDb(), COLLECTIONS.attendance),
+    where('userId', '==', uid),
+  );
+
   return onSnapshot(
-    doc(getDb(), COLLECTIONS.attendance, attendanceId),
+    q,
     (snap) => {
-      if (!snap.exists()) {
+      const found = snap.docs.find((item) => item.id === attendanceId);
+      if (!found) {
         callback(null);
         return;
       }
-      callback({ id: snap.id, ...snap.data() } as AttendanceDoc);
+      callback({ id: found.id, ...found.data() } as AttendanceDoc);
     },
     (err) => {
       console.warn('[listenMyAttendance] error:', err);

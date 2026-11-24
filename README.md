@@ -331,6 +331,7 @@ Berdasarkan isi kode saat ini.
 | **Dev 2: Data praktikum** | Ada: CRUD kelas (`class-service`, layar Kelas), CRUD peserta (`enrollment-service`, layar Peserta, cegah daftar ganda), CRUD jadwal dan sesi (`session-service`, layar Atur Sesi, validasi tanggal dan jam), filter jadwal dan riwayat praktikan lewat enrollment (`usePraktikanSchedule`), dan audit log pada setiap tambah/ubah/hapus. Sebagian: penggantian seluruh data dummy ke Firestore belum tuntas (lihat keterbatasan). |
 | **Dev 3: Sesi, presensi & peta** | Ada: buka/tutup sesi dengan audit log, presensi hanya saat sesi `open`, pencegahan presensi ganda, rekap realtime, peta laboratorium OpenStreetMap/Leaflet, aktivitas Sekarang/Berikutnya, dan mode daftar. |
 | **Dev 4: Izin & AI** | Ada: form izin, modul AI dengan timeout dan fallback, penyimpanan `permissionRequests`, riwayat izin praktikan, daftar dan peninjauan izin oleh asisten. |
+| **E2E** | Ada: harness rules Firestore (18 skenario) dan web E2E Playwright (presensi, luar radius, asisten). Android/Maestro belum. |
 
 Keterbatasan yang perlu diketahui:
 
@@ -361,6 +362,7 @@ Keterbatasan yang perlu diketahui:
 | `npm test` | Jalankan test Jest |
 | `npm run test:ci` | Jalankan test sekali seperti CI |
 | `npm run test:rules` | Jalankan E2E Firestore rules di emulator (butuh Java 21+) |
+| `npm run test:web` | Jalankan E2E web Playwright di emulator (butuh Java 21+ dan Chromium) |
 | `npm run verify` | Lint, typecheck, dan test sekaligus |
 | `npm --prefix functions test` | Jalankan test Cloud Functions |
 | `npm --prefix functions run build` | Build Cloud Functions |
@@ -368,7 +370,7 @@ Keterbatasan yang perlu diketahui:
 | `npx expo install --fix` | Samakan versi paket dengan SDK |
 | `npx expo install <paket>` | Pasang paket dengan versi yang cocok dengan SDK |
 
-Jalankan `npm run verify`, `npm run test:rules`, `npm --prefix functions test`, `npm --prefix functions run build`, dan `git diff --check` sebelum membuka pull request. `test:rules` membutuhkan Java 21+ dan Firebase Emulator. CI menjalankan langkah yang sama; lihat `.github/workflows/ci.yml`.
+Jalankan `npm run verify`, `npm run test:rules`, `npm run test:web`, `npm --prefix functions test`, `npm --prefix functions run build`, dan `git diff --check` sebelum membuka pull request. `test:rules` dan `test:web` membutuhkan Java 21+ dan Firebase Emulator; `test:web` juga membutuhkan Chromium. CI menjalankan langkah yang sama; lihat `.github/workflows/ci.yml`.
 
 ## 11. Build dengan EAS
 
