@@ -11,6 +11,7 @@ module.exports = defineConfig([
       'dist/**',
       'web-build/**',
       'coverage/**',
+      'functions/lib/**',
       'e2e/web/playwright-report/**',
       'e2e/web/test-results/**',
       'android/**',
