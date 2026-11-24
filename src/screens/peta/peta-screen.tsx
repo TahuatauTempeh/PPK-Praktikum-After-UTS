@@ -6,7 +6,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingState } from '@/components/LoadingState';
@@ -26,7 +26,9 @@ export interface PetaScreenProps {
 
 export function PetaScreen({ showBackButton = false, onBack }: PetaScreenProps) {
   const styles = useThemedStyles(createStyles);
-  const bottomInset = useTabBarInset();
+  const tabBarInset = useTabBarInset();
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(tabBarInset, insets.bottom);
   const isWeb = Platform.OS === 'web';
 
   const { items, loading, error, retry } = useMapData();

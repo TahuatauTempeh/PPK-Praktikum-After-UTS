@@ -41,6 +41,10 @@ jest.mock('./use-map-location', () => ({
 jest.mock('@/context/tab-bar-inset', () => ({
   useTabBarInset: () => 0,
 }));
+jest.mock('react-native-safe-area-context', () => ({
+  ...jest.requireActual('react-native-safe-area-context'),
+  useSafeAreaInsets: () => ({ top: 0, bottom: 24, left: 0, right: 0 }),
+}));
 
 const mockUseMapData = useMapData as jest.MockedFunction<typeof useMapData>;
 const mockUseMapLocation = useMapLocation as jest.MockedFunction<typeof useMapLocation>;
