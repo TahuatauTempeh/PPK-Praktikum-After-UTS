@@ -26,8 +26,8 @@ export function PresensiKonfirmasi({ visible, onKonfirmasi, onBatal }: Props) {
           Apakah kamu yakin ingin presensi sekarang?
         </Text>
         <View style={styles.aksi}>
-          <Tombol label="Ya" onPress={onKonfirmasi} />
-          <Tombol label="Batal" varian="lembut" onPress={onBatal} />
+          <Tombol testID="presensi-konfirmasi-ya" label="Ya" onPress={onKonfirmasi} />
+          <Tombol testID="presensi-konfirmasi-batal" label="Batal" varian="lembut" onPress={onBatal} />
         </View>
       </View>
     </BottomSheet>

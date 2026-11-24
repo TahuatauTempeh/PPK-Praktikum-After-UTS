@@ -11,11 +11,19 @@ import type { TimeFieldProps } from './time-field-utils';
 
 export type { TimeFieldProps };
 
-export function TimeField({ value, onChange, accessibilityLabel, disabled = false, style }: TimeFieldProps) {
+export function TimeField({
+  value,
+  onChange,
+  accessibilityLabel,
+  disabled = false,
+  style,
+  testID,
+}: TimeFieldProps) {
   const theme = useTheme();
 
   return (
     <TextInput
+      testID={testID}
       value={value}
       onChangeText={onChange}
       placeholder="08:00"

@@ -12,11 +12,18 @@ import { dateKeJam, jamKeDate, type TimeFieldProps } from './time-field-utils';
 
 export type { TimeFieldProps };
 
-export function TimeField({ value, onChange, accessibilityLabel, disabled = false, style }: TimeFieldProps) {
+export function TimeField({
+  value,
+  onChange,
+  accessibilityLabel,
+  disabled = false,
+  style,
+  testID,
+}: TimeFieldProps) {
   const theme = useTheme();
 
   return (
-    <View style={[style, styles.isi]} accessibilityLabel={accessibilityLabel}>
+    <View testID={testID} style={[style, styles.isi]} accessibilityLabel={accessibilityLabel}>
       <DateTimePicker
         mode="time"
         display="compact"

@@ -13,7 +13,14 @@ import { AssistantText } from './assistant-text';
 import { ScheduleIcon } from './schedule-icon';
 import { dateKeJam, jamKeDate, jamValid, tampilJam, type TimeFieldProps } from './time-field-utils';
 
-export function TimeFieldDialog({ value, onChange, accessibilityLabel, disabled = false, style }: TimeFieldProps) {
+export function TimeFieldDialog({
+  value,
+  onChange,
+  accessibilityLabel,
+  disabled = false,
+  style,
+  testID,
+}: TimeFieldProps) {
   const theme = useTheme();
   const [terbuka, setTerbuka] = useState(false);
   const adaJam = jamValid(value);
@@ -22,6 +29,7 @@ export function TimeFieldDialog({ value, onChange, accessibilityLabel, disabled 
   return (
     <>
       <Pressable
+        testID={testID}
         accessibilityRole="button"
         accessibilityLabel={`${accessibilityLabel}, ${adaJam ? tampilJam(value) : 'belum dipilih'}`}
         accessibilityHint="Ketuk untuk memilih jam"

@@ -11,11 +11,19 @@ import type { DateFieldProps } from './date-field-utils';
 
 export type { DateFieldProps };
 
-export function DateField({ value, onChange, accessibilityLabel, disabled = false, style }: DateFieldProps) {
+export function DateField({
+  value,
+  onChange,
+  accessibilityLabel,
+  disabled = false,
+  style,
+  testID,
+}: DateFieldProps) {
   const theme = useTheme();
 
   return (
     <TextInput
+      testID={testID}
       value={value}
       onChangeText={onChange}
       placeholder="YYYY-MM-DD, mis. 2026-11-20"

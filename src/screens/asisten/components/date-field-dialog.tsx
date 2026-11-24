@@ -14,7 +14,14 @@ import { AssistantText } from './assistant-text';
 import { dateKeTanggal, tanggalKeDate, tanggalValid, type DateFieldProps } from './date-field-utils';
 import { ScheduleIcon } from './schedule-icon';
 
-export function DateFieldDialog({ value, onChange, accessibilityLabel, disabled = false, style }: DateFieldProps) {
+export function DateFieldDialog({
+  value,
+  onChange,
+  accessibilityLabel,
+  disabled = false,
+  style,
+  testID,
+}: DateFieldProps) {
   const theme = useTheme();
   const [terbuka, setTerbuka] = useState(false);
   const adaTanggal = tanggalValid(value);
@@ -23,6 +30,7 @@ export function DateFieldDialog({ value, onChange, accessibilityLabel, disabled 
   return (
     <>
       <Pressable
+        testID={testID}
         accessibilityRole="button"
         accessibilityLabel={`${accessibilityLabel}, ${adaTanggal ? teks : 'belum dipilih'}`}
         accessibilityHint="Ketuk untuk memilih tanggal"

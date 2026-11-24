@@ -171,6 +171,7 @@ export function SessionFormSheet({
             <View style={styles.field}>
               <AssistantText variant="label" style={styles.fieldLabel}>Judul / Topik Sesi *</AssistantText>
               <TextInput
+                testID="sesi-judul"
                 value={title}
                 onChangeText={value => {
                   setTitle(value);
@@ -188,6 +189,7 @@ export function SessionFormSheet({
             <View style={styles.field}>
               <AssistantText variant="label" style={styles.fieldLabel}>Tanggal *</AssistantText>
               <DateField
+                testID="sesi-tanggal"
                 value={date}
                 onChange={value => {
                   setDate(value);
@@ -203,6 +205,7 @@ export function SessionFormSheet({
               <View style={[styles.field, styles.timeField]}>
                 <AssistantText variant="label" style={styles.fieldLabel}>Jam Mulai *</AssistantText>
                 <TimeField
+                  testID="sesi-mulai"
                   value={startTime}
                   onChange={value => {
                     setStartTime(value);
@@ -217,6 +220,7 @@ export function SessionFormSheet({
               <View style={[styles.field, styles.timeField]}>
                 <AssistantText variant="label" style={styles.fieldLabel}>Jam Selesai *</AssistantText>
                 <TimeField
+                  testID="sesi-selesai"
                   value={endTime}
                   onChange={value => {
                     setEndTime(value);
@@ -278,6 +282,7 @@ export function SessionFormSheet({
             <View style={styles.field}>
               <AssistantText variant="label" style={styles.fieldLabel}>Ruangan *</AssistantText>
               <TextInput
+                testID="sesi-ruangan"
                 value={room}
                 onChangeText={value => {
                   setRoom(value);
@@ -295,6 +300,7 @@ export function SessionFormSheet({
 
           <View style={styles.actions}>
             <Pressable
+              testID="sesi-simpan"
               accessibilityRole="button"
               disabled={submitting}
               onPress={() => void handleSave(closeSheet)}

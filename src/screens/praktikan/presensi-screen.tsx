@@ -124,6 +124,7 @@ export function PresensiTampilan({ model, aksi }: { model: PresensiViewModel; ak
       ) : (
         <>
           <Tombol
+            testID="presensi-submit"
             label={labelKirim}
             disabled={!bisaKirim}
             petunjuk={bisaKirim ? undefined : kelayakan.alasan}

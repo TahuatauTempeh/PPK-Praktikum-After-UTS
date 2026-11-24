@@ -113,6 +113,7 @@ export function FormIzin({ user, sessions, sesiBerizin, memuatSesi, galatSesi: g
       <View style={styles.kolom}>
         <Text style={[typography.caption, styles.tebal, { color: theme.colors.textPrimary }]}>Sesi</Text>
         <Pressable
+          testID="izin-sesi"
           accessibilityRole="button"
           accessibilityLabel={terpilih ? `Sesi: ${namaSesi(terpilih)}. Ganti sesi` : 'Pilih sesi'}
           aria-required
@@ -148,6 +149,7 @@ export function FormIzin({ user, sessions, sesiBerizin, memuatSesi, galatSesi: g
       <View style={styles.kolom}>
         <Text style={[typography.caption, styles.tebal, { color: theme.colors.textPrimary }]}>Alasan</Text>
         <TextInput
+          testID="izin-alasan"
           accessibilityLabel="Alasan izin"
           aria-required
           aria-invalid={!!galatAlasan}
@@ -188,7 +190,7 @@ export function FormIzin({ user, sessions, sesiBerizin, memuatSesi, galatSesi: g
         </View>
       ) : null}
 
-      <Tombol label={mengirim ? 'Mengirim izin...' : 'Kirim izin'} disabled={mengirim} onPress={kirim} />
+      <Tombol testID="izin-kirim" label={mengirim ? 'Mengirim izin...' : 'Kirim izin'} disabled={mengirim} onPress={kirim} />
 
       <BottomSheet visible={pemilihTampil} title="Pilih sesi" onClose={() => setPemilihTampil(false)}>
         <ScrollView style={styles.daftarSesi} contentContainerStyle={styles.isiDaftar}>
@@ -214,6 +216,7 @@ export function FormIzin({ user, sessions, sesiBerizin, memuatSesi, galatSesi: g
             return (
               <Pressable
                 key={s.id}
+                testID={`izin-sesi-${s.id}`}
                 accessibilityRole="button"
                 accessibilityLabel={`${namaSesi(s)}, ${formatTanggalPendek(s.date)}${berizin ? ', izin sudah diajukan' : ''}`}
                 accessibilityState={{ disabled: berizin, selected: aktif }}

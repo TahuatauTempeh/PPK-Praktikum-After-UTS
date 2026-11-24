@@ -14,6 +14,7 @@ export interface DateFieldProps {
   disabled?: boolean;
   /** Gaya kolom, disamakan dengan input lain di form */
   style?: StyleProp<ViewStyle>;
+  testID?: string;
 }
 
 const POLA_TANGGAL = /^(\d{4})-(\d{2})-(\d{2})$/;
