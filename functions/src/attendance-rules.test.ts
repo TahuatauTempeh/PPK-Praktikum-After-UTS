@@ -125,10 +125,10 @@ describe('kelayakanPresensi: tabel tombol PRD 7.1', () => {
       'Akurasi lokasi terlalu rendah',
     ],
     [
-      'di luar radius',
+      'di luar area absen',
       { lokasi: { tahap: 'siap', posisi: POSISI_BAIK, distanceMeters: 139.6 } },
       'out-of-radius',
-      'Kamu berada 140 m dari lab, radius 100 m',
+      'Kamu berada di luar area absen.',
     ],
   ])('menonaktifkan tombol saat %s', (_, ubah, state, alasan) => {
     const hasil = kelayakan(ubah);
@@ -191,10 +191,13 @@ describe('kelayakanPresensi: state tambahan SRS 7.2', () => {
     );
   });
 
-  it('menulis jarak jauh dalam kilometer', () => {
-    expect(kelayakan({ lokasi: { tahap: 'siap', posisi: POSISI_BAIK, distanceMeters: 13_751_698 } }).alasan).toBe(
-      'Kamu berada 13751,7 km dari lab, radius 100 m'
-    );
+  it('memakai pesan area absen untuk jarak berapa pun tanpa angka radius', () => {
+    const alasan = kelayakan({
+      lokasi: { tahap: 'siap', posisi: POSISI_BAIK, distanceMeters: 13_751_698 },
+    }).alasan;
+
+    expect(alasan).toBe('Kamu berada di luar area absen.');
+    expect(alasan).not.toMatch(/radius|\d/);
   });
 
   it('mengaktifkan tombol tepat di batas radius', () => {

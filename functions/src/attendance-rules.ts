@@ -9,13 +9,13 @@
  * - `kelayakanPresensi`: lapis tampilan, menentukan tombol dan alasan di halaman presensi.
  */
 
-import { formatDistanceMeters } from './geo';
-
 /** Sama dengan MAX_ACCURACY_METERS di `geo.ts` (PRD BR-06) */
 export const BATAS_AKURASI_METER = 100;
 /** Rentang radius lab yang sah (PRD BR-08) */
 export const RADIUS_MIN_METER = 10;
 export const RADIUS_MAKS_METER = 500;
+/** Pesan tampilan saat posisi di luar area presensi; angka radius tidak diekspos. */
+export const PESAN_DI_LUAR_AREA = 'Kamu berada di luar area absen.';
 
 export type StatusSesiPresensi = 'scheduled' | 'open' | 'closed';
 
@@ -216,10 +216,7 @@ export function kelayakanPresensi(input: InputKelayakan): Kelayakan {
     return tolak('low-accuracy', 'Akurasi lokasi terlalu rendah', 'periksa-lagi');
   }
   if (!dalamRadius(lokasi.distanceMeters, lab.radiusMeters)) {
-    const alasan = angka(lokasi.distanceMeters)
-      ? `Kamu berada ${formatDistanceMeters(lokasi.distanceMeters)} dari lab, radius ${formatDistanceMeters(lab.radiusMeters)}`
-      : 'Kamu berada di luar radius lab';
-    return tolak('out-of-radius', alasan, 'periksa-lagi');
+    return tolak('out-of-radius', PESAN_DI_LUAR_AREA, 'periksa-lagi');
   }
   return { state: 'eligible', tombolAktif: true, alasan: 'Presensi sekarang', aksi: 'periksa-lagi' };
 }

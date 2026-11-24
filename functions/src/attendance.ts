@@ -8,7 +8,13 @@ import { FieldValue, getFirestore, Timestamp, type Firestore } from 'firebase-ad
 import { logger } from 'firebase-functions';
 import { HttpsError, onCall, type FunctionsErrorCode } from 'firebase-functions/v2/https';
 
-import { validasiPresensi, type KodeTolakPresensi, type LabPresensi, type SesiPresensi } from './attendance-rules';
+import {
+  PESAN_DI_LUAR_AREA,
+  validasiPresensi,
+  type KodeTolakPresensi,
+  type LabPresensi,
+  type SesiPresensi,
+} from './attendance-rules';
 import { haversineMeters, isValidLatitude, isValidLongitude } from './geo';
 
 const REGION = 'asia-southeast2';
@@ -37,7 +43,7 @@ const TOLAK: Record<KodeTolakPresensi, { http: FunctionsErrorCode; pesan: string
   NOT_ENROLLED: { http: 'permission-denied', pesan: 'Kamu tidak terdaftar di sesi ini.' },
   LAB_NOT_SET: { http: 'failed-precondition', pesan: 'Laboratorium sesi belum diatur.' },
   LAB_INACTIVE: { http: 'failed-precondition', pesan: 'Laboratorium sedang tidak aktif.' },
-  OUT_OF_RADIUS: { http: 'failed-precondition', pesan: 'Kamu berada di luar radius.' },
+  OUT_OF_RADIUS: { http: 'failed-precondition', pesan: PESAN_DI_LUAR_AREA },
   LOCATION_INACCURATE: { http: 'failed-precondition', pesan: 'Akurasi lokasi terlalu rendah.' },
   MOCK_LOCATION: { http: 'failed-precondition', pesan: 'Lokasi palsu terdeteksi.' },
   ALREADY_PRESENT: { http: 'already-exists', pesan: 'Kamu sudah presensi.' },
