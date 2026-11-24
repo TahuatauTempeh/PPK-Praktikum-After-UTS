@@ -3,7 +3,11 @@ import type { FirestoreSession } from '@/lib/session-actions';
 import type { Enrollment } from '@/types';
 
 import { countAttendance } from './schedule-data';
-import { buildAssistantAttendance, buildAssistantSessions } from './schedule-mapping';
+import {
+  buildAssistantAttendance,
+  buildAssistantParticipants,
+  buildAssistantSessions,
+} from './schedule-mapping';
 
 jest.mock('firebase/firestore', () => ({
   Timestamp: class Timestamp {},
@@ -75,6 +79,21 @@ describe('buildAssistantSessions', () => {
       className: 'Kelas Praktikum',
       participantIds: [],
     });
+  });
+});
+
+describe('buildAssistantParticipants', () => {
+  it('menghapus peserta ganda berdasarkan userId', () => {
+    const enrollments = [
+      { id: 'a_u1', classId: 'a', userId: 'u1', userName: 'Satu', enrolledAt: '' },
+      { id: 'b_u1', classId: 'b', userId: 'u1', userName: 'Satu', enrolledAt: '' },
+      { id: 'a_u2', classId: 'a', userId: 'u2', userName: 'Dua', enrolledAt: '' },
+    ] as Enrollment[];
+
+    expect(buildAssistantParticipants(enrollments)).toEqual([
+      { id: 'u1', name: 'Satu' },
+      { id: 'u2', name: 'Dua' },
+    ]);
   });
 });
 

@@ -5,8 +5,7 @@
  *   - Realtime listener rekap kehadiran dari Firestore
  *   - openSession / closeSession yang menulis ke Firestore
  *
- * Dipakai oleh SessionScreen sebagai pengganti useAssistantSessions()
- * untuk data yang terhubung ke Firestore.
+ * Dipakai oleh SessionScreen dan layar Asisten untuk data Firestore realtime.
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -20,16 +19,23 @@ import type { UserProfile } from '@/types';
 export function useFirestoreSchedule() {
   const [firestoreSessions, setFirestoreSessions] = useState<FirestoreSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsub = listenAllSessions((data) => {
-      setFirestoreSessions(data);
-      setLoading(false);
-    });
+    const unsub = listenAllSessions(
+      (data) => {
+        setFirestoreSessions(data);
+        setLoading(false);
+      },
+      (message) => {
+        setError(message);
+        setLoading(false);
+      },
+    );
     return unsub;
   }, []);
 
-  return { firestoreSessions, loading };
+  return { firestoreSessions, loading, error };
 }
 
 // ─── Asisten: kelola satu sesi ────────────────────────────────────────────────

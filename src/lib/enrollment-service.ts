@@ -15,6 +15,7 @@ import {
 
 import { logActionInBatch } from '@/lib/firebase/audit';
 import { toUserProfile } from '@/lib/firebase/converters';
+import { mapFirebaseError } from '@/lib/firebase/errors';
 import { COLLECTIONS, getDb } from '@/lib/firebase/firestore';
 import { requireNonEmpty, rethrowServiceError } from '@/lib/praktikum-helpers';
 import { CreateEnrollmentInput, Enrollment, User } from '@/types';
@@ -32,13 +33,15 @@ function toEnrollment(snapshot: DocumentSnapshot<DocumentData>): Enrollment {
 
 /** Listener realtime seluruh enrollment (untuk ringkasan peserta di jadwal asisten). */
 export function listenAllEnrollments(
-  callback: (items: Enrollment[]) => void
+  callback: (items: Enrollment[]) => void,
+  onError?: (message: string) => void
 ): Unsubscribe {
   return onSnapshot(
     collection(getDb(), COLLECTIONS.enrollments),
     snapshot => callback(snapshot.docs.map(toEnrollment)),
     error => {
       console.warn('[listenAllEnrollments] error:', error);
+      onError?.(mapFirebaseError(error).message);
     }
   );
 }

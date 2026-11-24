@@ -3,7 +3,11 @@ import { toIsoString } from '@/lib/praktikum-helpers';
 import type { FirestoreSession } from '@/lib/session-actions';
 import type { Enrollment } from '@/types';
 
-import type { AssistantAttendance, AssistantSession } from './schedule-data';
+import type {
+  AssistantAttendance,
+  AssistantParticipant,
+  AssistantSession,
+} from './schedule-data';
 
 function groupUserIdsByClass(enrollments: readonly Enrollment[]): Map<string, string[]> {
   const map = new Map<string, string[]>();
@@ -39,6 +43,19 @@ export function buildAssistantSessions(
     // Denominator memakai roster enrollment; attendance user non-enrolled tersaring di countAttendance.
     participantIds: Array.from(new Set(enrolledByClass.get(session.classId) ?? [])),
   }));
+}
+
+/** Peserta unik dari seluruh enrollment, dipakai kartu rekap. */
+export function buildAssistantParticipants(
+  enrollments: readonly Enrollment[],
+): AssistantParticipant[] {
+  const byId = new Map<string, AssistantParticipant>();
+  for (const item of enrollments) {
+    if (!byId.has(item.userId)) {
+      byId.set(item.userId, { id: item.userId, name: item.userName });
+    }
+  }
+  return Array.from(byId.values());
 }
 
 /** Memetakan dokumen attendance Firestore untuk perhitungan kehadiran asisten. */
