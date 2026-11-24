@@ -316,7 +316,7 @@ status:      "scheduled"
 createdAt:   <timestamp>
 ```
 
-Selama koleksi `sessions` kosong, jadwal Asisten menampilkan data contoh. Begitu ada satu sesi sungguhan, data contoh berhenti dipakai di layar itu.
+Beranda, jadwal, rekap, dan detail sesi Asisten membaca Firestore. Bila belum ada sesi, layar menampilkan keadaan kosong, bukan data contoh.
 
 ## 9. Status pengerjaan
 
@@ -331,11 +331,16 @@ Berdasarkan isi kode saat ini.
 | **Dev 2: Data praktikum** | Ada: CRUD kelas (`class-service`, layar Kelas), CRUD peserta (`enrollment-service`, layar Peserta, cegah daftar ganda), CRUD jadwal dan sesi (`session-service`, layar Atur Sesi, validasi tanggal dan jam), filter jadwal dan riwayat praktikan lewat enrollment (`usePraktikanSchedule`), dan audit log pada setiap tambah/ubah/hapus. Sebagian: penggantian seluruh data dummy ke Firestore belum tuntas (lihat keterbatasan). |
 | **Dev 3: Sesi, presensi & peta** | Ada: buka/tutup sesi dengan audit log, presensi hanya saat sesi `open`, pencegahan presensi ganda, rekap realtime, peta laboratorium OpenStreetMap/Leaflet, aktivitas Sekarang/Berikutnya, dan mode daftar. |
 | **Dev 4: Izin & AI** | Ada: form izin, modul AI dengan timeout dan fallback, penyimpanan `permissionRequests`, riwayat izin praktikan, daftar dan peninjauan izin oleh asisten. |
-| **E2E** | Ada: harness rules Firestore (18 skenario), web E2E Playwright (presensi, luar radius, asisten), dan Android E2E Maestro (presensi, luar radius, asisten). |
+| **E2E** | Ada: harness rules Firestore (18 skenario), 5 flow critical web Playwright (presensi, luar radius, kehadiran asisten, lab/siklus sesi, izin), dan 3 flow critical Android Maestro (presensi, luar radius, kehadiran asisten). |
 
 E2E Android dijalankan dengan Maestro pada emulator API 35. Build APK E2E
 (`npm run android:e2e:build`), boot emulator, lalu `npm run test:android`.
 Prasyarat: Android SDK, Maestro, Java 21+, dan KVM untuk CI.
+
+`npm run test:web` menjalankan 5 flow critical dan `npm run test:android`
+menjalankan 3 flow critical. Full UAT 65 ID, checklist manual 24 ID,
+`test:web:full`, `test:android:full`, dan `uat:check` belum tersedia di Phase 1;
+semuanya direncanakan pada Phase 2 setelah harness critical stabil.
 
 Keterbatasan yang perlu diketahui:
 
@@ -344,11 +349,11 @@ Keterbatasan yang perlu diketahui:
 - **Klaim keamanan presensi diturunkan menjadi client-enforced untuk lokasi.** Setelah rules dideploy, server memeriksa: praktikan terdaftar di kelas, sesi `open`, lab aktif dan sama dengan sesi, radius sama dengan lab, akurasi ≤ 100 m, `distanceMeters ≤ radiusMeters`, `mocked == false`, waktu server, dan tidak ada presensi ganda. Jarak Haversine tidak bisa dihitung di rules, sehingga koordinat dan jarak dipercaya dari aplikasi. Jalur callable juga menerima koordinat dari perangkat, jadi tidak ada jalur yang bisa membuktikan koordinat asli.
 - **Pindah ke callable** setelah project Blaze: deploy `submitAttendance`, ganti `JALUR_PRESENSI` di `src/lib/attendance-service.ts` menjadi `'callable'`, lalu ubah rules create `attendance` menjadi `false`. Urutan ini penting supaya presensi tidak mati di tengah jalan.
 - Rules `attendance` (fallback) dan `notificationLogs` baru berlaku setelah rules dideploy ulang.
-- **Sebagian layar masih memakai data contoh**: beranda dan rekap Asisten (`AssistantPreviewProvider`), serta sebagian detail dan presensi Praktikan (`SessionContext` yang diisi `src/data/dummy.ts`). Data ini hilang saat aplikasi dimuat ulang. Jadwal Asisten (`/asisten/jadwal`) memakai Firestore bila ada sesi, dan kembali ke data contoh bila koleksi `sessions` kosong.
+- **Beranda, jadwal, rekap, dan detail sesi Asisten sudah Firestore-first**; `AssistantPreviewProvider` sudah dihapus. Sebagian layar Praktikan masih memakai `SessionContext` yang diisi `src/data/dummy.ts`, dan data itu hilang saat aplikasi dimuat ulang.
 - Layar jadwal Asisten menampilkan satu tanggal: hari ini bila ada sesi, jika tidak tanggal terdekat berikutnya, lalu tanggal terakhir. Untuk melihat semua sesi dan mengelolanya, pakai layar **Atur Sesi**.
 - Layar **Atur Sesi** tanpa filter kelas hanya menampilkan sesi milik asisten yang sedang login (`assistantId`).
 - Menghapus kelas **tidak** ikut menghapus sesi dan peserta kelas itu (tidak ada penghapusan berantai). Hapus sesi dan peserta lebih dulu bila perlu data bersih.
-- Daftar peserta per sesi (`participantIds`) di layar jadwal dan rekap Asisten belum terhubung ke `enrollments`.
+- Daftar peserta per sesi (`participantIds`) di layar jadwal dan rekap Asisten dihitung dari `enrollments`; layar detail sesi memakai roster kelas yang sama.
 - Ada dua jalur data sesi: `session-service.ts` (Dev 2, baca sekali untuk daftar dan CRUD) dan `session-actions.ts` / `useSessionFirestore.ts` (Dev 3, realtime untuk jadwal, buka/tutup, dan presensi). Keduanya menulis ke koleksi `sessions` yang sama dengan format tanggal `YYYY-MM-DD`.
 - `listenSessionsByClass` di `session-actions.ts` memakai `where` + dua `orderBy`, sehingga butuh indeks komposit Firestore jika kelak dipakai. Saat ini belum dipanggil di mana pun.
 - `invitationCodes` belum dipakai kode aplikasi.
@@ -366,9 +371,9 @@ Keterbatasan yang perlu diketahui:
 | `npm test` | Jalankan test Jest |
 | `npm run test:ci` | Jalankan test sekali seperti CI |
 | `npm run test:rules` | Jalankan E2E Firestore rules di emulator (butuh Java 21+) |
-| `npm run test:web` | Jalankan E2E web Playwright di emulator (butuh Java 21+ dan Chromium) |
+| `npm run test:web` | Jalankan 5 flow critical web Playwright (butuh Java 21+ dan Chromium) |
 | `npm run android:e2e:build` | Build APK release-like untuk E2E Android |
-| `npm run test:android` | Jalankan E2E Android Maestro (butuh APK + emulator API 35) |
+| `npm run test:android` | Jalankan 3 flow critical Android Maestro (butuh APK + emulator API 35) |
 | `npm run verify` | Lint, typecheck, dan test sekaligus |
 | `npm --prefix functions test` | Jalankan test Cloud Functions |
 | `npm --prefix functions run build` | Build Cloud Functions |
@@ -376,7 +381,7 @@ Keterbatasan yang perlu diketahui:
 | `npx expo install --fix` | Samakan versi paket dengan SDK |
 | `npx expo install <paket>` | Pasang paket dengan versi yang cocok dengan SDK |
 
-Jalankan `npm run verify`, `npm run test:rules`, `npm run test:web`, `npm --prefix functions test`, `npm --prefix functions run build`, dan `git diff --check` sebelum membuka pull request. `test:rules` dan `test:web` membutuhkan Java 21+ dan Firebase Emulator; `test:web` juga membutuhkan Chromium. CI menjalankan langkah yang sama; lihat `.github/workflows/ci.yml`.
+Jalankan `npm run verify`, `npm run test:rules`, `npm run test:web`, `npm --prefix functions test`, `npm --prefix functions run build`, dan `git diff --check` sebelum membuka pull request. `test:rules` dan `test:web` membutuhkan Java 21+ dan Firebase Emulator; `test:web` juga membutuhkan Chromium. `test:web` di Phase 1 hanya menjalankan tier critical; full UAT belum ada. CI menjalankan langkah yang sama; lihat `.github/workflows/ci.yml`.
 
 ## 11. Build dengan EAS
 
