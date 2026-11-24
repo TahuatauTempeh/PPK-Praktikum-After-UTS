@@ -8,10 +8,15 @@ APK="e2e/android/artifacts/app-release.apk"
 ARTIFACTS="e2e/android/artifacts"
 FLOWS="e2e/android/flows"
 PASSWORD="e2e-password"
+TIER="${TIER:-critical}"
+MANIFEST="e2e/android/manifest.tsv"
+RUN_JSON="e2e/.run/run.json"
 
 ADB=(adb)
+MAESTRO_DEVICE_ARGS=()
 if [[ -n "${ANDROID_SERIAL:-}" ]]; then
   ADB=(adb -s "$ANDROID_SERIAL")
+  MAESTRO_DEVICE_ARGS=(--udid "$ANDROID_SERIAL")
 fi
 
 fail() {
@@ -20,6 +25,8 @@ fail() {
 }
 
 [[ -s "$APK" ]] || fail "APK tidak ada. Jalankan npm run android:e2e:build."
+[[ -s "$MANIFEST" ]] || fail "Manifest flow tidak ada: $MANIFEST."
+[[ -s "$RUN_JSON" ]] || fail "run.json tidak ada. Jalankan lewat npm run test:android."
 command -v maestro >/dev/null 2>&1 || fail "Maestro tidak ada di PATH."
 "${ADB[@]}" get-state >/dev/null 2>&1 || fail "Tidak ada emulator yang terhubung."
 [[ "$("${ADB[@]}" shell getprop ro.kernel.qemu | tr -d '\r')" == "1" ]] \
@@ -62,9 +69,16 @@ start_geo() {
 
 run_flow() {
   local name="$1"
-  local lon="$2"
-  local lat="$3"
-  local email="$4"
+  local tier="$2"
+  local lon="$3"
+  local lat="$4"
+  local email="$5"
+
+  [[ "$TIER" == "full" || "$tier" == "$TIER" ]] || return 0
+
+  local session_id
+  session_id="$(node -e "const j=require('./$RUN_JSON');const f=j.flows['$name']??{};process.stdout.write(f.sessionId??'')")"
+  [[ -n "$session_id" ]] || fail "Session ID untuk flow $name tidak ada di run.json."
 
   printf '\n== %s ==\n' "$name"
   start_geo "$lon" "$lat"
@@ -75,8 +89,11 @@ run_flow() {
     --no-ansi \
     --output "$ARTIFACTS/$name.xml" \
     --test-output-dir "$ARTIFACTS/$name" \
+    -e RUN_DATE="$(node -e "const j=require('./$RUN_JSON');process.stdout.write(j.runDate)")" \
+    -e SESSION_ID="$session_id" \
     -e EMAIL="$email" \
     -e PASSWORD="$PASSWORD" \
+    "${MAESTRO_DEVICE_ARGS[@]}" \
     "$FLOWS/$name.yaml"
   local status=$?
   set -e
@@ -90,7 +107,9 @@ run_flow() {
   fi
 }
 
-run_flow presensi-dalam-radius 110.4383 -7.0519 praktikan1@test.local
-run_flow presensi-luar-radius 110.5 -7.25 praktikan2@test.local
-run_flow asisten-kehadiran 110.4383 -7.0519 asisten@test.local
-node e2e/android/verify.js
+while IFS=$'\t' read -r name tier lon lat email; do
+  [[ -z "$name" || "$name" == \#* ]] && continue
+  run_flow "$name" "$tier" "$lon" "$lat" "$email"
+done < "$MANIFEST"
+
+TIER="$TIER" node e2e/android/verify.js

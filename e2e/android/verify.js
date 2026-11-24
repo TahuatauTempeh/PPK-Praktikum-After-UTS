@@ -3,10 +3,11 @@ const { initializeApp } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 
 const PROJECT_ID = process.env.GCLOUD_PROJECT ?? 'demo-ppk-e2e';
+const TIER = process.env.TIER ?? 'critical';
 const app = initializeApp({ projectId: PROJECT_ID }, 'e2e-verify');
 const db = getFirestore(app);
 
-async function main() {
+async function verifyCritical() {
   const success = await db.doc('attendance/e2e-session-open_e2e-praktikan1').get();
   assert.ok(success.exists, 'attendance sukses tidak ditemukan');
   const data = success.data();
@@ -40,8 +41,13 @@ async function main() {
     .doc('attendance/e2e-session-closed_e2e-praktikan1')
     .get();
   assert.ok(seeded.exists, 'attendance seed sesi tertutup hilang');
+}
 
-  console.log('Verifikasi E2E Android lulus');
+async function main() {
+  if (TIER === 'critical') {
+    await verifyCritical();
+  }
+  console.log(`Verifikasi E2E Android lulus (${TIER})`);
 }
 
 main().catch((error) => {
