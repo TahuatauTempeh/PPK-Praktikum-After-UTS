@@ -118,7 +118,7 @@ describe('usePresensi', () => {
       result.current.onKirim();
     });
 
-    expect(submitAttendanceWithLocation).toHaveBeenCalledWith('s1', DI_LAB, PROFIL, 'Lab A201');
+    expect(submitAttendanceWithLocation).toHaveBeenCalledWith('s1', DI_LAB, PROFIL);
     expect(result.current.model.kirim).toEqual({ tahap: 'berhasil', jam: '08.07', distanceMeters: 0, radiusMeters: 100 });
   });
 
@@ -126,7 +126,7 @@ describe('usePresensi', () => {
     jest.mocked(submitAttendanceWithLocation).mockResolvedValue({
       ok: false,
       code: 'OUT_OF_RADIUS',
-      message: 'Kamu berada 140 m dari Lab A201. Radius yang diizinkan 100 m.',
+      message: 'Kamu berada di luar area absen.',
     });
     const { result } = await mulai();
     jest.mocked(getFreshPosition).mockClear();
@@ -137,7 +137,7 @@ describe('usePresensi', () => {
 
     expect(result.current.model.kirim).toEqual({
       tahap: 'gagal',
-      pesan: 'Kamu berada 140 m dari Lab A201. Radius yang diizinkan 100 m.',
+      pesan: 'Kamu berada di luar area absen.',
     });
     // Satu pembacaan segar sebelum kirim, lalu satu lagi untuk memulihkan state setelah ditolak.
     expect(getFreshPosition).toHaveBeenCalledTimes(2);

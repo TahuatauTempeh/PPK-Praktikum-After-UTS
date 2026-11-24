@@ -10,28 +10,10 @@ function galatCallable(code: string, details?: unknown) {
 }
 
 describe('pesanGagalPresensi', () => {
-  it('menyebut jarak, nama lab, dan radius saat di luar radius', () => {
-    expect(
-      pesanGagalPresensi('OUT_OF_RADIUS', { distanceMeters: 139.6, radiusMeters: 100, laboratoryName: 'Lab A201' })
-    ).toBe('Kamu berada 140 m dari Lab A201. Radius yang diizinkan 100 m.');
-  });
-
-  it('menulis jarak jauh dalam kilometer', () => {
-    expect(
-      pesanGagalPresensi('OUT_OF_RADIUS', { distanceMeters: 13_751_698, radiusMeters: 500, laboratoryName: 'Dapur Informatika' })
-    ).toBe('Kamu berada 13751,7 km dari Dapur Informatika. Radius yang diizinkan 500 m.');
-  });
-
-  it('memakai kata laboratorium bila nama lab kosong', () => {
-    expect(pesanGagalPresensi('OUT_OF_RADIUS', { distanceMeters: 233, radiusMeters: 100, laboratoryName: '  ' })).toBe(
-      'Kamu berada 233 m dari laboratorium. Radius yang diizinkan 100 m.'
-    );
-  });
-
-  it('tidak menampilkan angka bila jarak atau radius tidak valid', () => {
-    expect(pesanGagalPresensi('OUT_OF_RADIUS', { distanceMeters: Number.NaN, radiusMeters: 100 })).toBe(
-      'Kamu berada di luar radius laboratorium.'
-    );
+  it('menyembunyikan jarak dan radius saat di luar area absen', () => {
+    const pesan = pesanGagalPresensi('OUT_OF_RADIUS');
+    expect(pesan).toBe('Kamu berada di luar area absen.');
+    expect(pesan).not.toMatch(/radius|\d/);
   });
 
   it('memakai pesan koneksi dari PRD untuk NETWORK', () => {
@@ -65,7 +47,7 @@ describe('buatGagal', () => {
     expect(buatGagal('OUT_OF_RADIUS', { distanceMeters: 140, radiusMeters: -1 })).toEqual({
       ok: false,
       code: 'OUT_OF_RADIUS',
-      message: 'Kamu berada di luar radius laboratorium.',
+      message: 'Kamu berada di luar area absen.',
       distanceMeters: 140,
     });
   });
@@ -74,14 +56,13 @@ describe('buatGagal', () => {
 describe('hasilGagalDariGalat', () => {
   it('memakai kode domain dari details callable', () => {
     const hasil = hasilGagalDariGalat(
-      galatCallable('failed-precondition', { code: 'OUT_OF_RADIUS', distanceMeters: 140, radiusMeters: 100 }),
-      'Lab A201'
+      galatCallable('failed-precondition', { code: 'OUT_OF_RADIUS', distanceMeters: 140, radiusMeters: 100 })
     );
 
     expect(hasil).toEqual({
       ok: false,
       code: 'OUT_OF_RADIUS',
-      message: 'Kamu berada 140 m dari Lab A201. Radius yang diizinkan 100 m.',
+      message: 'Kamu berada di luar area absen.',
       distanceMeters: 140,
       radiusMeters: 100,
     });

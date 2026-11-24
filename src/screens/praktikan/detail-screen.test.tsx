@@ -69,7 +69,7 @@ describe('<DetailSesiScreen /> Sprint 3', () => {
 
     await fireEvent.press(getByText('Buka halaman presensi'));
     expect(bukaPresensi).toHaveBeenCalledWith('s1');
-    expect(queryByText('Ya, presensi sekarang')).toBeNull();
+    expect(queryByText('Konfirmasi presensi')).toBeNull();
   });
 
   it.each([

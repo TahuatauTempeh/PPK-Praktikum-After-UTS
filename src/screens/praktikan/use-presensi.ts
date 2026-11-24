@@ -299,12 +299,7 @@ export function usePresensi(sessionId: string, profile: UserProfile | null): Pre
           return;
         }
 
-        const hasil = await submitAttendanceWithLocation(
-          sessionId,
-          segar.position,
-          profile,
-          namaLab ?? undefined,
-        );
+        const hasil = await submitAttendanceWithLocation(sessionId, segar.position, profile);
         if (hasil.ok) {
           setKirim({
             tahap: 'berhasil',
@@ -330,7 +325,6 @@ export function usePresensi(sessionId: string, profile: UserProfile | null): Pre
     terdaftar,
     catatan,
     sessionId,
-    namaLab,
     periksaLokasi,
   ]);
 

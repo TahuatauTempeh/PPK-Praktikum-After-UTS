@@ -62,7 +62,6 @@ export async function submitAttendanceViaTransaction(
   sessionId: string,
   position: DevicePosition,
   profile: ProfilPresensi,
-  laboratoryName?: string,
 ): Promise<AttendanceSubmitResult> {
   const db = getDb();
   const uid = profile.id;
@@ -154,8 +153,8 @@ export async function submitAttendanceViaTransaction(
   } catch (error) {
     if (error instanceof TolakPresensi) {
       const { code, distanceMeters, radiusMeters } = error.hasil;
-      return buatGagal(code, { distanceMeters, radiusMeters, laboratoryName });
+      return buatGagal(code, { distanceMeters, radiusMeters });
     }
-    return hasilGagalDariGalat(error, laboratoryName);
+    return hasilGagalDariGalat(error);
   }
 }

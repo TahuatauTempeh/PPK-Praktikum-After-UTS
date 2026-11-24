@@ -69,7 +69,7 @@ describe('submitAttendanceViaTransaction', () => {
   it('mencatat presensi dengan bukti lokasi dan audit log dalam satu transaksi', async () => {
     siapkan();
 
-    await expect(submitAttendanceViaTransaction('s1', POSISI, PROFIL, 'Lab A201')).resolves.toEqual({
+    await expect(submitAttendanceViaTransaction('s1', POSISI, PROFIL)).resolves.toEqual({
       ok: true,
       recordedAt: '2026-11-23T01:07:00.000Z',
       distanceMeters: 0,
@@ -141,12 +141,12 @@ describe('submitAttendanceViaTransaction', () => {
     expect(ditulis).toHaveLength(0);
   });
 
-  it('menolak di luar radius dengan pesan jarak', async () => {
+  it('menolak di luar area absen dengan pesan sederhana', async () => {
     siapkan();
-    const hasil = await submitAttendanceViaTransaction('s1', { ...POSISI, latitude: -7.054 }, PROFIL, 'Lab A201');
+    const hasil = await submitAttendanceViaTransaction('s1', { ...POSISI, latitude: -7.054 }, PROFIL);
 
     expect(hasil).toMatchObject({ ok: false, code: 'OUT_OF_RADIUS', radiusMeters: 100 });
-    expect(hasil.ok ? '' : hasil.message).toMatch(/^Kamu berada 23[2-4] m dari Lab A201\. Radius yang diizinkan 100 m\.$/);
+    expect(hasil.ok ? '' : hasil.message).toBe('Kamu berada di luar area absen.');
     expect(ditulis).toHaveLength(0);
   });
 

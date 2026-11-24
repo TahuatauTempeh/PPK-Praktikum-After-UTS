@@ -87,18 +87,18 @@ describe('submitAttendanceViaCallable', () => {
     expect(setDocMock).not.toHaveBeenCalled();
   });
 
-  it('mengembalikan penolakan server dengan jarak dan nama lab', async () => {
+  it('mengembalikan penolakan server dengan pesan area absen', async () => {
     callable(async () => {
-      throw Object.assign(new Error('luar radius'), {
+      throw Object.assign(new Error('luar area'), {
         code: 'functions/failed-precondition',
         details: { code: 'OUT_OF_RADIUS', distanceMeters: 140, radiusMeters: 100 },
       });
     });
 
-    await expect(submitAttendanceViaCallable('s1', posisi, 'Lab A201')).resolves.toEqual({
+    await expect(submitAttendanceViaCallable('s1', posisi)).resolves.toEqual({
       ok: false,
       code: 'OUT_OF_RADIUS',
-      message: 'Kamu berada 140 m dari Lab A201. Radius yang diizinkan 100 m.',
+      message: 'Kamu berada di luar area absen.',
       distanceMeters: 140,
       radiusMeters: 100,
     });
@@ -125,8 +125,8 @@ describe('submitAttendanceWithLocation', () => {
     jest.mocked(submitAttendanceViaTransaction).mockResolvedValueOnce(hasil);
 
     expect(JALUR_PRESENSI).toBe('fallback');
-    await expect(submitAttendanceWithLocation('s1', posisi, profil, 'Lab A201')).resolves.toEqual(hasil);
-    expect(submitAttendanceViaTransaction).toHaveBeenCalledWith('s1', posisi, profil, 'Lab A201');
+    await expect(submitAttendanceWithLocation('s1', posisi, profil)).resolves.toEqual(hasil);
+    expect(submitAttendanceViaTransaction).toHaveBeenCalledWith('s1', posisi, profil);
     expect(httpsCallable).not.toHaveBeenCalled();
   });
 });
