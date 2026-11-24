@@ -19,6 +19,7 @@ import {
 } from 'firebase/firestore';
 
 import { logAction } from '@/lib/firebase/audit';
+import { mapFirebaseError } from '@/lib/firebase/errors';
 import { COLLECTIONS, getDb } from '@/lib/firebase/firestore';
 import type { SessionStatus } from '@/types';
 
@@ -192,6 +193,7 @@ export function listenSession(
 
 export function listenAllSessions(
   callback: (sessions: FirestoreSession[]) => void,
+  onError?: (message: string) => void,
 ): Unsubscribe {
   const q = collection(getDb(), COLLECTIONS.sessions);
   return onSnapshot(
@@ -202,6 +204,7 @@ export function listenAllSessions(
     },
     (err) => {
       console.warn('[listenAllSessions] error:', err);
+      onError?.(mapFirebaseError(err).message);
     },
   );
 }

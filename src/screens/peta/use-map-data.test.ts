@@ -166,4 +166,39 @@ describe('useMapData', () => {
     expect(result.current.error).toBeNull();
     expect(result.current.items).toHaveLength(1);
   });
+
+  it('menampilkan error saat listener sesi gagal tanpa menggantung loading', async () => {
+    const unsubLabs = jest.fn();
+    const unsubSessions = jest.fn();
+    const unsubClasses = jest.fn();
+
+    let onLabsSuccess!: (items: Laboratory[]) => void;
+    let onSessionsError: ((message: string) => void) | undefined;
+    let onClassesSuccess!: (items: PracticumClass[]) => void;
+
+    mockListenLabs.mockImplementation((cb) => {
+      onLabsSuccess = cb;
+      return unsubLabs;
+    });
+    mockListenSessions.mockImplementation((_cb, errCb) => {
+      onSessionsError = errCb;
+      return unsubSessions;
+    });
+    mockListenClasses.mockImplementation((cb) => {
+      onClassesSuccess = cb;
+      return unsubClasses;
+    });
+
+    const { result } = await renderHook(() => useMapData());
+
+    await act(async () => {
+      onLabsSuccess([sampleLab]);
+      onClassesSuccess([sampleClass]);
+      onSessionsError?.('Gagal memuat sesi praktikum.');
+    });
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBe('Gagal memuat sesi praktikum.');
+    expect(result.current.items).toHaveLength(1);
+  });
 });

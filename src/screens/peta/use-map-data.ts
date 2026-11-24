@@ -35,6 +35,7 @@ export function useMapData(): MapDataState {
   const [classesReady, setClassesReady] = useState(false);
 
   const [labsError, setLabsError] = useState<string | null>(null);
+  const [sessionsError, setSessionsError] = useState<string | null>(null);
   const [classesError, setClassesError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [nowTick, setNowTick] = useState(() => new Date());
@@ -59,10 +60,17 @@ export function useMapData(): MapDataState {
       }
     );
 
-    const unsubscribeSessions = listenAllSessions((data) => {
-      setSessions(data);
-      setSessionsReady(true);
-    });
+    const unsubscribeSessions = listenAllSessions(
+      (data) => {
+        setSessions(data);
+        setSessionsError(null);
+        setSessionsReady(true);
+      },
+      (message) => {
+        setSessionsError(message);
+        setSessionsReady(true);
+      }
+    );
 
     const unsubscribeClasses = listenAllClasses(
       (data) => {
@@ -88,11 +96,12 @@ export function useMapData(): MapDataState {
     setSessionsReady(false);
     setClassesReady(false);
     setLabsError(null);
+    setSessionsError(null);
     setClassesError(null);
     setRetryCount((count) => count + 1);
   }, []);
 
-  const error = labsError ?? classesError;
+  const error = labsError ?? sessionsError ?? classesError;
   const loading = error === null && (!labsReady || !sessionsReady || !classesReady);
 
   const items = useMemo(
