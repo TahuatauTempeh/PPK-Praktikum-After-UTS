@@ -31,7 +31,7 @@ export function PetaScreen({ showBackButton = false, onBack }: PetaScreenProps) 
 
   const { items, loading, error, retry } = useMapData();
   const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [viewMode, setViewMode] = useState<'map' | 'list'>(() => (isWeb ? 'list' : 'map'));
   const [mapLoadFailed, setMapLoadFailed] = useState(false);
 
   const location = useMapLocation(true);

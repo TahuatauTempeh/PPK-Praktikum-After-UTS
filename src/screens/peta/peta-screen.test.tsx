@@ -1,5 +1,6 @@
 import { act, fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
+import { Platform } from 'react-native';
 
 import { PetaScreen } from './peta-screen';
 import type { LaboratoryMapItem } from './selectors';
@@ -189,6 +190,29 @@ describe('PetaScreen', () => {
 
     await fireEvent.press(getByText('Peta'));
     expect(getByTestId('native-map')).toBeTruthy();
+  });
+
+  it('memakai mode daftar sebagai default di web', async () => {
+    const originalOS = Platform.OS;
+    Object.defineProperty(Platform, 'OS', { value: 'web', configurable: true });
+
+    try {
+      mockUseMapData.mockReturnValue({
+        items: [sampleItem],
+        activeLabs: [sampleItem.lab],
+        loading: false,
+        error: null,
+        retry: jest.fn(),
+      });
+
+      const { getByText, queryByTestId } = await render(<PetaScreen />);
+
+      expect(queryByTestId('native-map')).toBeNull();
+      expect(getByText('Lab A201')).toBeTruthy();
+      expect(getByText('Peta')).toBeTruthy();
+    } finally {
+      Object.defineProperty(Platform, 'OS', { value: originalOS, configurable: true });
+    }
   });
 
   it('beralih ke mode daftar fallback jika peta OpenStreetMap gagal dimuat', async () => {
