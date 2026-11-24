@@ -51,6 +51,10 @@ firestore-debug.log
 # test
 coverage/
 
+# playwright
+e2e/web/playwright-report/
+e2e/web/test-results/
+
 # generated native folders
 /ios
 /android
