@@ -6,12 +6,14 @@ import { PlatformMapView } from './map-view.native';
 jest.mock('react-native-webview', () => {
   const mockReact = jest.requireActual<typeof import('react')>('react');
   const { View } = jest.requireActual<typeof import('react-native')>('react-native');
-  const MockWebView = mockReact.forwardRef((_props: unknown, ref: unknown) => {
-    mockReact.useImperativeHandle(ref, () => ({
-      injectJavaScript: jest.fn(),
-    }));
-    return mockReact.createElement(View, { testID: 'native-map' });
-  });
+  const MockWebView = mockReact.forwardRef(
+    (_props: unknown, ref: React.ForwardedRef<unknown>) => {
+      mockReact.useImperativeHandle(ref, () => ({
+        injectJavaScript: jest.fn(),
+      }));
+      return mockReact.createElement(View, { testID: 'native-map' });
+    }
+  );
   MockWebView.displayName = 'MockWebView';
   return {
     __esModule: true,
