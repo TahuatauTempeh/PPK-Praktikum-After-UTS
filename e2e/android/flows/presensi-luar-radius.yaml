@@ -1,0 +1,30 @@
+appId: com.ppk.presensipraktikum
+name: Presensi luar radius
+tags:
+  - android
+  - e2e
+---
+- launchApp:
+    clearState: true
+    permissions:
+      location: allow
+      notifications: allow
+- runFlow:
+    file: ../subflows/login.yaml
+- extendedWaitUntil:
+    visible: "Daftar sesi"
+    timeout: 20000
+- openLink:
+    link: "presensipraktikum://praktikan/presensi/e2e-session-open-out"
+    browser: false
+- extendedWaitUntil:
+    visible: "Pemeriksaan lokasi"
+    timeout: 20000
+- extendedWaitUntil:
+    visible: "Kamu berada di luar area absen."
+    timeout: 30000
+- assertNotVisible: "Radius"
+- assertVisible:
+    text: "Presensi sekarang"
+    enabled: false
+- assertNotVisible: "Presensi berhasil"
