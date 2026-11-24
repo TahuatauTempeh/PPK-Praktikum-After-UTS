@@ -331,7 +331,11 @@ Berdasarkan isi kode saat ini.
 | **Dev 2: Data praktikum** | Ada: CRUD kelas (`class-service`, layar Kelas), CRUD peserta (`enrollment-service`, layar Peserta, cegah daftar ganda), CRUD jadwal dan sesi (`session-service`, layar Atur Sesi, validasi tanggal dan jam), filter jadwal dan riwayat praktikan lewat enrollment (`usePraktikanSchedule`), dan audit log pada setiap tambah/ubah/hapus. Sebagian: penggantian seluruh data dummy ke Firestore belum tuntas (lihat keterbatasan). |
 | **Dev 3: Sesi, presensi & peta** | Ada: buka/tutup sesi dengan audit log, presensi hanya saat sesi `open`, pencegahan presensi ganda, rekap realtime, peta laboratorium OpenStreetMap/Leaflet, aktivitas Sekarang/Berikutnya, dan mode daftar. |
 | **Dev 4: Izin & AI** | Ada: form izin, modul AI dengan timeout dan fallback, penyimpanan `permissionRequests`, riwayat izin praktikan, daftar dan peninjauan izin oleh asisten. |
-| **E2E** | Ada: harness rules Firestore (18 skenario) dan web E2E Playwright (presensi, luar radius, asisten). Android/Maestro belum. |
+| **E2E** | Ada: harness rules Firestore (18 skenario), web E2E Playwright (presensi, luar radius, asisten), dan Android E2E Maestro (presensi, luar radius, asisten). |
+
+E2E Android dijalankan dengan Maestro pada emulator API 35. Build APK E2E
+(`npm run android:e2e:build`), boot emulator, lalu `npm run test:android`.
+Prasyarat: Android SDK, Maestro, Java 21+, dan KVM untuk CI.
 
 Keterbatasan yang perlu diketahui:
 
@@ -363,6 +367,8 @@ Keterbatasan yang perlu diketahui:
 | `npm run test:ci` | Jalankan test sekali seperti CI |
 | `npm run test:rules` | Jalankan E2E Firestore rules di emulator (butuh Java 21+) |
 | `npm run test:web` | Jalankan E2E web Playwright di emulator (butuh Java 21+ dan Chromium) |
+| `npm run android:e2e:build` | Build APK release-like untuk E2E Android |
+| `npm run test:android` | Jalankan E2E Android Maestro (butuh APK + emulator API 35) |
 | `npm run verify` | Lint, typecheck, dan test sekaligus |
 | `npm --prefix functions test` | Jalankan test Cloud Functions |
 | `npm --prefix functions run build` | Build Cloud Functions |

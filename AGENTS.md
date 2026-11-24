@@ -115,7 +115,8 @@ Later promotions go through the Admin screen and are recorded in `auditLogs`.
 
 ## Verification
 
-CI runs lint, typecheck, tests, the Firestore rules E2E, web E2E, and a whitespace check.
+CI runs lint, typecheck, tests, the Firestore rules E2E, web E2E, Android E2E,
+and a whitespace check.
 Reproduce them locally before opening a pull request:
 
 ```bash
@@ -124,10 +125,14 @@ npm run typecheck
 npm run test:ci
 npm run test:rules
 npm run test:web
+npm run test:android
 npm --prefix functions test -- --ci --runInBand
 npm --prefix functions run build
 git diff --check
 ```
+
+`npm run test:android` needs an API 35 emulator, Maestro, and
+`npm run android:e2e:build` first.
 
 `npm run test:rules` needs Java 21+ and the Firebase Emulator. If the default
 `java` is older, point `JAVA_HOME`/`PATH` at a newer JDK first.
@@ -136,8 +141,9 @@ git diff --check
 
 `npm run verify` runs lint, typecheck, and `test:ci` in order. CI also installs,
 tests, and builds `functions/`, runs `npm run test:rules` in the `rules-e2e`
-job, and `npm run test:web` in the `web-e2e` job with Temurin 21. CI uses Node 24
-(Expo SDK 58 accepts `^22.13.0 || ^24.3.0`).
+job, `npm run test:web` in the `web-e2e` job, and `npm run test:android` in the
+`android-e2e` job with Temurin 21. CI uses Node 24 (Expo SDK 58 accepts
+`^22.13.0 || ^24.3.0`).
 
 Test stack:
 
@@ -155,9 +161,11 @@ Test stack:
 
 Firestore rules have an emulator E2E harness: run `npm run test:rules`.
 The harness is not part of Jest and needs Java 21+. Web E2E is available via
-`npm run test:web` (Playwright, Chromium, Java 21+); Android E2E is still
-unavailable. Changes to `firestore.rules` still need review and a deploy against
-a test project. `npx expo-doctor` is advisory:
+`npm run test:web` (Playwright, Chromium, Java 21+). Android E2E is available
+via `npm run test:android` (Maestro, API 35 emulator, Java 21+), after
+`npm run android:e2e:build` and booting the emulator. Changes to
+`firestore.rules` still need review and a deploy against a test project.
+`npx expo-doctor` is advisory:
 this checkout currently has known patch/minor drift from the SDK’s expected
 package versions, and it requires network access. Do not make it a merge gate
 without fixing the versions first.
