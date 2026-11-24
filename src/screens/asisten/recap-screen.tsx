@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
+import { ErrorState } from '@/components/ErrorState';
+import { LoadingState } from '@/components/LoadingState';
 import { HeroCard } from '@/screens/shared/components/hero-card';
 
 import { AssistantScreen } from './components/assistant-screen';
@@ -9,10 +11,11 @@ import { AssistantTopBar } from './components/assistant-top-bar';
 import { RecapCard } from './components/recap-card';
 import { RecapFilterDialog } from './components/recap-filter-dialog';
 import { ScheduleIcon } from './components/schedule-icon';
-import { useAssistantSessions } from './preview-session-provider';
-import { buildRecap, type DateRange, monthRange } from './recap-data';
-import { previewDate } from './schedule-data';
+import { tanggalHariIniWIB } from './jadwal-aktif';
+import { buildRecap, type DateRange } from './recap-data';
+import { expandRangeForSession, initialRecapRange } from './recap-range';
 import { formatSessionDate } from './session-format';
+import { useAssistantRecapData } from './use-assistant-data';
 import {
   tokens,
   useThemedStyles,
@@ -25,12 +28,30 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
   const theme = useTheme();
   const styles = useThemedStyles(gaya);
   const { width } = useWindowDimensions();
-  const { sessions, attendance, participants } = useAssistantSessions();
-  const initialSession = sessions.find(session => session.id === initialSessionId);
-  const [range, setRange] = useState<DateRange | null>(() => monthRange(initialSession?.date ?? previewDate));
+  const { sessions, attendance, participants, loading, error } = useAssistantRecapData();
+  const [range, setRange] = useState<DateRange | null>(() =>
+    initialRecapRange(tanggalHariIniWIB()),
+  );
+  const seenSessionRef = useRef<string | undefined>(undefined);
   const [selectedId, setSelectedId] = useState(initialSessionId);
   const [expandedId, setExpandedId] = useState(initialSessionId);
   const [dialog, setDialog] = useState<'date' | 'session' | null>(null);
+
+  useEffect(() => {
+    const initial = sessions.find(session => session.id === initialSessionId);
+    const next = expandRangeForSession(
+      range,
+      initial?.date,
+      initialSessionId,
+      seenSessionRef.current,
+    );
+    if (next.range !== range) setRange(next.range);
+    seenSessionRef.current = next.seenSessionId;
+  }, [sessions, initialSessionId, range]);
+
+  if (loading) return <LoadingState message="Memuat rekap..." />;
+  if (error) return <ErrorState message={error} />;
+
   const { rows, present, percent } = buildRecap(sessions, attendance, range, selectedId);
   const closedSessions = sessions.filter(session => session.status === 'closed')
     .sort((a, b) => `${b.date}T${b.startTime}`.localeCompare(`${a.date}T${a.startTime}`));
@@ -107,7 +128,6 @@ export default function RecapScreen({ initialSessionId = '', onSchedule, onDetai
               </Pressable>
             </View>
           )}
-          <AssistantText variant="caption" tone="secondary">Data contoh | perubahan sementara akan direset saat aplikasi dimuat ulang.</AssistantText>
         </AssistantScreen>
       </View>
       {dialog && <RecapFilterDialog kind={dialog} range={range} selectedId={selectedId} sessions={closedSessions}

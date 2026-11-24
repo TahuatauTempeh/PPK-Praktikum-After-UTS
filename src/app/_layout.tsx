@@ -19,7 +19,6 @@ import { SessionProvider } from '@/context/session-context';
 import { ThemePreferenceProvider } from '@/context/theme-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { missingFirebaseEnvKeys } from '@/lib/firebase/app';
-import { AssistantPreviewProvider } from '@/screens/asisten/preview-session-provider';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -47,13 +46,11 @@ function ThemedRoot() {
     <AuthProvider>
       <NotificationProvider>
         <SessionProvider>
-          <AssistantPreviewProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-              <RootNavigator />
-              <ToastContainer />
-            </ThemeProvider>
-          </AssistantPreviewProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+            <RootNavigator />
+            <ToastContainer />
+          </ThemeProvider>
         </SessionProvider>
       </NotificationProvider>
     </AuthProvider>
