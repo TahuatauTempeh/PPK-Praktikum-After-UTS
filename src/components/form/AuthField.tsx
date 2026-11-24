@@ -27,6 +27,7 @@ interface AuthFieldProps
     | 'textContentType'
     | 'returnKeyType'
     | 'onSubmitEditing'
+    | 'testID'
   > {
   label: string;
   error?: string;
