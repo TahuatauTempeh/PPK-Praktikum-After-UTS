@@ -2,6 +2,7 @@ import * as FirebaseAuth from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { getFirebaseApp } from './app';
+import { connectAuthEmulatorIfConfigured } from './emulators';
 
 const getReactNativePersistence = (
   FirebaseAuth as unknown as {
@@ -12,7 +13,10 @@ const getReactNativePersistence = (
 let authInstance: FirebaseAuth.Auth | null = null;
 
 export function getFirebaseAuth(): FirebaseAuth.Auth {
-  if (authInstance) return authInstance;
+  if (authInstance) {
+    connectAuthEmulatorIfConfigured(authInstance);
+    return authInstance;
+  }
 
   const app = getFirebaseApp();
 
@@ -28,5 +32,6 @@ export function getFirebaseAuth(): FirebaseAuth.Auth {
     }
   }
 
+  connectAuthEmulatorIfConfigured(authInstance);
   return authInstance;
 }

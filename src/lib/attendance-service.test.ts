@@ -234,6 +234,52 @@ describe('listener attendance', () => {
     expect(result).toBe(unsubscribe);
   });
 
+  it('listenMyAttendance memakai query userId dan hanya mengembalikan sesi yang cocok', () => {
+    const unsubscribe = jest.fn();
+    onSnapshotMock.mockImplementation(((...args: unknown[]) => {
+      const onNext = args[1] as (snapshot: unknown) => void;
+      onNext({
+        docs: [
+          {
+            id: 's1_u1',
+            data: () => ({
+              sessionId: 's1',
+              userId: 'u1',
+              userName: 'Bunga',
+              userNim: '231110002',
+              recordedAt: '2026-11-20T01:05:00.000Z',
+            }),
+          },
+          {
+            id: 's2_u1',
+            data: () => ({
+              sessionId: 's2',
+              userId: 'u1',
+              userName: 'Bunga',
+              userNim: '231110002',
+              recordedAt: '2026-11-21T01:05:00.000Z',
+            }),
+          },
+        ],
+      });
+      return unsubscribe;
+    }) as never);
+
+    const callback = jest.fn();
+    const result = listenMyAttendance('s1', 'u1', callback);
+
+    expect(collectionMock).toHaveBeenCalledWith({}, 'attendance');
+    expect(whereMock).toHaveBeenCalledWith('userId', '==', 'u1');
+    expect(queryMock).toHaveBeenCalledWith(
+      { kind: 'collection' },
+      { kind: 'where' },
+    );
+    expect(callback).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 's1_u1', sessionId: 's1' }),
+    );
+    expect(result).toBe(unsubscribe);
+  });
+
   it('listenAllAttendance membaca seluruh koleksi dan memetakan dokumen', () => {
     const unsubscribe = jest.fn();
     onSnapshotMock.mockImplementation(((...args: unknown[]) => {
