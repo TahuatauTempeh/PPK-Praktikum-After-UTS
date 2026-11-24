@@ -1,0 +1,10 @@
+appId: com.ppk.presensipraktikum
+---
+- assertVisible: { id: "login-submit" }
+- tapOn: { id: "login-email" }
+- inputText: ${EMAIL}
+- hideKeyboard
+- tapOn: { id: "login-password" }
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn: { id: "login-submit" }
