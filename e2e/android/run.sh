@@ -28,6 +28,8 @@ command -v maestro >/dev/null 2>&1 || fail "Maestro tidak ada di PATH."
 "${ADB[@]}" shell settings put global window_animation_scale 0
 "${ADB[@]}" shell settings put global transition_animation_scale 0
 "${ADB[@]}" shell settings put global animator_duration_scale 0
+# Emulator CI yang lambat memunculkan dialog ANR Pixel Launcher di depan app.
+"${ADB[@]}" shell settings put global hide_error_dialogs 1
 # Google Password Manager menutupi UI setelah login dan membuat flow flaky.
 "${ADB[@]}" shell settings put secure autofill_service null
 "${ADB[@]}" shell svc power stayon true

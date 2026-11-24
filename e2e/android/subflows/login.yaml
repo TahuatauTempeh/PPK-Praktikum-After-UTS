@@ -1,6 +1,8 @@
 appId: com.ppk.presensipraktikum
 ---
-- assertVisible: { id: "login-submit" }
+- extendedWaitUntil:
+    visible: { id: "login-submit" }
+    timeout: 30000
 - tapOn: { id: "login-email" }
 - inputText: ${EMAIL}
 - hideKeyboard
