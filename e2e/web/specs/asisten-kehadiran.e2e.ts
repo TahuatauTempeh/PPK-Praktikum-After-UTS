@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-import { login, waitForAsistenHome } from './helpers';
+import { login, waitForAsistenHome } from '../helpers';
 
-test('asisten melihat kehadiran pada sesi tertutup', async ({ page }) => {
+test('asisten melihat kehadiran pada sesi tertutup', { tag: '@critical' }, async ({ page }) => {
   await login(page, 'asisten@test.local');
   await waitForAsistenHome(page);
 

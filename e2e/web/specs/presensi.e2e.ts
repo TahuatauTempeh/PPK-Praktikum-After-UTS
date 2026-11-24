@@ -7,7 +7,7 @@ import {
   login,
   openPresensi,
   waitForPraktikanHome,
-} from './helpers';
+} from '../helpers';
 
 const SESSION_ID = 'e2e-session-open';
 const UID = 'e2e-praktikan1';
@@ -21,7 +21,7 @@ test.describe('presensi web', () => {
     await closeAdminDb();
   });
 
-  test('praktikan mencatat presensi di dalam radius', async ({ page }) => {
+  test('praktikan mencatat presensi di dalam radius', { tag: '@critical' }, async ({ page }) => {
     await login(page, 'praktikan1@test.local');
     await waitForPraktikanHome(page);
     await openPresensi(page, SESSION_ID);

@@ -6,7 +6,7 @@ import {
   login,
   openPresensi,
   waitForPraktikanHome,
-} from './helpers';
+} from '../helpers';
 
 const SESSION_ID = 'e2e-session-open-out';
 const UID = 'e2e-praktikan2';
@@ -20,7 +20,7 @@ test.describe('presensi luar radius', () => {
     await closeAdminDb();
   });
 
-  test('menolak presensi di luar area absen tanpa menulis dokumen', async ({
+  test('menolak presensi di luar area absen tanpa menulis dokumen', { tag: '@critical' }, async ({
     page,
   }) => {
     await login(page, 'praktikan2@test.local');
