@@ -117,7 +117,7 @@ Later promotions go through the Admin screen and are recorded in `auditLogs`.
 
 ## Verification
 
-CI runs lint, typecheck, tests, the Firestore rules E2E, and a whitespace check.
+CI runs lint, typecheck, tests, the Firestore rules E2E, web E2E, and a whitespace check.
 Reproduce them locally before opening a pull request:
 
 ```bash
@@ -125,6 +125,7 @@ npm run lint
 npm run typecheck
 npm run test:ci
 npm run test:rules
+npm run test:web
 npm --prefix functions test -- --ci --runInBand
 npm --prefix functions run build
 git diff --check
@@ -132,11 +133,13 @@ git diff --check
 
 `npm run test:rules` needs Java 21+ and the Firebase Emulator. If the default
 `java` is older, point `JAVA_HOME`/`PATH` at a newer JDK first.
+`npm run test:web` needs Java 21+, the Firebase Emulator, and Chromium
+(`npx playwright install chromium`).
 
 `npm run verify` runs lint, typecheck, and `test:ci` in order. CI also installs,
-tests, and builds `functions/`, and runs `npm run test:rules` in the `rules-e2e`
-job with Temurin 21. CI uses Node 24 (Expo SDK 58 accepts
-`^22.13.0 || ^24.3.0`).
+tests, and builds `functions/`, runs `npm run test:rules` in the `rules-e2e`
+job, and `npm run test:web` in the `web-e2e` job with Temurin 21. CI uses Node 24
+(Expo SDK 58 accepts `^22.13.0 || ^24.3.0`).
 
 Test stack:
 
@@ -149,11 +152,14 @@ Test stack:
   the `global.css` import in `src/theme`.
 - RNTL 14 renders asynchronously: use `await render(...)` and
   `await fireEvent.press(...)` or `await user.press(...)`.
+- Web E2E memakai Playwright di `e2e/web/` dengan akhiran `.e2e.ts`; file ini
+  bukan bagian dari Jest.
 
 Firestore rules have an emulator E2E harness: run `npm run test:rules`.
-The harness is not part of Jest and needs Java 21+. Browser and native
-end-to-end suites are not available yet; changes to `firestore.rules` still
-need review and a deploy against a test project. `npx expo-doctor` is advisory:
+The harness is not part of Jest and needs Java 21+. Web E2E is available via
+`npm run test:web` (Playwright, Chromium, Java 21+); Android E2E is still
+unavailable. Changes to `firestore.rules` still need review and a deploy against
+a test project. `npx expo-doctor` is advisory:
 this checkout currently has known patch/minor drift from the SDK’s expected
 package versions, and it requires network access. Do not make it a merge gate
 without fixing the versions first.
