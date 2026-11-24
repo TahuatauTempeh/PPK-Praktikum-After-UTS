@@ -167,7 +167,8 @@ export function buildOsmLeafletHtml(
 
       var initialRegion = ${regionJson};
       var currentState = ${stateJson};
-      var lastSelectedId = currentState.selectedLabId || null;
+      // Kosongkan agar applyState pertama memusatkan peta ke lab yang sudah dipilih.
+      var lastSelectedId = null;
 
       var map = L.map('map', {
         zoomControl: true,

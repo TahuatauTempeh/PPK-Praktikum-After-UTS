@@ -112,4 +112,32 @@ describe('buildOsmLeafletHtml', () => {
     expect(html).not.toContain('"<script>alert(1)</script>"');
     expect(html).toContain('\\u003cscript>alert(1)\\u003c/script>');
   });
+
+  it('memusatkan peta ke lab terpilih pada applyState pertama', () => {
+    const state: OsmMapStatePayload = {
+      labs: toOsmLabMarkers([sampleItem]),
+      selectedLabId: 'lab-a',
+      userPosition: null,
+      colors: {
+        primary: '#204CAC',
+        success: '#23765B',
+        surface: '#FFFFFF',
+        text: '#192138',
+        accent: '#204CAC',
+      },
+    };
+
+    const html = buildOsmLeafletHtml(
+      {
+        latitude: -7.0519,
+        longitude: 110.4383,
+        latitudeDelta: 0.006,
+        longitudeDelta: 0.006,
+      },
+      state
+    );
+
+    expect(html).toContain('var lastSelectedId = null;');
+    expect(html).not.toContain('var lastSelectedId = "lab-a";');
+  });
 });
