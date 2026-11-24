@@ -67,7 +67,7 @@ Hasil akhir adalah tiga alur demo yang dapat dijalankan di perangkat Android: pr
 - Halaman detail sesi Praktikan memuat aksi presensi langsung di dalam layar detail, bukan halaman tersendiri.
 - Belum ada koleksi `laboratories`, belum ada koordinat laboratorium, dan sesi belum terhubung ke laboratorium.
 - Belum ada halaman peta, marker laboratorium, atau marker pengguna.
-- Belum ada `expo-location`, `react-native-maps`, maupun `expo-notifications` di `package.json`.
+- Belum ada `expo-location`, `react-native-webview`, maupun `expo-notifications` di `package.json`.
 - Belum ada Cloud Functions, sehingga belum ada pengirim notifikasi berbasis peristiwa.
 - Pengguna hanya mengetahui perubahan jadwal, pembukaan sesi, atau keputusan izin setelah membuka aplikasi.
 
@@ -78,7 +78,7 @@ Hasil akhir adalah tiga alur demo yang dapat dijalankan di perangkat Android: pr
 | Presensi bisa dilakukan dari luar laboratorium | Kehadiran tidak mencerminkan kehadiran fisik | Validasi radius lokasi |
 | Tidak ada data lokasi laboratorium | Tidak ada acuan jarak yang konsisten | Koleksi `laboratories` dan pengelolaan oleh asisten |
 | Sesi tidak terhubung ke laboratorium | Peta tidak tahu praktikum mana yang berlangsung di lab mana | `laboratoryId` pada sesi |
-| Tidak ada peta | Pengguna tidak melihat sebaran lab dan aktivitasnya | Halaman Maps interaktif |
+| Tidak ada peta | Pengguna tidak melihat sebaran lab dan aktivitasnya | Halaman peta interaktif |
 | Tidak ada notifikasi | Perubahan penting terlewat | Push notification berbasis peristiwa |
 | Kondisi perangkat tidak tertangani | Pengguna bingung saat izin ditolak atau GPS mati | State dan pesan yang jelas |
 
@@ -117,7 +117,7 @@ Hasil akhir adalah tiga alur demo yang dapat dijalankan di perangkat Android: pr
 - Presensi QR Code tidak diimplementasikan pada Sprint 3. Fitur ini opsional pada spesifikasi dan akan menambah izin kamera, generator QR, serta jalur validasi kedua. Keputusan ini dicatat pada bagian 5.
 - Background location dan geofencing tidak dipakai. Lokasi hanya dibaca saat halaman presensi atau peta aktif.
 - Presensi offline tidak diantrikan. Sesi dan lokasi harus segar, sehingga presensi yang gagal karena koneksi diminta mencoba lagi.
-- Peta interaktif di web tidak menjadi target. Web memakai mode daftar laboratorium sebagai fallback.
+- Peta interaktif web bukan target demo utama. Web memakai mode daftar sebagai default; peta OpenStreetMap tersedia sebagai tampilan opsional.
 - iOS push notification bersifat best-effort dan membutuhkan APNs; target UAT utama adalah Android.
 - Koreksi presensi manual oleh asisten tidak mendapat UI baru. Aturan Firestore yang ada tetap mengizinkan asisten memperbaiki catatan.
 
@@ -146,7 +146,7 @@ Prioritas: **P0** wajib demo, **P1** wajib sebelum rilis, **P2** opsional.
 | Halaman presensi terpisah | Rute `/praktikan/presensi/[id]` | P0 |
 | Validasi lokasi presensi | Foreground location + Haversine + callable server (fallback selama Spark) | P0 |
 | Pengelolaan lokasi laboratorium | Koleksi `laboratories`, layar asisten, `laboratoryId` pada sesi | P0 |
-| Peta laboratorium interaktif | `react-native-maps`, marker lab, marker pengguna | P0 |
+| Peta laboratorium interaktif | `react-native-webview` + Leaflet/OpenStreetMap, marker lab, marker pengguna | P0 |
 | Informasi aktivitas laboratorium | Praktikum sekarang dan berikutnya, realtime | P0 |
 | Push notification | Expo Push Service dari Cloud Functions | P0 |
 | Penanganan izin dan kondisi perangkat | State permission, services, GPS, koneksi, notifikasi | P0 |
@@ -163,7 +163,7 @@ Prioritas: **P0** wajib demo, **P1** wajib sebelum rilis, **P2** opsional.
 | D-05 | Notifikasi dikirim oleh Firestore trigger di Cloud Functions | Tidak bergantung pada aplikasi asisten tetap terbuka | Butuh Functions dan kredensial push |
 | D-06 | Expo Push Service dipakai, dengan FCM V1 di Android | Cross-platform, tidak menyimpan service account di aplikasi | Butuh EAS credentials dan `google-services.json` |
 | D-07 | Lokasi hanya foreground | Menghindari izin background dan privasi berlebihan | Tidak ada pelacakan saat aplikasi ditutup |
-| D-08 | Peta native; web memakai daftar | `react-native-maps` tidak mendukung web | Web bukan target demo peta |
+| D-08 | Peta memakai Leaflet/OpenStreetMap di WebView native dan web | Tidak membutuhkan Google Maps API key dan tetap bisa berjalan di web | Peta butuh koneksi ke CDN/tile OSM; web default ke mode daftar dan fallback daftar bila peta gagal |
 | D-09 | Satu token push per pengguna | Cukup untuk demo, kode lebih sederhana | Perangkat terakhir yang login menggantikan token sebelumnya |
 | D-10 | QR tidak diimplementasikan | Fokus pada validasi lokasi dan notifikasi | Tidak ada izin kamera baru |
 
@@ -335,7 +335,7 @@ Halaman peta tersedia untuk kedua peran:
 
 Komponen:
 
-- `MapView` native dengan marker laboratorium aktif.
+- Peta Leaflet di `react-native-webview` dengan marker laboratorium aktif.
 - Marker pengguna berupa titik biru dengan lingkaran akurasi.
 - Marker lab menampilkan nama dan status praktikum saat ini.
 - Ketukan marker membuka panel bawah berisi detail lab dan aktivitas.
@@ -353,7 +353,7 @@ State:
 | Layanan lokasi mati | Banner dan tombol pengaturan |
 | Lokasi belum tersedia | Banner, marker pengguna tidak tampil |
 | Gagal memuat Firestore | Banner error dan tombol coba lagi |
-| Web | Mode daftar, tanpa peta interaktif |
+| Web | Default mode daftar; peta OpenStreetMap opsional lewat tombol **Peta** |
 
 ### 7.5 Informasi aktivitas laboratorium
 
@@ -561,7 +561,7 @@ flowchart LR
         UI["Layar Expo Router"]
         Hook["Hooks dan services"]
         Loc["expo-location"]
-        Map["react-native-maps"]
+        Map["WebView + Leaflet"]
         Notif["expo-notifications"]
     end
 
@@ -626,16 +626,16 @@ Listener harus dibersihkan saat layar blur/unmount.
 
 | Platform | Presensi | Peta | Push |
 |---|---|---|---|
-| Android | Ya, target utama | Ya, Google Maps | Ya, FCM V1 |
-| iOS | Ya, best-effort | Ya, Apple Maps default | Ya bila APNs dikonfigurasi |
-| Web | Ya bila browser mengizinkan geolocation | Mode daftar | Tidak didukung |
+| Android | Ya, target utama | Ya, Leaflet/OpenStreetMap | Ya, FCM V1 |
+| iOS | Ya, best-effort | Ya, Leaflet/OpenStreetMap | Ya bila APNs dikonfigurasi |
+| Web | Ya bila browser mengizinkan geolocation | Default mode daftar; peta opsional | Tidak didukung |
 
 ### 9.6 Dependensi baru
 
 | Paket | Fungsi | Cara pasang |
 |---|---|---|
 | `expo-location` | Izin dan posisi perangkat | `npx expo install expo-location` |
-| `react-native-maps` | Peta native | `npx expo install react-native-maps` |
+| `react-native-webview` | Peta Leaflet/OpenStreetMap | `npx expo install react-native-webview` |
 | `expo-notifications` | Izin, token, foreground, deep link | `npx expo install expo-notifications` |
 | `firebase-functions` | Definisi Cloud Functions | `npm --prefix functions install` |
 | `firebase-admin` | Admin SDK di Functions | `npm --prefix functions install` |
@@ -888,17 +888,16 @@ Detail ID dan kriteria ada di [SRS](#lampiran-a-srs).
 | `google-services.json` di root | FCM Android | Dev 1 |
 | EAS FCM V1 service account | Push Android | Dev 4 |
 | APNs key (opsional) | Push iOS | Dev 4 |
-| Google Maps API key, Maps SDK Android aktif | Peta Android | Dev 1 |
-| API key dibatasi package `com.ppk.presensipraktikum` + SHA-1 | Keamanan peta | Dev 1 |
+| Akses internet ke `unpkg.com` dan `tile.openstreetmap.org` | Peta WebView/OpenStreetMap | Dev 1 |
 | Expo project ID `973698af-d649-4bb7-a583-4fbf399f00a2` | Token push | Dev 4 |
-| Development build EAS | Maps + notifications | Semua |
-| Perangkat/emulator Android dengan Google Play Services | Peta + push | QA |
+| Development build EAS | Peta + notifications | Semua |
+| Perangkat/emulator Android | Peta + push | QA |
 | Koordinat laboratorium Informatika | Seed data | Asisten/tim |
 
 ### 13.2 Konfigurasi yang berubah
 
-- `app.json`: plugin `expo-location`, `expo-notifications`, `react-native-maps`; `android.googleServicesFile`.
-- `.env.example`: tidak perlu variabel baru untuk Maps bila API key dimasukkan ke `app.json`. Bila tim memilih `app.config.ts`, tambahkan `GOOGLE_MAPS_API_KEY` dan jangan commit nilai rahasia.
+- `app.json`: plugin `expo-location`, `expo-notifications`; `android.googleServicesFile`. Peta memakai `react-native-webview` tanpa plugin Expo tambahan.
+- `.env.example`: tidak perlu variabel tambahan untuk peta OpenStreetMap.
 - `firebase.json`: tambah konfigurasi `functions`.
 - `firestore.rules`: aturan laboratorium, attendance, notificationLogs, dan validasi sesi.
 - `package.json` dan `package-lock.json`: hanya Dev 1 yang mengubah.
@@ -907,13 +906,13 @@ Detail ID dan kriteria ada di [SRS](#lampiran-a-srs).
 |---|---|
 | `expo-location` | `locationWhenInUsePermission`: "Izinkan Presensi Praktikum mengakses lokasi untuk memvalidasi presensi." Tidak ada background permission. |
 | `expo-notifications` | `icon`, `color`, `defaultChannel`: `praktikum`; remote notifications aktif. |
-| `react-native-maps` | `androidGoogleMapsApiKey`; iOS memakai Apple Maps default. |
+| `react-native-webview` | Autolink; tidak memerlukan plugin Expo atau API key peta. |
 | `android` | `googleServicesFile: "./google-services.json"`. |
 
 ### 13.3 Perintah deployment
 
 ```bash
-npx expo install expo-location react-native-maps expo-notifications
+npx expo install expo-location react-native-webview expo-notifications
 npm --prefix functions install
 npm --prefix functions run build
 npx firebase-tools deploy --only functions --project <PROJECT_ID>
@@ -931,7 +930,7 @@ Urutan deploy yang aman: deploy callable `submitAttendance` lebih dulu, lalu rul
 | Kode | Risiko | Dampak | Mitigasi | Pemilik |
 |---|---|---|---|---|
 | R-01 | Proyek tidak dapat memakai Blaze | Callable dan trigger tidak dapat deploy | Konfirmasi hari 0; bila tidak memungkinkan, gunakan fallback yang didokumentasikan dan turunkan klaim keamanan | Dev 1 |
-| R-02 | Google Maps key salah atau SHA-1 tidak cocok | Peta kosong | Batasi key dengan package + SHA-1; uji build dev sebelum hari 5 | Dev 1 |
+| R-02 | CDN Leaflet atau tile OpenStreetMap tidak dapat diakses | Peta kosong | Uji koneksi/CDN; sediakan fallback mode daftar; jangan blokir unpkg/tile OSM | Dev 1 |
 | R-03 | GPS dalam ruangan tidak akurat | Presensi valid ditolak | Radius default 100 m; tampilkan akurasi; minta pengguna mendekat/jendela; uji dengan emulator | Dev 2 |
 | R-04 | Push tidak muncul di emulator | Demo notifikasi gagal | Gunakan perangkat fisik atau emulator dengan Play Services; uji token dan Expo push tool | Dev 4 |
 | R-05 | Trigger Firestore retry | Notifikasi ganda | Kunci dedupe `notificationLogs` | Dev 4 |
@@ -939,7 +938,7 @@ Urutan deploy yang aman: deploy callable `submitAttendance` lebih dulu, lalu rul
 | R-07 | Sesi lama tanpa lab | Tidak bisa dibuka | Tampilkan peringatan; form edit untuk menambahkan lab; dokumentasikan migrasi | Dev 1 |
 | R-08 | Data lab dan kelas tidak konsisten | Peta salah menampilkan | Join `classId`; validasi referensi; listener realtime | Dev 3 |
 | R-09 | Konflik file antar-dev | Merge lambat | Matriks kepemilikan file dan aturan satu pemilik | Dev 1 |
-| R-10 | Web tidak mendukung peta/push | Demo web terbatas | Mode daftar dan status tidak didukung; demo utama Android | Dev 3/4 |
+| R-10 | Web bukan target demo peta/push | Demo web terbatas | Peta web opsional dengan default daftar; push tidak didukung; demo utama Android | Dev 3/4 |
 | R-11 | Lokasi dipalsukan | Presensi curang | Catat `mocked`; tolak bila terdeteksi; validasi jarak di server; sebutkan batasan | Dev 2 |
 | R-12 | Koneksi putus saat presensi | Data tidak tercatat | Tidak ada antrean offline; pesan jelas dan tombol coba lagi | Dev 2 |
 
@@ -961,7 +960,7 @@ Ini bukan jalur utama dan hanya dipakai bila R-01 terbukti. Fallback harus diset
 
 | Hari | Fokus | Keluaran |
 |---|---|---|
-| 0 | Kontrak, akses Firebase Blaze, Maps key, koordinat lab | Kontrak disetujui |
+| 0 | Kontrak, akses Firebase Blaze, koordinat lab | Kontrak disetujui |
 | 1–2 | Fondasi Dev 1: config, tipe, koleksi, geo, device-location, lab service skeleton, functions scaffold, placeholder | PR fondasi |
 | 3–5 | Lab CRUD, integrasi sesi, rules awal; callable attendance; map data; notification service | CP1 |
 | 5–7 | Presensi UI, peta marker/aktivitas, trigger notifikasi | CP2 |
@@ -1016,7 +1015,7 @@ Dev 2, 3, dan 4 boleh bekerja paralel setelah fondasi. Hanya Dev 1 yang mengubah
 
 | Developer | Tema | Kepemilikan utama | Dependensi |
 |---|---|---|---|
-| Dev 1 | Platform, data lab, integrasi sesi | Config, tipe, koleksi, `geo`, `device-location`, `laboratory-service`, lab UI, session lab, rules, functions scaffold, navigation shell | Tidak ada; butuh Maps key dan koordinat lab |
+| Dev 1 | Platform, data lab, integrasi sesi | Config, tipe, koleksi, `geo`, `device-location`, `laboratory-service`, lab UI, session lab, rules, functions scaffold, navigation shell | Tidak ada; butuh koordinat lab |
 | Dev 2 | Presensi berbasis lokasi | Callable attendance, `attendance-service`, halaman presensi, detail sesi, hook presensi | Dev 1: tipe, geo, device-location, functions scaffold, rules |
 | Dev 3 | Peta dan aktivitas lab | `src/screens/peta/**`, `laboratory-activity`, route peta | Dev 1: lab service, device-location, `listenAllClasses`; Dev 2 tidak perlu |
 | Dev 4 | Notifikasi dan kondisi perangkat | Notification service/context, kartu profil, functions notifications, dedupe | Dev 1: config, functions scaffold, provider placeholder, rules |
@@ -1101,7 +1100,8 @@ Detail ada di [UAT](#lampiran-b-uat).
 - Expo Location: <https://docs.expo.dev/versions/v58.0.0/sdk/location/>
 - Expo Notifications: <https://docs.expo.dev/versions/v58.0.0/sdk/notifications/>
 - Expo Push setup: <https://docs.expo.dev/push-notifications/push-notifications-setup/>
-- react-native-maps: <https://docs.expo.dev/versions/v58.0.0/sdk/map-view/>
+- react-native-webview: <https://github.com/react-native-webview/react-native-webview>
+- Leaflet: <https://leafletjs.com/>
 - Firebase Functions v2: <https://firebase.google.com/docs/functions>
 
 ---
@@ -1146,7 +1146,7 @@ Sistem adalah aplikasi Expo/React Native dengan Firebase Authentication, Cloud F
 - [UAT Sprint 3](#lampiran-b-uat)
 - [DESIGN.md](DESIGN.md)
 - [README.md](README.md)
-- Expo SDK 58 Location, Notifications, MapView
+- Expo SDK 58 Location, Notifications, WebView (Leaflet/OpenStreetMap)
 - Firebase Cloud Functions v2 dan Cloud Firestore Security Rules
 
 ---
@@ -1209,7 +1209,7 @@ Expo Push Service
 | Bahasa | TypeScript strict |
 | Routing | Expo Router, rute di `src/app/` |
 | Backend | Firebase Auth, Firestore, Functions v2 region `asia-southeast2` |
-| Peta | `react-native-maps`; Google Maps di Android, Apple Maps di iOS |
+| Peta | Leaflet + OpenStreetMap di `react-native-webview` |
 | Lokasi | `expo-location`, foreground only |
 | Notifikasi | `expo-notifications` + Expo Push Service |
 | Build | Development build EAS; Expo Go tidak cukup untuk push |
@@ -1220,7 +1220,7 @@ Expo Push Service
 - Tidak ada background location.
 - Tidak ada presensi offline yang diantrikan.
 - Tidak ada QR.
-- Tidak ada peta interaktif web.
+- Peta web hanya opsional; default web adalah mode daftar.
 - Tidak ada multi-token per pengguna.
 - Tidak ada perubahan model kelas/enrollment di luar `laboratoryId` pada sesi.
 - Tidak ada UI koreksi presensi manual.
@@ -1228,7 +1228,7 @@ Expo Push Service
 ### 2.6 Asumsi
 
 - Firebase project memakai Blaze.
-- Google Maps API key tersedia dan dibatasi.
+- Koneksi ke CDN Leaflet dan tile OpenStreetMap tersedia.
 - Koordinat lab diisi manual hasil survei.
 - Perangkat uji Android memiliki Google Play Services.
 - Pengguna memberi izin lokasi dan notifikasi saat diminta.
@@ -1267,7 +1267,7 @@ Expo Push Service
 | Cloud Functions callable | HTTPS | Presensi |
 | Firestore triggers | Internal | Notifikasi |
 | Expo Push Service | HTTPS | Pengiriman push |
-| Google Maps | Native SDK | Peta Android |
+| Leaflet + OpenStreetMap | WebView | Peta Android/iOS/web |
 
 ### 3.4 Antarmuka komunikasi
 
@@ -1727,7 +1727,7 @@ Aturan:
 ### 11.1 Asumsi
 
 - Blaze aktif.
-- Maps key valid.
+- CDN Leaflet dan tile OpenStreetMap dapat diakses.
 - Lab coordinates tersedia.
 - Android device/emulator with Play Services.
 - EAS development build.
@@ -1786,7 +1786,7 @@ UAT ini juga memverifikasi regresi Sprint 2 dan penanganan kondisi perangkat.
 
 | Perangkat | Peran | Catatan |
 |---|---|---|
-| Android emulator dengan Google Play Services | Perangkat utama | Dapat mengatur lokasi; mendukung Google Maps |
+| Android emulator dengan Google Play Services | Perangkat utama | Dapat mengatur lokasi; mendukung push |
 | Perangkat Android fisik | Push notification | Disarankan untuk demo notifikasi |
 | Browser (Chrome) | Fallback | Peta mode daftar; push tidak didukung |
 | iOS simulator/perangkat | Best-effort | Hanya bila APNs tersedia |
@@ -1819,7 +1819,6 @@ Build harus development build. Expo Go tidak cukup untuk push notification.
 - Firebase project Blaze aktif.
 - Cloud Functions dan rules ter-deploy.
 - `google-services.json` terpasang di `app.json`.
-- Google Maps API key valid untuk package + SHA-1.
 - EAS FCM V1 credentials terpasang.
 - Izin lokasi dan notifikasi dapat diubah di pengaturan perangkat.
 - Emulator memiliki Google Play Services.
@@ -1970,7 +1969,7 @@ Legenda prioritas: **P0** wajib, **P1** wajib sebelum rilis, **P2** opsional.
 | UAT-DEV-03 | GPS tidak tersedia | Buka presensi | State lokasi belum tersedia; tombol coba lagi | FR-DEV-03 | P0 |
 | UAT-DEV-04 | Koneksi mati | Buka peta | Data cache/empty state + banner koneksi; tidak crash | FR-DEV-09 | P1 |
 | UAT-DEV-05 | Web | Buka Profil | Notifikasi **Tidak didukung**; tidak ada error mentah | FR-DEV-06 | P0 |
-| UAT-DEV-06 | Maps key salah/kosong | Build dan buka peta | Peta gagal dimuat; banner + mode daftar; tidak crash | FR-DEV-07 | P1 |
+| UAT-DEV-06 | CDN Leaflet/tile OSM diblokir | Build dan buka peta | Peta gagal dimuat; banner + mode daftar; tidak crash | FR-DEV-07 | P1 |
 | UAT-DEV-07 | Sesi lama tanpa lab | Buka detail sesi sebagai asisten | Peringatan **Laboratorium belum diatur**; tombol buka sesi ditolak | FR-DEV-08, FR-LAB-08 | P1 |
 | UAT-DEV-08 | Login sebagai praktikan; token aktif | Tutup dan buka kembali aplikasi | Sesi login bertahan; status notifikasi dan data sesi dimuat ulang | FR-DEV-10 | P1 |
 
@@ -2488,8 +2487,8 @@ File berikut tidak boleh diedit Dev 2/3/4 tanpa persetujuan Dev 1:
 
 | ID | Task | File utama | Depends | Estimasi | Acceptance |
 |---|---|---|---|---|---|
-| D1-01 | Kickoff kontrak, review PRD/SRS/UAT, konfirmasi Blaze, Maps key, kredensial FCM/APNs, koordinat lab | docs | — | 0,5 hari | Kontrak disetujui; akses tersedia |
-| D1-02 | Pasang `expo-location`, `react-native-maps`, `expo-notifications`; konfigurasi plugin, `googleServicesFile`, Maps key | `package.json`, `app.json` | D1-01 | 1 hari | `npx expo-doctor` lulus; build dev dapat memuat modul |
+| D1-01 | Kickoff kontrak, review PRD/SRS/UAT, konfirmasi Blaze, akses CDN/tile peta, kredensial FCM/APNs, koordinat lab | docs | — | 0,5 hari | Kontrak disetujui; akses tersedia |
+| D1-02 | Pasang `expo-location`, `react-native-webview`, `expo-notifications`; konfigurasi plugin dan `googleServicesFile` | `package.json`, `app.json` | D1-01 | 1 hari | `npx expo-doctor` lulus; build dev dapat memuat modul |
 | D1-03 | Tambah tipe, koleksi, `geo.ts`, `device-location.ts`, dan `listenAllClasses` | `src/types`, `src/lib` | D1-02 | 1,5 hari | `tsc` lulus; fungsi geo punya test vector |
 | D1-04 | Buat `laboratory-service` + rules lab | `src/lib/laboratory-service.ts`, `firestore.rules` | D1-03 | 1 hari | CRUD lab dan audit berjalan; rules menolak non-asisten |
 | D1-05 | Buat layar lab list/form + route (`index`, `baru`, `[id]`) | `src/screens/asisten/lab/**`, `src/app/asisten/lab/**` | D1-04 | 1,5 hari | UAT-LAB-01..06 lulus |
@@ -2578,7 +2577,7 @@ File berikut tidak boleh diedit Dev 2/3/4 tanpa persetujuan Dev 1:
 | ID | Task | File utama | Depends | Estimasi | Acceptance |
 |---|---|---|---|---|---|
 | D3-01 | Buat hook data peta: lab, sesi, kelas | `use-map-data.ts` | D1-04, D1-06 | 1,5 hari | Data gabungan benar; listener dibersihkan |
-| D3-02 | Buat map native, marker lab, marker pengguna, pusatkan lokasi; pisahkan `map-view.native.tsx` dan `map-view.web.tsx` | `screens/peta/**` | D3-01, D1-03 | 2 hari | UAT-MAP-01..04 |
+| D3-02 | Buat peta native (WebView/Leaflet), marker lab, marker pengguna, pusatkan lokasi; pisahkan `map-view.native.tsx` dan `map-view.web.tsx` | `screens/peta/**` | D3-01, D1-03 | 2 hari | UAT-MAP-01..04 |
 | D3-03 | Buat panel aktivitas sekarang/berikutnya + formatter | `laboratory-activity.ts`, components | D3-01 | 1,5 hari | UAT-MAP-05..08 |
 | D3-04 | Buat state permission/error/empty, mode daftar, fallback web | `screens/peta/**` | D3-02 | 1,5 hari | UAT-MAP-09..12, UAT-DEV-01/02/06 |
 | D3-05 | Finalisasi route peta | `(praktikan)/peta.tsx`, `asisten/peta.tsx` | D1-07 | 0,5 hari | Route dapat dibuka kedua peran |
@@ -2661,7 +2660,7 @@ File berikut tidak boleh diedit Dev 2/3/4 tanpa persetujuan Dev 1:
 ### 6.1 Hari 0 — Kickoff
 
 - Review PRD, SRS, UAT, dan dokumen ini.
-- Konfirmasi Blaze, Maps key, FCM credentials, APNs (opsional).
+- Konfirmasi Blaze, akses CDN/tile peta, FCM credentials, APNs (opsional).
 - Kumpulkan koordinat tiga laboratorium.
 - Bekukan kontrak.
 - Buat branch masing-masing.
@@ -2773,7 +2772,7 @@ Aturan merge:
 | `src/screens/praktikan/components/navigasi.tsx` | Entri tab Peta | Dev 1 | Hanya Dev 1 |
 | `src/screens/asisten/home-menu.ts` | Menu Lab/Peta | Dev 1 | Hanya Dev 1 |
 | `firestore.rules` | Rules lab/attendance/notifikasi | Dev 1 | Hanya Dev 1; Dev 2/4 memberi requirement |
-| `app.json` | Plugin lokasi/maps/notifications | Dev 1 | Hanya Dev 1 |
+| `app.json` | Plugin lokasi/notifications; WebView autolink | Dev 1 | Hanya Dev 1 |
 | `package.json` / lockfile | Dependency | Dev 1 | Hanya Dev 1 |
 | `functions/src/index.ts` | Export functions | Dev 1 | Hanya Dev 1; Dev 2/4 mengisi modul |
 | `src/screens/shared/profil-screen.tsx` | Kartu notifikasi | Dev 4 | Hanya Dev 4 |
@@ -2853,7 +2852,7 @@ Sebelum menutup task/PR:
 | Situasi | Tindakan | Pemilik |
 |---|---|---|
 | Blaze tidak tersedia | Aktifkan rencana fallback PRD 14.1; turunkan klaim keamanan; catat di docs | Dev 1 |
-| Maps key terlambat | Peta memakai mode daftar; marker ditunda; demo peta ditunda | Dev 3 |
+| CDN/tile peta tidak tersedia | Peta memakai mode daftar; marker ditunda; demo peta ditunda | Dev 3 |
 | FCM credentials terlambat | Uji token di perangkat fisik; gunakan Expo push tool; demo notifikasi ditunda | Dev 4 |
 | Koordinat lab belum siap | Isi koordinat sementara; tandai di UAT; ganti sebelum demo | Dev 1 |
 | GPS indoor tidak akurat | Naikkan radius lab sementara (mis. 150 m); uji ulang; catat | Dev 2 |
