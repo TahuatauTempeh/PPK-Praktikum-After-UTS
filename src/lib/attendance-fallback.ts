@@ -74,12 +74,21 @@ export async function submitAttendanceViaTransaction(
     // dokumen yang tidak ada, sehingga bukan peserta akan terbaca sebagai permission-denied.
     const kelasSaya = new Set((await getEnrollmentsByUser(uid)).map((item) => item.classId));
 
+    // Rules attendance menolak `get` dokumen yang belum ada karena `resource.data.userId`
+    // bernilai null. Anggap permission-denied sebagai "belum presensi"; create kedua tetap
+    // ditolak rules karena dokumen yang sudah ada hanya bisa di-update oleh asisten.
+    let sudahPresensi = false;
+    try {
+      sudahPresensi = (await getDoc(attendanceRef)).exists();
+    } catch (error) {
+      if ((error as { code?: string }).code !== 'permission-denied') throw error;
+    }
+
     const hasil = await runTransaction(db, async (tx) => {
       const sessionSnap = await tx.get(doc(db, COLLECTIONS.sessions, sessionId));
       const dataSesi = sessionSnap.exists() ? sessionSnap.data() : undefined;
       const laboratoryId = teks(dataSesi?.laboratoryId);
       const labSnap = laboratoryId ? await tx.get(doc(db, COLLECTIONS.laboratories, laboratoryId)) : null;
-      const attendanceSnap = await tx.get(attendanceRef);
 
       const dataLab = labSnap?.exists() ? labSnap.data() : undefined;
       const lab = labDari(dataLab);
@@ -89,7 +98,7 @@ export async function submitAttendanceViaTransaction(
         sesi: sesiDari(dataSesi),
         terdaftar: kelasSaya.has(teks(dataSesi?.classId)),
         lab,
-        sudahPresensi: attendanceSnap.exists(),
+        sudahPresensi,
         posisi: { accuracyMeters: position.accuracyMeters, mocked: position.mocked },
         distanceMeters,
       });

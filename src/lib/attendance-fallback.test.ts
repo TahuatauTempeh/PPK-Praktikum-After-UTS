@@ -50,9 +50,13 @@ function siapkan(ubah: Record<string, Data | undefined> = {}) {
     ditulis.push(...pending);
     return hasil;
   }) as unknown as typeof runTransaction);
-  jest.mocked(getDoc).mockResolvedValue({
-    data: () => ({ recordedAt: { toDate: () => new Date('2026-11-23T01:07:00.000Z') } }),
-  } as never);
+  jest.mocked(getDoc).mockImplementation((async (ref: { path: string }) => ({
+    exists: () => db[ref.path] !== undefined,
+    data: () => ({
+      recordedAt: { toDate: () => new Date('2026-11-23T01:07:00.000Z') },
+      ...(db[ref.path] ?? {}),
+    }),
+  })) as never);
 }
 
 beforeEach(() => {
@@ -96,6 +100,17 @@ describe('submitAttendanceViaTransaction', () => {
       actorRole: 'praktikan',
       timestamp: 'SERVER_TS',
     });
+  });
+
+  it('tetap mencatat saat rules menolak get dokumen presensi yang belum ada', async () => {
+    siapkan();
+    jest.mocked(getDoc).mockRejectedValueOnce({ code: 'permission-denied' });
+
+    await expect(submitAttendanceViaTransaction('s1', POSISI, PROFIL)).resolves.toMatchObject({
+      ok: true,
+      recordedAt: '2026-11-23T01:07:00.000Z',
+    });
+    expect(ditulis.map((w) => w.path)).toEqual(['attendance/s1_u1', 'auditLogs/auto']);
   });
 
   it.each<[string, Record<string, Data | undefined>, string]>([
@@ -169,7 +184,9 @@ describe('submitAttendanceViaTransaction', () => {
 
   it('tetap sukses memakai jam perangkat bila jam server gagal dibaca ulang', async () => {
     siapkan();
-    jest.mocked(getDoc).mockRejectedValueOnce(new Error('offline'));
+    jest.mocked(getDoc)
+      .mockResolvedValueOnce({ exists: () => false, data: () => undefined } as never)
+      .mockRejectedValueOnce(new Error('offline'));
 
     const hasil = await submitAttendanceViaTransaction('s1', POSISI, PROFIL);
     expect(hasil.ok).toBe(true);
