@@ -160,6 +160,7 @@ export function listenUserAttendance(
 
 export function listenAllAttendance(
   callback: (records: AttendanceDoc[]) => void,
+  onError?: (message: string) => void,
 ): Unsubscribe {
   return onSnapshot(
     collection(getDb(), COLLECTIONS.attendance),
@@ -169,6 +170,7 @@ export function listenAllAttendance(
     },
     (err) => {
       console.warn('[listenAllAttendance] error:', err);
+      onError?.(mapFirebaseError(err).message);
     },
   );
 }

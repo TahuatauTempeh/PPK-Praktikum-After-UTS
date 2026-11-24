@@ -3,6 +3,7 @@ name: Presensi luar radius
 tags:
   - android
   - e2e
+  - critical
 ---
 - launchApp:
     clearState: true
@@ -15,7 +16,7 @@ tags:
     visible: "Daftar sesi"
     timeout: 20000
 - openLink:
-    link: "presensipraktikum://praktikan/presensi/e2e-session-open-out"
+    link: "presensipraktikum://praktikan/presensi/${SESSION_ID}"
     browser: false
 - extendedWaitUntil:
     visible: "Pemeriksaan lokasi"

@@ -12,11 +12,18 @@ import { dateKeTanggal, tanggalKeDate, type DateFieldProps } from './date-field-
 
 export type { DateFieldProps };
 
-export function DateField({ value, onChange, accessibilityLabel, disabled = false, style }: DateFieldProps) {
+export function DateField({
+  value,
+  onChange,
+  accessibilityLabel,
+  disabled = false,
+  style,
+  testID,
+}: DateFieldProps) {
   const theme = useTheme();
 
   return (
-    <View style={[style, styles.isi]} accessibilityLabel={accessibilityLabel}>
+    <View testID={testID} style={[style, styles.isi]} accessibilityLabel={accessibilityLabel}>
       <DateTimePicker
         mode="date"
         display="compact"

@@ -16,6 +16,7 @@ interface TombolProps {
   disabled?: boolean;
   panah?: boolean;
   petunjuk?: string;
+  testID?: string;
 }
 
 // 'terang' dipakai di atas kartu biru, jadi warnanya tidak ikut tema
@@ -28,6 +29,7 @@ export function Tombol({
   disabled = false,
   panah = false,
   petunjuk,
+  testID,
 }: TombolProps) {
   const theme = useTheme();
   const utama = varian === 'utama' && !disabled;
@@ -49,6 +51,7 @@ export function Tombol({
 
   return (
     <Pressable
+      testID={testID}
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"

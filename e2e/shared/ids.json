@@ -1,0 +1,15 @@
+{
+  "password": "e2e-password",
+  "users": {
+    "asisten": "e2e-asisten",
+    "praktikan1": "e2e-praktikan1",
+    "praktikan2": "e2e-praktikan2"
+  },
+  "classes": { "a": "e2e-class" },
+  "labs": { "a": "e2e-lab" },
+  "sessions": {
+    "open": "e2e-session-open",
+    "openOut": "e2e-session-open-out",
+    "closed": "e2e-session-closed"
+  }
+}

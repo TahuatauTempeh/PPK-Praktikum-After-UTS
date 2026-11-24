@@ -1,7 +1,10 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
+import { ErrorState } from '@/components/ErrorState';
+import { listenAllEnrollments } from '@/lib/enrollment-service';
 import { useSessionManage } from '@/lib/useSessionFirestore';
+import type { Enrollment } from '@/types';
 import {
   fonts,
   tokens,
@@ -14,21 +17,12 @@ import { AssistantText } from './components/assistant-text';
 import { ScheduleIcon } from './components/schedule-icon';
 import { SessionCardSurface, summaryDock } from './components/session-card-surface';
 import { SessionConfirmation } from './components/session-confirmation';
-import { useAssistantSessions } from './preview-session-provider';
-import { countAttendance, statusLabels } from './schedule-data';
-import { formatAttendanceTime, formatPraktikumName, formatSessionDate, splitSessionTopic } from './session-format';
+import { formatAttendanceTime, formatSessionDate } from './session-format';
+import { summarizeAttendance } from './session-summary';
 
-/**
- * Props:
- *  - id          : ID sesi (preview/dummy)
- *  - firestoreId : jika diisi, screen akan terhubung ke Firestore realtime
- *                  dan mengabaikan data preview untuk sesi tersebut.
- */
-type Props = { id: string; firestoreId?: string; onBack: () => void; onRecap?: (id: string) => void };
+type Props = { firestoreId: string; onBack: () => void; onRecap?: (id: string) => void };
 
-// ─── Firestore hook (hanya aktif jika firestoreId diisi) ─────────────────────
-
-function FirestoreSessionScreen({ firestoreId, onBack, onRecap }: { firestoreId: string; onBack: () => void; onRecap?: (id: string) => void }) {
+export default function SessionScreen({ firestoreId, onBack, onRecap }: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(gaya);
   const {
@@ -42,6 +36,9 @@ function FirestoreSessionScreen({ firestoreId, onBack, onRecap }: { firestoreId:
   const [confirmation, setConfirmation] = useState<'open' | 'close' | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+
+  useEffect(() => listenAllEnrollments(setEnrollments), []);
 
   const handleConfirm = useCallback(async () => {
     setActionLoading(true);
@@ -72,19 +69,19 @@ function FirestoreSessionScreen({ firestoreId, onBack, onRecap }: { firestoreId:
   );
 
   if (!fsSession) {
-    return <PreviewSessionScreen id={firestoreId} onBack={onBack} onRecap={onRecap} />;
+    return <ErrorState title="Sesi tidak ditemukan" message="Sesi mungkin sudah dihapus." />;
   }
 
   const scheduled = fsSession.status === 'scheduled';
   const open = fsSession.status === 'open';
   const closed = fsSession.status === 'closed';
-  const present = attendanceRecords.length;
-  // Karena data peserta dari Dev 2, sementara total dihitung dari attendance
-  const total = present; // akan diperbarui Dev 2
-  const percent = total ? 100 : null;
+  const summary = summarizeAttendance(attendanceRecords, enrollments, fsSession.classId);
+  const present = summary.present;
+  const total = summary.total;
+  const percent = summary.percent;
   const actionDisabled = (closed && !onRecap) || actionLoading;
 
-  // Buat objek session-like untuk SessionConfirmation (kompatibel dengan tipe preview)
+  // Buat objek session-like untuk SessionConfirmation.
   const sessionForConfirm = {
     id: fsSession.id,
     code: '',
@@ -105,7 +102,10 @@ function FirestoreSessionScreen({ firestoreId, onBack, onRecap }: { firestoreId:
         importantForAccessibility={confirmation ? 'no-hide-descendants' : 'auto'}>
         <AssistantScreen footer={
           <View style={styles.footer}>
-            <Pressable accessibilityRole="button" disabled={actionDisabled}
+            <Pressable
+              testID={scheduled ? 'sesi-buka' : open ? 'sesi-tutup' : undefined}
+              accessibilityRole="button"
+              disabled={actionDisabled}
               accessibilityState={{ disabled: actionDisabled }}
               onPress={() => {
                 if (closed) onRecap?.(firestoreId);
@@ -215,200 +215,6 @@ function FirestoreSessionScreen({ firestoreId, onBack, onRecap }: { firestoreId:
           onConfirm={handleConfirm}
         />
       )}
-    </>
-  );
-}
-
-// ─── Main SessionScreen: Firestore jika firestoreId ada, preview jika tidak ──
-
-export default function SessionScreen({ id, firestoreId, onBack, onRecap }: Props) {
-  // Jika firestoreId diberikan, tampilkan screen berbasis Firestore
-  if (firestoreId) {
-    return <FirestoreSessionScreen firestoreId={firestoreId} onBack={onBack} onRecap={onRecap} />;
-  }
-
-  // Fallback: data preview (dummy) — backward-compatible
-  return <PreviewSessionScreen id={id} onBack={onBack} onRecap={onRecap} />;
-}
-
-function PreviewSessionScreen({ id, onBack, onRecap }: { id: string; onBack: () => void; onRecap?: (id: string) => void }) {
-  const theme = useTheme();
-  const styles = useThemedStyles(gaya);
-  const { sessions, attendance, participants, openSession, closeSession } = useAssistantSessions();
-  const [confirmation, setConfirmation] = useState<'open' | 'close' | null>(null);
-  const [feedback, setFeedback] = useState('');
-  const session = sessions.find(item => item.id === id);
-
-  const header = (
-    <View style={styles.header}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Kembali" onPress={onBack}
-        style={({ pressed }) => [styles.back, pressed && styles.pressed]}>
-        <ScheduleIcon name="backPrimary" size={20} tintColor={theme.colors.onHero} />
-      </Pressable>
-      <AssistantText style={styles.headerTitle} accessibilityRole="header">Kelola sesi</AssistantText>
-      <View style={styles.headerSpacer} />
-    </View>
-  );
-
-  if (!session) return (
-    <AssistantScreen>
-      {header}
-      <View style={styles.empty}>
-        <AssistantText style={styles.emptyTitle}>Sesi tidak ditemukan</AssistantText>
-        <AssistantText tone="secondary" style={styles.center}>Sesi ini tidak tersedia. Kembali ke jadwal untuk memilih sesi lainnya.</AssistantText>
-        <Pressable accessibilityRole="button" onPress={onBack} style={[styles.button, styles.primary]}>
-          <AssistantText variant="label" style={styles.white}>Kembali ke jadwal</AssistantText>
-        </Pressable>
-      </View>
-    </AssistantScreen>
-  );
-
-  const sessionTopic = splitSessionTopic(session.topic);
-  const pending = session.status === 'pending';
-  const open = session.status === 'open';
-  const closed = session.status === 'closed';
-  const rosterIds = [...new Set(session.participantIds)];
-  const total = rosterIds.length;
-  const present = countAttendance(session, attendance);
-  const percent = total ? Math.round(present / total * 100) : null;
-  const records = attendance.filter(item => item.sessionId === session.id);
-  const actionDisabled = closed && !onRecap;
-
-  function confirm() {
-    if (confirmation === 'open' && pending) {
-      openSession(id);
-      setFeedback('Sesi berhasil dibuka.');
-    } else if (confirmation === 'close' && open) {
-      closeSession(id);
-      setFeedback('Sesi berhasil ditutup.');
-    }
-    setConfirmation(null);
-  }
-
-  return (
-    <>
-      <View style={styles.screen} aria-hidden={confirmation !== null}
-        importantForAccessibility={confirmation ? 'no-hide-descendants' : 'auto'}>
-      <AssistantScreen footer={
-        <View style={styles.footer}>
-          <Pressable accessibilityRole="button" disabled={actionDisabled}
-            accessibilityState={{ disabled: actionDisabled }}
-            accessibilityHint={actionDisabled ? 'Rekap sesi belum tersedia.' : undefined}
-            onPress={() => {
-              if (closed) onRecap?.(id);
-              else setConfirmation(pending ? 'open' : 'close');
-            }}
-            style={({ pressed }) => [styles.button, open ? styles.secondary : styles.primary, actionDisabled && styles.disabled, pressed && styles.pressed]}>
-            <ScheduleIcon name={pending ? 'doorOpenWhite' : open ? 'lock' : 'chartWhite'} size={18}
-              tintColor={open ? theme.colors.primary : undefined} />
-            <AssistantText variant="label" tone="accent" style={!open && styles.white}>
-              {pending ? 'Buka sesi' : open ? 'Tutup sesi' : 'Lihat rekap sesi'}
-            </AssistantText>
-          </Pressable>
-        </View>
-      }>
-        {header}
-        <SessionCardSurface>
-          <View style={styles.identity}>
-            <View style={styles.topRow}>
-              {sessionTopic.number && (
-                <View style={styles.sessionNumberBadge}>
-                  <AssistantText style={styles.sessionNumber}>SESI KE-{sessionTopic.number}</AssistantText>
-                </View>
-              )}
-              <View style={[styles.badge, open && styles.activeBadge]}>
-                <ScheduleIcon name={open ? 'dotOpen' : 'dotNeutral'} size={5}
-                  tintColor={open ? theme.colors.primary : theme.colors.iconMuted} />
-                <AssistantText style={[styles.badgeText, open && styles.activeBadgeText]} tone={open ? 'accent' : 'secondary'}>{statusLabels[session.status]}</AssistantText>
-              </View>
-            </View>
-            <View style={styles.material}>
-              <AssistantText variant="detailTitle" accessibilityRole="header">{formatPraktikumName(session)}</AssistantText>
-              <AssistantText tone="secondary">{sessionTopic.topic}</AssistantText>
-            </View>
-            <View style={styles.metadata}>
-              <View style={styles.metaItem}>
-                <ScheduleIcon name="calendarSmall" size={15} tintColor={theme.colors.iconMuted} />
-                <AssistantText variant="caption" tone="secondary">{formatSessionDate(session.date)}</AssistantText>
-              </View>
-              <View style={[styles.metaItem, styles.timeMetaItem]}>
-                <ScheduleIcon name="clock" size={15} tintColor={theme.colors.iconMuted} />
-                <AssistantText variant="caption" tone="secondary">{session.startTime.replace(':', '.')}–{session.endTime.replace(':', '.')}</AssistantText>
-              </View>
-            </View>
-            <View style={styles.metaItem}>
-              <ScheduleIcon name="pin" size={15} tintColor={theme.colors.iconMuted} />
-              <AssistantText variant="caption" tone="secondary" style={styles.shrink}>{session.room}</AssistantText>
-            </View>
-          </View>
-          <View style={styles.summary}>
-            <View style={styles.summaryRow}>
-              <View style={styles.total}>
-                <AssistantText style={styles.count}>{present}</AssistantText>
-                <AssistantText style={styles.summaryText}>/ {total} hadir</AssistantText>
-              </View>
-              <AssistantText style={styles.summaryPercent}>{percent === null ? '—' : `${percent}%`}</AssistantText>
-            </View>
-            <View style={styles.progress} accessibilityRole="progressbar"
-              accessibilityLabel="Persentase kehadiran" accessibilityValue={percent === null
-                ? { text: 'Belum ada praktikan terdaftar' } : { min: 0, max: 100, now: percent }}>
-              <View style={[styles.progressFill, { width: `${total ? present / total * 100 : 0}%` }]} />
-            </View>
-          </View>
-        </SessionCardSurface>
-        {feedback !== '' && <AssistantText variant="caption" tone="accent" accessibilityLiveRegion="polite">{feedback}</AssistantText>}
-        <View style={styles.attendance}>
-          <View style={styles.listHeading}>
-            <AssistantText variant="sectionTitle" accessibilityRole="header">{closed ? 'Hasil presensi' : 'Presensi praktikan'}</AssistantText>
-          </View>
-          {pending || (open && present === 0) ? (
-            <View style={styles.empty}>
-              <View style={styles.emptyIcon}><ScheduleIcon name={pending ? 'doorClosed' : 'users'} size={34}
-                tintColor={theme.colors.primary} /></View>
-              <AssistantText style={styles.emptyTitle} accessibilityRole="header">{pending ? 'Sesi belum dibuka' : 'Menunggu praktikan'}</AssistantText>
-              <AssistantText tone="secondary" style={styles.center}>{pending
-                ? `Buka sesi agar ${total} praktikan dapat mulai mengisi presensi.`
-                : 'Belum ada presensi masuk. Kehadiran akan muncul otomatis saat praktikan mengisi presensi.'}</AssistantText>
-            </View>
-          ) : (
-            <View style={styles.roster} accessibilityLiveRegion="polite">
-              {rosterIds.map((participantId, index) => {
-                const person = participants.find(item => item.id === participantId);
-                const record = records.find(item => item.participantId === participantId);
-                const name = person?.name ?? participantId;
-                const initials = name.split(' ').slice(0, 2).map(word => word[0]).join('');
-                return (
-                  <View key={participantId} style={[styles.person, index > 0 && styles.personBorder]}>
-                    <View style={[styles.avatar, record && styles.presentAvatar]}>
-                      <AssistantText style={styles.initials} tone={record ? 'accent' : 'secondary'}>{initials}</AssistantText>
-                    </View>
-                    <View style={styles.personIdentity}>
-                      <AssistantText style={styles.personName}>{name}</AssistantText>
-                      <AssistantText variant="caption" tone="secondary" style={styles.small}>{participantId}</AssistantText>
-                    </View>
-                    <View style={styles.record}>
-                      <AssistantText style={styles.recordTime} tone={record ? 'primary' : 'secondary'}>{record ? formatAttendanceTime(record.recordedAt) : '—'}</AssistantText>
-                      <AssistantText style={[styles.recordStatus, record && styles.presentText]} tone="secondary">
-                        {record ? 'Hadir' : closed ? 'Tidak hadir' : 'Belum hadir'}
-                      </AssistantText>
-                    </View>
-                  </View>
-                );
-              })}
-              {total === 0 && <AssistantText tone="secondary" style={styles.noRoster}>Belum ada praktikan terdaftar untuk sesi ini.</AssistantText>}
-            </View>
-          )}
-        </View>
-        {closed && session.closedAt && <View style={styles.closedNote}>
-          <ScheduleIcon name="lockSmall" size={13} tintColor={theme.colors.iconMuted} />
-          <AssistantText variant="caption" tone="secondary" style={styles.shrink}>
-            Ditutup {new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(session.closedAt))} WIB oleh {session.closedBy}.
-          </AssistantText>
-        </View>}
-      </AssistantScreen>
-      </View>
-      {confirmation && <SessionConfirmation session={session} mode={confirmation} present={present} total={total}
-        onCancel={() => setConfirmation(null)} onConfirm={confirm} />}
     </>
   );
 }

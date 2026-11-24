@@ -9,8 +9,9 @@ Aturan produk ada di `PRD.md`, aturan visual di `DESIGN.md`, dan aturan teknis d
 sudah ada. Jika panduan ini berbeda dengan dokumen tersebut, ikuti aturan yang
 lebih spesifik dan terbaru.
 
-Sprint 2 sudah berjalan. Sprint 3 di `PRD.md` masih berupa rencana; jangan
-mengerjakan fitur Sprint 3 tanpa task yang jelas.
+Sprint 2 selesai. Fondasi Sprint 3 sudah berjalan, tetapi notifikasi dan
+callable presensi belum final; jangan mengerjakan fitur Sprint 3 tanpa task yang
+jelas.
 
 ## Daftar Isi
 
@@ -529,14 +530,16 @@ Aturan penting:
 
 Firestore rules E2E sudah dicakup otomatis lewat `npm run test:rules`
 (Firestore emulator + Java 21+). E2E web Playwright tersedia lewat
-`npm run test:web` (Chromium + Java 21+). Android E2E tersedia lewat
-`npm run test:android` (Maestro, emulator API 35, Java 21+); build APK dulu
-dengan `npm run android:e2e:build` dan boot emulator. Prasyarat lokal: Android
-SDK, `adb`, Maestro, Java 21+, dan KVM untuk CI. `npm run test:android` bukan
-bagian dari `npm run verify`. Yang belum dicakup otomatis: seluruh jalur CRUD
-Firestore end-to-end dan build native. Perubahan pada area itu tetap memerlukan
-pengujian manual. Skenario harness rules saat ini fokus pada `attendance`; rules
-koleksi lain belum dicakup.
+`npm run test:web` (Chromium + Java 21+) dan menjalankan 5 flow critical.
+Android E2E tersedia lewat `npm run test:android` (Maestro, emulator API 35,
+Java 21+) dan menjalankan 3 flow critical; build APK dulu dengan
+`npm run android:e2e:build` dan boot emulator. Prasyarat lokal: Android SDK,
+`adb`, Maestro, Java 21+, dan KVM untuk CI. `npm run test:android` bukan bagian
+dari `npm run verify`. Full UAT 65 ID, checklist manual 24 ID, `test:web:full`,
+`test:android:full`, dan `uat:check` belum tersedia di Phase 1. Yang belum
+dicakup otomatis: seluruh jalur CRUD Firestore end-to-end dan build native.
+Perubahan pada area itu tetap memerlukan pengujian manual. Skenario harness
+rules saat ini fokus pada `attendance`; rules koleksi lain belum dicakup.
 
 ## Menjalankan Verifikasi Lokal
 
@@ -817,11 +820,11 @@ profil yang sesuai. Untuk admin pertama, ikuti langkah bootstrap di atas.
 `isAdmin` pada profil belum `true`. Ubah di Firestore, lalu keluar dan masuk
 lagi agar profil dimuat ulang.
 
-### Jadwal menampilkan data contoh
+### Jadwal Asisten kosong
 
-Koleksi `sessions` masih kosong atau layar masih memakai
-`AssistantPreviewProvider`. Tambahkan sesi lewat **Atur Sesi**, lalu cek kembali.
-Data contoh tidak tersimpan permanen.
+Beranda, jadwal, dan rekap Asisten membaca Firestore. Bila koleksi `sessions`
+masih kosong, tambahkan sesi lewat **Atur Sesi** lalu cek kembali. Data contoh
+Asisten sudah dihapus, jadi jadwal kosong berarti memang belum ada sesi.
 
 ### Jadwal praktikan kosong
 
@@ -896,7 +899,9 @@ anggota lain, koordinasikan dulu.
 - [ ] Test ditambahkan atau diperbarui untuk logika yang berubah.
 - [ ] `npm run verify` lulus.
 - [ ] `npm run test:rules` lulus (butuh Java 21+).
-- [ ] `npm run test:web` lulus (butuh Java 21+ dan Chromium).
+- [ ] `npm run test:web` lulus (5 flow critical; butuh Java 21+ dan Chromium).
+- [ ] `npm run test:android` lulus bila menyentuh alur Android (3 flow critical;
+      butuh APK, Maestro, dan emulator API 35).
 - [ ] Tidak ada secret, `.env`, file generate, atau debug log.
 - [ ] `git diff` dan `git diff --staged` sudah ditinjau.
 - [ ] Pesan commit mengikuti Conventional Commits dan bahasa Indonesia.

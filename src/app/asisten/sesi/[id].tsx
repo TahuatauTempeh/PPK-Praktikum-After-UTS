@@ -6,7 +6,6 @@ export default function SessionRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
   return (
     <SessionScreen
-      id={id}
       firestoreId={id}
       onRecap={(sessionId) => router.navigate({ pathname: '/asisten/rekap', params: { sesi: sessionId } })}
       onBack={() => {

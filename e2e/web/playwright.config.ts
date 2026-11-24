@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  testDir: '.',
+  testDir: './specs',
   testMatch: '**/*.e2e.ts',
   fullyParallel: false,
   workers: 1,
@@ -12,6 +12,10 @@ export default defineConfig({
   reporter: [
     ['list'],
     ['html', { outputFolder: 'playwright-report', open: 'never' }],
+  ],
+  projects: [
+    { name: 'critical', grep: /@critical/ },
+    { name: 'full' },
   ],
   use: {
     baseURL: 'http://127.0.0.1:8081',
@@ -36,8 +40,8 @@ export default defineConfig({
       EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: 'demo-ppk-e2e.firebaseapp.com',
       EXPO_PUBLIC_FIREBASE_PROJECT_ID: 'demo-ppk-e2e',
       EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET: 'demo-ppk-e2e.appspot.com',
-      EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '1234567890',
-      EXPO_PUBLIC_FIREBASE_APP_ID: '1:1234567890:web:demo',
+      EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '000000000000',
+      EXPO_PUBLIC_FIREBASE_APP_ID: '1:000000000000:web:0000000000000000',
       EXPO_PUBLIC_FIREBASE_EMULATOR_HOST: '127.0.0.1',
     },
   },

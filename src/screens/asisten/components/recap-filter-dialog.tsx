@@ -2,8 +2,9 @@ import { type ComponentRef, useRef, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { AssistantSheet, type CloseSheet } from './assistant-sheet';
 
+import { tanggalHariIniWIB } from '../jadwal-aktif';
 import { type DateRange, isValidDate, monthRange } from '../recap-data';
-import { type AssistantSession, previewDate } from '../schedule-data';
+import { type AssistantSession } from '../schedule-data';
 import { formatPraktikumName, formatSessionDate } from '../session-format';
 import {
   tokens,
@@ -23,7 +24,7 @@ type Props = {
 };
 export function RecapFilterDialog({ kind, range, selectedId, sessions, onRange, onSelect, onCancel }: Props) {
   const styles = useThemedStyles(gaya);
-  const defaults = range ?? monthRange(previewDate);
+  const defaults = range ?? monthRange(tanggalHariIniWIB());
   const [start, setStart] = useState(defaults.start);
   const [end, setEnd] = useState(defaults.end);
   const [errors, setErrors] = useState<{ start?: string; end?: string }>({});

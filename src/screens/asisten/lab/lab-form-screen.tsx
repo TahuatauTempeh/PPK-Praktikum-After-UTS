@@ -45,6 +45,17 @@ type FormState = {
     isActive: boolean;
 };
 
+/** TestID hanya untuk kontrol yang dipakai E2E critical. */
+const FIELD_TEST_IDS: Partial<Record<LaboratoryField, string>> = {
+    name: 'lab-nama',
+    code: 'lab-kode',
+    building: 'lab-gedung',
+    room: 'lab-ruang',
+    latitude: 'lab-latitude',
+    longitude: 'lab-longitude',
+    radiusMeters: 'lab-radius',
+};
+
 const EMPTY_FORM: FormState = {
     name: '',
     code: '',
@@ -209,6 +220,7 @@ export default function LabFormScreen({ labId, onBack, onSaved }: Props) {
                     {options.required ? ' *' : ''}
                 </AssistantText>
                 <TextInput
+                    testID={FIELD_TEST_IDS[key]}
                     value={value}
                     onChangeText={text => setField(key as keyof FormState, text as never)}
                     placeholder={options.placeholder}
@@ -352,6 +364,7 @@ export default function LabFormScreen({ labId, onBack, onSaved }: Props) {
 
                     <View style={styles.actions}>
                         <Pressable
+                            testID="lab-simpan"
                             accessibilityRole="button"
                             disabled={saving}
                             onPress={() => void handleSave()}

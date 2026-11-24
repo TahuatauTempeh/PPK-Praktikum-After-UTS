@@ -131,8 +131,11 @@ npm --prefix functions run build
 git diff --check
 ```
 
-`npm run test:android` needs an API 35 emulator, Maestro, and
-`npm run android:e2e:build` first.
+`npm run test:web` runs the 5 critical Playwright flows. `npm run test:android`
+runs the 3 critical Maestro flows and needs an API 35 emulator, Maestro, and
+`npm run android:e2e:build` first. Full UAT (`test:web:full`,
+`test:android:full`, `uat:check`, 65-ID matrix, 24 manual checks) is Phase 2 and
+is not available yet.
 
 `npm run test:rules` needs Java 21+ and the Firebase Emulator. If the default
 `java` is older, point `JAVA_HOME`/`PATH` at a newer JDK first.
@@ -161,8 +164,9 @@ Test stack:
 
 Firestore rules have an emulator E2E harness: run `npm run test:rules`.
 The harness is not part of Jest and needs Java 21+. Web E2E is available via
-`npm run test:web` (Playwright, Chromium, Java 21+). Android E2E is available
-via `npm run test:android` (Maestro, API 35 emulator, Java 21+), after
+`npm run test:web` (Playwright, Chromium, Java 21+) and covers the critical
+tier only. Android E2E is available via `npm run test:android` (Maestro, API 35
+emulator, Java 21+) and covers the critical tier only, after
 `npm run android:e2e:build` and booting the emulator. Changes to
 `firestore.rules` still need review and a deploy against a test project.
 `npx expo-doctor` is advisory:
@@ -403,13 +407,15 @@ Profiles live in `eas.json`: `development` (development client, internal),
 - **Firebase project is on Spark.** `praktikum-ppk-3` does not have billing
   enabled. Auth and Firestore work, but Cloud Functions from Sprint 3 cannot be
   deployed until the project is upgraded to Blaze.
-- **Preview data is still mixed in.** `AssistantPreviewProvider` and parts of
-  `SessionContext` are seeded from `src/data/dummy.ts`; those changes disappear
-  on reload. Do not build production features on those paths. Replace them with
-  Firestore services when a screen is migrated.
-- **Two session vocabularies exist.** Firestore uses `scheduled`; the legacy
-  preview types in `src/screens/asisten/schedule-data.ts` use `pending`. Do not
-  mix them in one flow.
+- **Assistant preview data is gone; praktikan dummy data is not.** Home, jadwal,
+  rekap, and session detail for assistants read Firestore, and
+  `AssistantPreviewProvider` has been removed. Parts of `SessionContext` are
+  still seeded from `src/data/dummy.ts`; those changes disappear on reload.
+  Migrate those screens before building production features on them.
+- **Two session vocabularies still meet at the view boundary.** Firestore uses
+  `scheduled`; the assistant card type in `src/screens/asisten/schedule-data.ts`
+  uses `pending`. `keSesiAsisten` and `buildAssistantSessions` map between them.
+  Do not mix the values in one flow.
 - **Two session data paths exist.** `session-service.ts` handles list/CRUD;
   `session-actions.ts` and `useSessionFirestore.ts` handle realtime status,
   open/close, and attendance. They write to the same `sessions` collection with

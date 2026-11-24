@@ -118,13 +118,13 @@ export default function ReviewIzin({ id, onBack }: Props) {
   // tombol nonaktif tidak memakai opacity rendah (DESIGN.md 8.4), tetapi latar netral dan teks sekunder
   const footer = pending ? (
     <View style={styles.footer}>
-      <Pressable accessibilityRole="button" disabled={saving} accessibilityState={{ disabled: saving }}
+      <Pressable testID="izin-tolak" accessibilityRole="button" disabled={saving} accessibilityState={{ disabled: saving }}
         accessibilityLabel={`Tolak izin ${request.userName}`}
         onPress={() => setConfirmation('rejected')}
         style={({ pressed }) => [styles.button, styles.flex, saving ? styles.disabled : styles.danger, pressed && styles.pressed]}>
         <AssistantText variant="label" style={saving ? styles.disabledText : styles.onError}>Tolak</AssistantText>
       </Pressable>
-      <Pressable accessibilityRole="button" disabled={saving} accessibilityState={{ disabled: saving }}
+      <Pressable testID="izin-terima" accessibilityRole="button" disabled={saving} accessibilityState={{ disabled: saving }}
         accessibilityLabel={`Terima izin ${request.userName}`}
         onPress={() => setConfirmation('approved')}
         style={({ pressed }) => [styles.button, styles.flex, saving ? styles.disabled : styles.primary, pressed && styles.pressed]}>

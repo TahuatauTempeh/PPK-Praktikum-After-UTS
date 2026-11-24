@@ -1,215 +1,85 @@
-const { initializeApp, deleteApp } = require('firebase-admin/app');
+const fs = require('node:fs');
+const path = require('node:path');
+const { getFirestore } = require('firebase-admin/firestore');
 const { getAuth } = require('firebase-admin/auth');
-const { getFirestore, Timestamp } = require('firebase-admin/firestore');
+
+const {
+  IDS,
+  requireEmulatorEnv,
+  clearEmulator,
+  getAdmin,
+  seedBaseline,
+} = require('./world');
 
 const PROJECT_ID =
   process.env.GCLOUD_PROJECT ??
   process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID ??
   'demo-ppk-e2e';
-const PASSWORD = 'e2e-password';
 
-const USERS = [
-  {
-    uid: 'e2e-asisten',
-    email: 'asisten@test.local',
-    name: 'Asisten Satu',
-    nim: 'A01',
-    role: 'asisten',
-  },
-  {
-    uid: 'e2e-praktikan1',
-    email: 'praktikan1@test.local',
-    name: 'Praktikan Satu',
-    nim: '001',
-    role: 'praktikan',
-  },
-  {
-    uid: 'e2e-praktikan2',
-    email: 'praktikan2@test.local',
-    name: 'Praktikan Dua',
-    nim: '002',
-    role: 'praktikan',
-  },
-];
+/**
+ * Menerima `--suite=critical` maupun `--suite critical`.
+ * Default `critical` supaya pemanggilan lama tanpa flag tetap berjalan.
+ */
+function parseSuite(argv) {
+  const withEquals = argv.find((arg) => arg.startsWith('--suite='));
+  if (withEquals) return withEquals.split('=')[1];
+  const index = argv.indexOf('--suite');
+  return index >= 0 ? argv[index + 1] : 'critical';
+}
 
-function requireEmulatorEnv() {
-  const firestoreHost = process.env.FIRESTORE_EMULATOR_HOST;
-  const authHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
-
-  if (!firestoreHost) {
-    throw new Error('FIRESTORE_EMULATOR_HOST kosong. Jalankan lewat firebase emulators:exec.');
-  }
-  if (!authHost) {
-    throw new Error('FIREBASE_AUTH_EMULATOR_HOST kosong. Jalankan lewat firebase emulators:exec.');
+async function main() {
+  const suite = parseSuite(process.argv.slice(2));
+  if (suite !== 'critical') {
+    throw new Error(`Suite ${suite} belum tersedia di Phase 1; gunakan --suite=critical.`);
   }
   if (!PROJECT_ID.startsWith('demo-')) {
     throw new Error(`Project E2E harus project demo-, bukan ${PROJECT_ID}.`);
   }
-
-  return { firestoreHost, authHost };
-}
-
-async function clearEmulator(host, path) {
-  const response = await fetch(`http://${host}${path}`, { method: 'DELETE' });
-  if (!response.ok) {
-    throw new Error(
-      `Gagal reset ${path}: ${response.status} ${await response.text()}`,
-    );
-  }
-}
-
-function todayWIB() {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Jakarta',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
-
-  const value = (type) => parts.find((part) => part.type === type)?.value ?? '';
-  return `${value('year')}-${value('month')}-${value('day')}`;
-}
-
-async function upsertUser(auth, user) {
-  const payload = {
-    email: user.email,
-    password: PASSWORD,
-    displayName: user.name,
-    emailVerified: true,
-  };
-
-  try {
-    await auth.getUser(user.uid);
-    await auth.updateUser(user.uid, payload);
-  } catch (error) {
-    if (error.code !== 'auth/user-not-found') throw error;
-    await auth.createUser({ uid: user.uid, ...payload });
-  }
-}
-
-function sessionData(status, now) {
-  return {
-    classId: 'e2e-class',
-    laboratoryId: 'e2e-lab',
-    title: 'Praktikum E2E',
-    date: todayWIB(),
-    startTime: '08:00',
-    endTime: '10:00',
-    room: 'A201',
-    assistantId: 'e2e-asisten',
-    assistantName: 'Asisten Satu',
-    status,
-    createdAt: now,
-  };
-}
-
-async function main() {
   const { firestoreHost, authHost } = requireEmulatorEnv();
-  const app = initializeApp({ projectId: PROJECT_ID }, 'e2e-seed');
-  const auth = getAuth(app);
+  await clearEmulator(
+    firestoreHost,
+    `/emulator/v1/projects/${PROJECT_ID}/databases/(default)/documents`,
+  );
+  await clearEmulator(authHost, `/emulator/v1/projects/${PROJECT_ID}/accounts`);
+
+  const app = getAdmin(PROJECT_ID);
   const db = getFirestore(app);
+  const auth = getAuth(app);
+  const now = new Date();
+  const runId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const result = await seedBaseline(db, auth, now);
 
-  try {
-    await clearEmulator(
-      firestoreHost,
-      `/emulator/v1/projects/${PROJECT_ID}/databases/(default)/documents`,
-    );
-    await clearEmulator(
-      authHost,
-      `/emulator/v1/projects/${PROJECT_ID}/accounts`,
-    );
-
-    for (const user of USERS) {
-      await upsertUser(auth, user);
-    }
-
-    const now = Timestamp.now();
-    const batch = db.batch();
-
-    for (const user of USERS) {
-      batch.set(db.collection('users').doc(user.uid), {
-        name: user.name,
-        nim: user.nim,
-        email: user.email,
-        role: user.role,
-        isAdmin: false,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }
-
-    batch.set(db.collection('classes').doc('e2e-class'), {
-      name: 'IF-3A E2E',
-      assistantId: 'e2e-asisten',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    for (const user of USERS.filter((item) => item.role === 'praktikan')) {
-      batch.set(db.collection('enrollments').doc(`e2e-class_${user.uid}`), {
-        classId: 'e2e-class',
-        userId: user.uid,
-        userName: user.name,
-        enrolledAt: now,
-      });
-    }
-
-    batch.set(db.collection('laboratories').doc('e2e-lab'), {
-      name: 'Lab E2E',
-      code: 'E2E',
-      building: 'Gedung E2E',
-      floor: '1',
-      room: 'A201',
-      latitude: -7.0519,
-      longitude: 110.4383,
-      radiusMeters: 100,
-      description: '',
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-      updatedBy: 'e2e-asisten',
-    });
-
-    batch.set(
-      db.collection('sessions').doc('e2e-session-open'),
-      sessionData('open', now),
-    );
-    batch.set(
-      db.collection('sessions').doc('e2e-session-open-out'),
-      sessionData('open', now),
-    );
-    batch.set(
-      db.collection('sessions').doc('e2e-session-closed'),
-      sessionData('closed', now),
-    );
-
-    batch.set(
-      db.collection('attendance').doc('e2e-session-closed_e2e-praktikan1'),
+  const runDir = path.resolve(__dirname, '..', '.run');
+  fs.mkdirSync(runDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(runDir, 'run.json'),
+    JSON.stringify(
       {
-        sessionId: 'e2e-session-closed',
-        userId: 'e2e-praktikan1',
-        userName: 'Praktikan Satu',
-        userNim: '001',
-        recordedAt: now,
-        latitude: -7.0519,
-        longitude: 110.4383,
-        accuracyMeters: 10,
-        distanceMeters: 0,
-        radiusMeters: 100,
-        laboratoryId: 'e2e-lab',
-        locationVerifiedAt: now,
-        mocked: false,
-        source: 'location',
+        runDate: result.date,
+        runId,
+        flows: {
+          'presensi-dalam-radius': {
+            sessionId: IDS.sessions.open,
+            email: 'praktikan1@test.local',
+          },
+          'presensi-luar-radius': {
+            sessionId: IDS.sessions.openOut,
+            email: 'praktikan2@test.local',
+          },
+          'asisten-kehadiran': {
+            sessionId: IDS.sessions.closed,
+            email: 'asisten@test.local',
+          },
+        },
       },
-    );
-
-    await batch.commit();
-    console.log(
-      `Seed selesai: ${USERS.length} akun, 1 kelas, 2 enrollment, 1 lab, 3 sesi, 1 attendance.`,
-    );
-  } finally {
-    await deleteApp(app);
-  }
+      null,
+      2,
+    ),
+  );
+  console.log(
+    `Seed selesai (critical): ${result.users.length} akun, runId=${runId}, date=${result.date}`,
+  );
+  await app.delete();
 }
 
 main().catch((error) => {

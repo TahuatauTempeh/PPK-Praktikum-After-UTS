@@ -163,6 +163,7 @@ export default function SessionManageListScreen({
         </View>
 
         <Pressable
+          testID="sesi-tambah"
           accessibilityRole="button"
           accessibilityLabel="Tambah sesi"
           disabled={classes.length === 0}

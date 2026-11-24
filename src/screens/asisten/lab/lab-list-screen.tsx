@@ -90,6 +90,7 @@ export default function LabListScreen({ onBack, onAdd, onEdit }: Props) {
                     </AssistantText>
                 </View>
                 <Pressable
+                    testID="lab-tambah"
                     accessibilityRole="button"
                     accessibilityLabel="Tambah laboratorium"
                     onPress={onAdd}

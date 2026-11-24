@@ -14,6 +14,7 @@ export interface TimeFieldProps {
   disabled?: boolean;
   /** Gaya kolom, disamakan dengan input lain di form */
   style?: StyleProp<ViewStyle>;
+  testID?: string;
 }
 
 const POLA_JAM = /^([01]\d|2[0-3]):([0-5]\d)$/;

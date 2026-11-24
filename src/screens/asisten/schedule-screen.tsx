@@ -9,9 +9,6 @@ import { AssistantTopBar } from './components/assistant-top-bar';
 import { ScheduleCard } from './components/schedule-card';
 import { ScheduleIcon } from './components/schedule-icon';
 import {
-  previewAttendance,
-  previewDate,
-  previewSessions,
   statusLabels,
   type AssistantAttendance,
   type AssistantSession,
@@ -22,17 +19,17 @@ type Filter = 'all' | SessionStatus;
 const filters: readonly Filter[] = ['all', 'pending', 'open', 'closed'];
 
 type Props = {
-  sessions?: readonly AssistantSession[];
-  attendance?: readonly AssistantAttendance[];
-  date?: string;
+  sessions: readonly AssistantSession[];
+  attendance: readonly AssistantAttendance[];
+  date: string;
   onManage?: (id: string) => void;
   onBack?: () => void;
 };
 
 export default function ScheduleScreen({
-  sessions = previewSessions,
-  attendance = previewAttendance,
-  date = previewDate,
+  sessions,
+  attendance,
+  date,
   onManage,
   onBack,
 }: Props) {

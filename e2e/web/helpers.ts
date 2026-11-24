@@ -37,6 +37,15 @@ export async function login(
   await page.getByRole('button', { name: 'Masuk' }).click();
 }
 
+export const loginAs = login;
+
+export async function logout(page: Page): Promise<void> {
+  await page.goto('/profil');
+  await page.getByRole('button', { name: 'Keluar dari akun' }).click();
+  await page.getByText('Ya', { exact: true }).click();
+  await expect(page).toHaveURL(/\/login/);
+}
+
 export async function waitForPraktikanHome(page: Page): Promise<void> {
   await expect(page.getByText('Daftar sesi')).toBeVisible();
 }
@@ -66,4 +75,26 @@ export async function getAttendance(
     .doc(`${sessionId}_${uid}`)
     .get();
   return snapshot.data() ?? null;
+}
+
+export async function getSessionByTitle(
+  title: string,
+): Promise<(DocumentData & { id: string }) | null> {
+  const snapshot = await getAdminDb()
+    .collection('sessions')
+    .where('title', '==', title)
+    .get();
+  return snapshot.docs[0]
+    ? { id: snapshot.docs[0].id, ...snapshot.docs[0].data() }
+    : null;
+}
+
+export async function getPermissionByReason(
+  reason: string,
+): Promise<DocumentData | undefined> {
+  const snapshot = await getAdminDb()
+    .collection('permissionRequests')
+    .where('reason', '==', reason)
+    .get();
+  return snapshot.docs[0]?.data();
 }

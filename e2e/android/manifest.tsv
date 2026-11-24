@@ -1,0 +1,4 @@
+# name	tier	lon	lat	email
+presensi-dalam-radius	critical	110.4383	-7.0519	praktikan1@test.local
+presensi-luar-radius	critical	110.5	-7.25	praktikan2@test.local
+asisten-kehadiran	critical	110.4383	-7.0519	asisten@test.local
