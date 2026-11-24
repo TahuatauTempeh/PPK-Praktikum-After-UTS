@@ -60,6 +60,9 @@ export function LabListMode({
       {items.map((item) => {
         const isExpanded = item.lab.id === selectedLabId;
         const summary = item.current ?? item.next;
+        const activityLabel = summary
+          ? `${item.current ? 'Sekarang' : 'Berikutnya'} ${summary.title}, ${summary.className}, ${summary.statusLabel}`
+          : 'Belum ada praktikum terjadwal';
 
         if (isExpanded) {
           return (
@@ -84,7 +87,7 @@ export function LabListMode({
               onPress={() => onSelectLab(item.lab.id)}
               accessibilityRole="button"
               accessibilityState={{ expanded: false }}
-              accessibilityLabel={`${item.lab.name}, ${item.locationLabel}, radius ${item.radiusLabel}`}
+              accessibilityLabel={`${item.lab.name}, ${item.locationLabel}, radius ${item.radiusLabel}. ${activityLabel}`}
               style={({ pressed }) => [styles.rowCard, pressed && styles.pressed]}
             >
               <View style={styles.rowTop}>

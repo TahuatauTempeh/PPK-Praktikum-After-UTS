@@ -85,7 +85,7 @@ describe('LabListMode', () => {
   });
 
   it('menampilkan ringkasan aktivitas dan status teks untuk setiap lab', async () => {
-    const { getByText } = await render(
+    const { getByLabelText, getByText } = await render(
       <LabListMode
         items={[labAItem, emptyLabItem]}
         selectedLabId={null}
@@ -95,6 +95,11 @@ describe('LabListMode', () => {
 
     expect(getByText('Lab A201')).toBeTruthy();
     expect(getByText('Dibuka')).toBeTruthy();
+    expect(
+      getByLabelText(
+        'Lab A201, Gedung A · Lantai 2 · A201, radius 100 m. Sekarang Basis Data, IF-3A, Dibuka'
+      )
+    ).toBeTruthy();
     expect(getByText('Lab C301')).toBeTruthy();
     expect(getByText('Belum ada praktikum terjadwal')).toBeTruthy();
   });
