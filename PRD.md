@@ -78,7 +78,7 @@ Hasil akhir adalah tiga alur demo yang dapat dijalankan di perangkat Android: pr
 | Presensi bisa dilakukan dari luar laboratorium | Kehadiran tidak mencerminkan kehadiran fisik | Validasi radius lokasi |
 | Tidak ada data lokasi laboratorium | Tidak ada acuan jarak yang konsisten | Koleksi `laboratories` dan pengelolaan oleh asisten |
 | Sesi tidak terhubung ke laboratorium | Peta tidak tahu praktikum mana yang berlangsung di lab mana | `laboratoryId` pada sesi |
-| Tidak ada peta | Pengguna tidak melihat sebaran lab dan aktivitasnya | Halaman Maps interaktif |
+| Tidak ada peta | Pengguna tidak melihat sebaran lab dan aktivitasnya | Halaman peta interaktif |
 | Tidak ada notifikasi | Perubahan penting terlewat | Push notification berbasis peristiwa |
 | Kondisi perangkat tidak tertangani | Pengguna bingung saat izin ditolak atau GPS mati | State dan pesan yang jelas |
 
@@ -2772,7 +2772,7 @@ Aturan merge:
 | `src/screens/praktikan/components/navigasi.tsx` | Entri tab Peta | Dev 1 | Hanya Dev 1 |
 | `src/screens/asisten/home-menu.ts` | Menu Lab/Peta | Dev 1 | Hanya Dev 1 |
 | `firestore.rules` | Rules lab/attendance/notifikasi | Dev 1 | Hanya Dev 1; Dev 2/4 memberi requirement |
-| `app.json` | Plugin lokasi/maps/notifications | Dev 1 | Hanya Dev 1 |
+| `app.json` | Plugin lokasi/notifications; WebView autolink | Dev 1 | Hanya Dev 1 |
 | `package.json` / lockfile | Dependency | Dev 1 | Hanya Dev 1 |
 | `functions/src/index.ts` | Export functions | Dev 1 | Hanya Dev 1; Dev 2/4 mengisi modul |
 | `src/screens/shared/profil-screen.tsx` | Kartu notifikasi | Dev 4 | Hanya Dev 4 |
