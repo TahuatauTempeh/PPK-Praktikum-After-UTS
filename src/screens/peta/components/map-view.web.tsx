@@ -158,6 +158,8 @@ export function PlatformMapView({
         <iframe
           ref={iframeRef}
           title="Peta Laboratorium OpenStreetMap"
+          sandbox="allow-scripts"
+          referrerPolicy="no-referrer"
           srcDoc={initialHtml}
           style={iframeStyle}
         />

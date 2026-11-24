@@ -97,7 +97,7 @@ export function buildOsmLeafletHtml(
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" />
   <style>
     html, body, #map {
       margin: 0;
@@ -142,7 +142,8 @@ export function buildOsmLeafletHtml(
   <div id="map"></div>
   <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    crossorigin=""
+    integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"
+    crossorigin="anonymous"
     onerror="window.__notifyOsmError && window.__notifyOsmError()"
   ></script>
   <script>

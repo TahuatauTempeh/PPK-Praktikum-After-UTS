@@ -109,6 +109,8 @@ describe('buildOsmLeafletHtml', () => {
     );
 
     expect(html).toContain('https://tile.openstreetmap.org/{z}/{x}/{y}.png');
+    expect(html).toContain('integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"');
+    expect(html).toContain('integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H"');
     expect(html).not.toContain('"<script>alert(1)</script>"');
     expect(html).toContain('\\u003cscript>alert(1)\\u003c/script>');
   });
