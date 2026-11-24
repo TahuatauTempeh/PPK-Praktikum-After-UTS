@@ -30,8 +30,6 @@ integration, location helpers, and laboratory/session security rules.
 
 Sprint 3 features still in progress:
 
-- Map screens are placeholders; `react-native-maps` is installed but no
-  `MapView` is rendered yet.
 - Location-based attendance is active through the client fallback in
   `src/lib/attendance-fallback.ts` while the Firebase project is on Spark. The
   `/praktikan/presensi/[id]` route is implemented, and the `submitAttendance`
@@ -71,9 +69,9 @@ Fill all six values in `.env` from the team Firebase project’s Web App config
 `EXPO_PUBLIC_FIREBASE_PROJECT_ID`, `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET`,
 `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`, and `EXPO_PUBLIC_FIREBASE_APP_ID`.
 
-- `GOOGLE_MAPS_API_KEY` is optional until the Android map screen uses a native
-  map. `app.config.ts` adds the `react-native-maps` plugin only when this value
-  is set. Do not commit the real key.
+- The map uses OpenStreetMap/Leaflet inside `react-native-webview`; it does not
+  need a Google Maps API key. `react-native-webview` is a native module, so
+  rebuild the development client after pulling this change.
 - Metro reads `.env` at startup. After changing it, restart with
   `npx expo start -c`.
 - If any key is empty, the app renders “Konfigurasi Firebase belum lengkap”
@@ -358,8 +356,8 @@ Profiles live in `eas.json`: `development` (development client, internal),
 - `app.json` pins `owner` and `extra.eas.projectId`. You need access to the team
   organization, or replace both values in a fork.
 - Set all `EXPO_PUBLIC_FIREBASE_*` variables in the EAS environment so they are
-  inlined into the build. Set `GOOGLE_MAPS_API_KEY` too when the Android build
-  uses the native map; `app.config.ts` reads it at config time.
+  inlined into the build. The OpenStreetMap map needs no extra API key; rebuild
+  the development client so `react-native-webview` is included.
 - There is no release workflow in this repository. Builds are manual; do not
   describe an automatic production release that does not exist.
 
@@ -381,11 +379,13 @@ Profiles live in `eas.json`: `development` (development client, internal),
 ## Known limitations and gotchas
 
 - **Sprint 3 is partially implemented.** Laboratory CRUD, session-to-lab
-  integration, geo helpers, lab/session rules, and location attendance (client
-  fallback) exist. Map screens and notifications are still in progress; do not
-  treat all `PRD.md` acceptance criteria as current behavior.
-- **Map screens are placeholders.** The tab/menu routes exist, but no `MapView`
-  is rendered. The Android Google Maps key comes from `GOOGLE_MAPS_API_KEY`.
+  integration, geo helpers, lab/session rules, location attendance (client
+  fallback), and the map screens exist. Notifications are still in progress; do
+  not treat all `PRD.md` acceptance criteria as current behavior.
+- **The map runs in a WebView.** Native and web use Leaflet with OpenStreetMap
+  tiles; web defaults to the accessible list mode and exposes the map as an
+  optional view. Leaflet loads from `unpkg.com`, so a blocked CDN or offline
+  device falls back to the list after the map fails to become ready.
 - **Firebase project is on Spark.** `praktikum-ppk-3` does not have billing
   enabled. Auth and Firestore work, but Cloud Functions from Sprint 3 cannot be
   deployed until the project is upgraded to Blaze.

@@ -32,7 +32,7 @@ Versi di bawah diambil dari `package.json`. Selalu pasang paket Expo dengan `npx
 | Bahasa | TypeScript (strict) |
 | Navigasi | Expo Router (rute berbasis berkas di `src/app/`) |
 | Backend | Firebase 13 (Authentication + Cloud Firestore) |
-| Lokasi & peta | `expo-location`, `react-native-maps` (key Android lewat `GOOGLE_MAPS_API_KEY`) |
+| Lokasi & peta | `expo-location`, `react-native-webview` + Leaflet/OpenStreetMap (tanpa API key peta) |
 | Animasi | `react-native-reanimated`, `react-native-worklets`, `react-native-gesture-handler` |
 | Tampilan | `expo-blur`, `expo-glass-effect`, `expo-image`, `expo-symbols`, `react-native-svg`, font Inter (`@expo-google-fonts/inter`) |
 | Penyimpanan lokal | `@react-native-async-storage/async-storage` (sesi login di perangkat) |
@@ -80,15 +80,12 @@ EXPO_PUBLIC_FIREBASE_PROJECT_ID=
 EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=
 EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 EXPO_PUBLIC_FIREBASE_APP_ID=
-# Opsional sampai peta Android dipakai; jangan commit nilai asli.
-GOOGLE_MAPS_API_KEY=
 ```
 
 Catatan:
 
 - Keenam variabel `EXPO_PUBLIC_FIREBASE_*` wajib terisi. Nilainya dibaca saat Metro dijalankan, jadi **setelah mengubah `.env`, restart dengan `npx expo start -c`**.
-- `GOOGLE_MAPS_API_KEY` hanya dibutuhkan untuk build Android yang memakai peta native. Nilai ini dibaca oleh `app.config.ts`; plugin `react-native-maps` tidak dipasang bila key kosong. Jangan commit nilai asli.
-- Setelah mengubah key atau menambah paket native, build ulang development client. Fast Refresh tidak cukup.
+- Peta memakai OpenStreetMap/Leaflet melalui WebView dan tidak memerlukan Google Maps API key. Karena `react-native-webview` adalah modul native, build ulang development client setelah menarik perubahan ini; Fast Refresh tidak cukup.
 - `.env` sudah ada di `.gitignore`. Jangan di-commit.
 
 ### 3.3 Pasang Firestore Security Rules
@@ -164,7 +161,6 @@ Ada dua peran: `praktikan` dan `asisten`, ditambah penanda `isAdmin` untuk asist
 
 ```text
 .
-├── app.config.ts                Config dinamis: plugin Maps dan GOOGLE_MAPS_API_KEY
 ├── ai/                          Model sentimen lokal (model-edom.json, sentiment.js, README.md)
 ├── assets/
 │   ├── asisten/                 Ikon SVG area asisten
@@ -188,7 +184,7 @@ Ada dua peran: `praktikan` dan `asisten`, ditambah penanda `isAdmin` untuk asist
 │   │       ├── kelas/           kelola kelas (Dev 2)
 │   │       ├── peserta/         kelola peserta per kelas (Dev 2)
 │   │       ├── lab/             daftar dan form laboratorium (Dev 1)
-│   │       ├── peta.tsx         placeholder peta Asisten (Dev 3)
+│   │       ├── peta.tsx         peta laboratorium Asisten (Dev 3)
 │   │       ├── atur-sesi/       tambah, ubah, hapus jadwal dan sesi (Dev 2)
 │   │       ├── sesi/[id]        kelola sesi: buka/tutup dan daftar hadir
 │   │       └── izin/            daftar dan tinjau izin
@@ -259,7 +255,7 @@ Aturan umum:
 | `/asisten/kelas` | Kelola kelas: tambah, ubah, hapus, lalu buka peserta kelas |
 | `/asisten/peserta?classId=<id>` | Kelola peserta satu kelas: tambah dan hapus |
 | `/asisten/lab`, `/asisten/lab/baru`, `/asisten/lab/[id]` | Daftar, tambah, dan ubah laboratorium |
-| `/asisten/peta` | Placeholder peta laboratorium Asisten |
+| `/asisten/peta` | Peta laboratorium Asisten (OpenStreetMap, aktivitas realtime) |
 | `/asisten/atur-sesi` | Kelola jadwal dan sesi: tambah, ubah, hapus, filter per kelas; sesi baru wajib memilih lab |
 | `/asisten/sesi/[id]` | Kelola sesi: buka/tutup dan daftar hadir |
 | `/asisten/izin` dan `/asisten/izin/[id]` | Daftar dan tinjau izin |
@@ -326,19 +322,19 @@ Selama koleksi `sessions` kosong, jadwal Asisten menampilkan data contoh. Begitu
 
 Berdasarkan isi kode saat ini.
 
-> Sprint 3 sudah mencakup fondasi laboratorium, integrasi lab ke sesi, helper lokasi, rules lab/sesi, dan presensi berbasis lokasi lewat jalur fallback. Peta native dan notifikasi masih dikerjakan Dev 3–4. Rencana lengkap ada di [`PRD.md`](PRD.md).
+> Sprint 3 sudah mencakup fondasi laboratorium, integrasi lab ke sesi, helper lokasi, rules lab/sesi, presensi berbasis lokasi lewat jalur fallback, dan peta laboratorium untuk kedua peran. Notifikasi masih dikerjakan Dev 4. Rencana lengkap ada di [`PRD.md`](PRD.md).
 
 | Area | Keadaan |
 |---|---|
 | **Dev 1: Fondasi & auth** | Ada: setup Firebase, login/registrasi/logout, profil `users`, auth context dan persist sesi, navigasi per peran, `logAction`, pemetaan galat Firebase, komponen loading/empty/error. |
-| **Dev 1: Fondasi Sprint 3** | Ada: CRUD laboratorium + validasi, `listenAllClasses`, helper Haversine dan validasi radius, `device-location` foreground, `laboratoryId` pada sesi, guard lab aktif saat buka sesi, rules `laboratories` + validasi sesi, dan route placeholder peta. |
+| **Dev 1: Fondasi Sprint 3** | Ada: CRUD laboratorium + validasi, `listenAllClasses`, helper Haversine dan validasi radius, `device-location` foreground, `laboratoryId` pada sesi, guard lab aktif saat buka sesi, rules `laboratories` + validasi sesi, dan route peta. |
 | **Dev 2: Data praktikum** | Ada: CRUD kelas (`class-service`, layar Kelas), CRUD peserta (`enrollment-service`, layar Peserta, cegah daftar ganda), CRUD jadwal dan sesi (`session-service`, layar Atur Sesi, validasi tanggal dan jam), filter jadwal dan riwayat praktikan lewat enrollment (`usePraktikanSchedule`), dan audit log pada setiap tambah/ubah/hapus. Sebagian: penggantian seluruh data dummy ke Firestore belum tuntas (lihat keterbatasan). |
-| **Dev 3: Sesi & presensi** | Ada: buka/tutup sesi dengan audit log, presensi hanya saat sesi `open`, pencegahan presensi ganda, rekap realtime. |
+| **Dev 3: Sesi, presensi & peta** | Ada: buka/tutup sesi dengan audit log, presensi hanya saat sesi `open`, pencegahan presensi ganda, rekap realtime, peta laboratorium OpenStreetMap/Leaflet, aktivitas Sekarang/Berikutnya, dan mode daftar. |
 | **Dev 4: Izin & AI** | Ada: form izin, modul AI dengan timeout dan fallback, penyimpanan `permissionRequests`, riwayat izin praktikan, daftar dan peninjauan izin oleh asisten. |
 
 Keterbatasan yang perlu diketahui:
 
-- **Peta masih placeholder.** Tab/menu Peta sudah bisa dibuka, tetapi layarnya belum memuat `MapView`; implementasi marker dan panel ada di Dev 3. Build Android yang memakai peta native memerlukan `GOOGLE_MAPS_API_KEY` yang valid.
+- **Peta memakai OpenStreetMap/Leaflet di WebView.** Web default ke mode daftar; peta interaktif web tersedia lewat tombol **Peta**. Leaflet dimuat dari CDN, jadi peta memerlukan koneksi internet; bila gagal dimuat, aplikasi beralih ke mode daftar. Build Android/iOS yang sudah ada perlu di-build ulang karena `react-native-webview` adalah modul native.
 - **Presensi berbasis lokasi memakai jalur fallback (PRD 14.1).** Project masih Spark, jadi callable `submitAttendance` belum bisa dideploy. Aplikasi mencatat presensi lewat transaksi Firestore dengan validasi yang sama (`validasiPresensi`). Keputusan tim 23 November 2026.
 - **Klaim keamanan presensi diturunkan menjadi client-enforced untuk lokasi.** Setelah rules dideploy, server memeriksa: praktikan terdaftar di kelas, sesi `open`, lab aktif dan sama dengan sesi, radius sama dengan lab, akurasi ≤ 100 m, `distanceMeters ≤ radiusMeters`, `mocked == false`, waktu server, dan tidak ada presensi ganda. Jarak Haversine tidak bisa dihitung di rules, sehingga koordinat dan jarak dipercaya dari aplikasi. Jalur callable juga menerima koordinat dari perangkat, jadi tidak ada jalur yang bisa membuktikan koordinat asli.
 - **Pindah ke callable** setelah project Blaze: deploy `submitAttendance`, ganti `JALUR_PRESENSI` di `src/lib/attendance-service.ts` menjadi `'callable'`, lalu ubah rules create `attendance` menjadi `false`. Urutan ini penting supaya presensi tidak mati di tengah jalan.
@@ -383,7 +379,7 @@ npx eas-cli@latest login
 npx eas-cli@latest build --profile development --platform android
 ```
 
-`app.json` sudah berisi `owner` dan `extra.eas.projectId` milik tim. Agar bisa membangun lewat EAS, akunmu harus punya akses ke organisasi tersebut, atau ganti dua nilai itu dengan milikmu sendiri. Variabel `EXPO_PUBLIC_*` juga harus diset di EAS (secret/environment variable) agar ikut masuk ke build. Untuk build Android dengan peta native, set juga `GOOGLE_MAPS_API_KEY` di environment EAS; key tidak disimpan di repository.
+`app.json` sudah berisi `owner` dan `extra.eas.projectId` milik tim. Agar bisa membangun lewat EAS, akunmu harus punya akses ke organisasi tersebut, atau ganti dua nilai itu dengan milikmu sendiri. Variabel `EXPO_PUBLIC_*` juga harus diset di EAS (secret/environment variable) agar ikut masuk ke build. Peta OpenStreetMap tidak memerlukan API key tambahan; cukup build ulang development client agar `react-native-webview` ikut terpasang.
 
 ## 12. Pemecahan masalah
 
@@ -393,7 +389,7 @@ npx eas-cli@latest build --profile development --platform android
 | Layar "Konfigurasi Firebase belum lengkap" | Ada variabel `EXPO_PUBLIC_FIREBASE_*` yang kosong atau `.env` belum dibuat. Isi lalu restart dengan `-c`. |
 | "Metode login belum diaktifkan" | Aktifkan Email/Password di Firebase Authentication. |
 | "Kamu tidak punya akses untuk tindakan ini" | Rules belum dipasang, atau akun belum berperan `asisten` untuk aksi yang butuh itu. Pastikan rules terbaru sudah dideploy; `laboratories` dan validasi sesi baru ada di Sprint 3. |
-| Peta Android kosong atau build gagal memuat Maps | `GOOGLE_MAPS_API_KEY` kosong/tidak valid, atau key dibatasi untuk package/SHA-1 lain. Isi key, lalu build ulang development client. |
+| Peta kosong atau gagal dimuat | Periksa koneksi internet dan akses ke `unpkg.com`/`tile.openstreetmap.org`. Pastikan development client di-build ulang setelah `react-native-webview` ditambahkan. Bila peta tetap gagal, aplikasi otomatis beralih ke mode daftar. |
 | Login berhasil tetapi muncul "Profil tidak ditemukan" | Dokumen `users/{uid}` belum ada. Buat lewat registrasi di aplikasi, atau tambahkan manual di Firestore. |
 | Tab Admin tidak muncul | `isAdmin` pada profil belum `true`. Keluar dan masuk lagi setelah mengubahnya. |
 | Jadwal Asisten menampilkan data contoh | Koleksi `sessions` masih kosong. Tambahkan sesi lewat layar Atur Sesi (bagian 8). |
