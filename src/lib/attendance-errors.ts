@@ -4,7 +4,7 @@
  * file ini mengubahnya menjadi AttendanceSubmitResult dengan pesan Bahasa Indonesia.
  */
 
-import { formatDistanceMeters } from '@/lib/geo';
+import { PESAN_DI_LUAR_AREA } from '@/lib/attendance-rules';
 import type { AttendanceFailureCode, AttendanceSubmitResult } from '@/types';
 
 export type { AttendanceFailureCode, AttendanceSubmitResult };
@@ -14,8 +14,6 @@ export type AttendanceFailure = Extract<AttendanceSubmitResult, { ok: false }>;
 export interface DetailGagal {
   distanceMeters?: number;
   radiusMeters?: number;
-  /** Nama lab untuk pesan luar radius, mis. "Lab A201" */
-  laboratoryName?: string;
 }
 
 /** Kode yang hanya boleh datang dari `details.code` callable */
@@ -51,20 +49,13 @@ function angkaValid(nilai: unknown): nilai is number {
   return typeof nilai === 'number' && Number.isFinite(nilai) && nilai >= 0;
 }
 
-
-export function pesanGagalPresensi(code: AttendanceFailureCode, detail: DetailGagal = {}): string {
-  if (code !== 'OUT_OF_RADIUS') return PESAN_TETAP[code];
-
-  const { distanceMeters, radiusMeters, laboratoryName } = detail;
-  if (!angkaValid(distanceMeters) || !angkaValid(radiusMeters)) {
-    return 'Kamu berada di luar radius laboratorium.';
-  }
-  const tujuan = laboratoryName?.trim() ? laboratoryName.trim() : 'laboratorium';
-  return `Kamu berada ${formatDistanceMeters(distanceMeters)} dari ${tujuan}. Radius yang diizinkan ${formatDistanceMeters(radiusMeters)}.`;
+export function pesanGagalPresensi(code: AttendanceFailureCode): string {
+  if (code === 'OUT_OF_RADIUS') return PESAN_DI_LUAR_AREA;
+  return PESAN_TETAP[code];
 }
 
 export function buatGagal(code: AttendanceFailureCode, detail: DetailGagal = {}): AttendanceFailure {
-  const hasil: AttendanceFailure = { ok: false, code, message: pesanGagalPresensi(code, detail) };
+  const hasil: AttendanceFailure = { ok: false, code, message: pesanGagalPresensi(code) };
   if (angkaValid(detail.distanceMeters)) hasil.distanceMeters = detail.distanceMeters;
   if (angkaValid(detail.radiusMeters)) hasil.radiusMeters = detail.radiusMeters;
   return hasil;
@@ -89,7 +80,7 @@ function bacaDetail(error: unknown): Record<string, unknown> {
  * error 500 dari server, jadi keduanya dianggap NETWORK: presensi tidak tercatat dan
  * pengguna perlu mencoba lagi.
  */
-export function hasilGagalDariGalat(error: unknown, laboratoryName?: string): AttendanceFailure {
+export function hasilGagalDariGalat(error: unknown): AttendanceFailure {
   const detail = bacaDetail(error);
   const kodeDomain = detail.code;
 
@@ -97,7 +88,6 @@ export function hasilGagalDariGalat(error: unknown, laboratoryName?: string): At
     return buatGagal(kodeDomain as AttendanceFailureCode, {
       distanceMeters: angkaValid(detail.distanceMeters) ? detail.distanceMeters : undefined,
       radiusMeters: angkaValid(detail.radiusMeters) ? detail.radiusMeters : undefined,
-      laboratoryName,
     });
   }
 

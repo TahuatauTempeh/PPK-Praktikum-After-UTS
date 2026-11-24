@@ -33,9 +33,15 @@ test.describe('presensi web', () => {
     await expect(
       page.getByText('Konfirmasi presensi', { exact: true }),
     ).toBeVisible();
-    await page
-      .getByRole('button', { name: 'Ya, presensi sekarang' })
-      .click();
+    await expect(
+      page.getByText('Apakah kamu yakin ingin presensi sekarang?', {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(page.getByText('Posisi kamu', { exact: false })).toHaveCount(
+      0,
+    );
+    await page.getByRole('button', { name: 'Ya', exact: true }).click();
 
     await expect(
       page.getByText('Presensi berhasil', { exact: true }),

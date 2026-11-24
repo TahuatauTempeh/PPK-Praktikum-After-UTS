@@ -147,8 +147,6 @@ export function PresensiTampilan({ model, aksi }: { model: PresensiViewModel; ak
       overlay={
         <PresensiKonfirmasi
           visible={sheetTampil}
-          sesi={sesi}
-          ukuran={model.ukuran}
           onKonfirmasi={konfirmasi}
           onBatal={() => setSheetTampil(false)}
         />
@@ -160,7 +158,6 @@ export function PresensiTampilan({ model, aksi }: { model: PresensiViewModel; ak
         <PresensiKartuLokasi
           kelayakan={kelayakan}
           ukuran={model.ukuran}
-          laboratorium={sesi.laboratorium}
           onAksi={aksi.onAksiLokasi}
         />
       ) : null}

@@ -68,6 +68,8 @@
     "emulators": "firebase emulators:start --only auth,firestore --project demo-ppk-e2e",
     "seed:e2e": "node e2e/shared/seed.js",
     "test:web": "firebase emulators:exec --only auth,firestore --project demo-ppk-e2e \"node e2e/shared/seed.js && playwright test --config e2e/web/playwright.config.ts\"",
+    "android:e2e:build": "bash e2e/android/build-apk.sh",
+    "test:android": "firebase emulators:exec --only auth,firestore --project demo-ppk-e2e \"node e2e/shared/seed.js && bash e2e/android/run.sh\"",
     "verify": "npm run lint && npm run typecheck && npm run test:ci"
   },
   "private": true

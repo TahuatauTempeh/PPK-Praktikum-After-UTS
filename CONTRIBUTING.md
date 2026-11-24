@@ -529,10 +529,14 @@ Aturan penting:
 
 Firestore rules E2E sudah dicakup otomatis lewat `npm run test:rules`
 (Firestore emulator + Java 21+). E2E web Playwright tersedia lewat
-`npm run test:web` (Chromium + Java 21+). Yang belum dicakup otomatis: seluruh
-jalur CRUD Firestore end-to-end, E2E Android (Maestro), dan build native.
-Perubahan pada area itu tetap memerlukan pengujian manual. Skenario harness rules
-saat ini fokus pada `attendance`; rules koleksi lain belum dicakup.
+`npm run test:web` (Chromium + Java 21+). Android E2E tersedia lewat
+`npm run test:android` (Maestro, emulator API 35, Java 21+); build APK dulu
+dengan `npm run android:e2e:build` dan boot emulator. Prasyarat lokal: Android
+SDK, `adb`, Maestro, Java 21+, dan KVM untuk CI. `npm run test:android` bukan
+bagian dari `npm run verify`. Yang belum dicakup otomatis: seluruh jalur CRUD
+Firestore end-to-end dan build native. Perubahan pada area itu tetap memerlukan
+pengujian manual. Skenario harness rules saat ini fokus pada `attendance`; rules
+koleksi lain belum dicakup.
 
 ## Menjalankan Verifikasi Lokal
 
@@ -684,10 +688,10 @@ npm --prefix functions run build
 
 Untuk kegagalan job `rules-e2e`, jalankan `npm run test:rules` dengan Java 21+.
 
-Yang tidak dijalankan CI: `expo-doctor`, E2E Android (Maestro), dan EAS build.
-Rules Firestore dan web E2E dijalankan lewat job `rules-e2e` dan `web-e2e`;
-perubahan pada area lain tetap memerlukan verifikasi manual dan hasilnya ditulis
-di PR.
+Yang tidak dijalankan CI: `expo-doctor` dan EAS build. Rules Firestore, web
+E2E, dan Android E2E dijalankan lewat job `rules-e2e`, `web-e2e`, dan
+`android-e2e`; perubahan pada area lain tetap memerlukan verifikasi manual dan
+hasilnya ditulis di PR.
 
 ## Build dan Distribusi dengan EAS
 

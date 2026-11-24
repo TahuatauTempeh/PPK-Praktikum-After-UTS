@@ -53,7 +53,8 @@
           "color": "#204CAC",
           "defaultChannel": "praktikum"
         }
-      ]
+      ],
+      "./plugins/with-e2e-cleartext"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,0 +1,12 @@
+appId: com.ppk.presensipraktikum
+---
+- extendedWaitUntil:
+    visible: { id: "login-submit" }
+    timeout: 30000
+- tapOn: { id: "login-email" }
+- inputText: ${EMAIL}
+- hideKeyboard
+- tapOn: { id: "login-password" }
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn: { id: "login-submit" }

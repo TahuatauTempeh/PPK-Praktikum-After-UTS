@@ -83,31 +83,33 @@ describe('<PresensiTampilan />', () => {
     expect(getByText('Dibuka')).toBeTruthy();
   });
 
-  it('meminta konfirmasi sebelum mengirim presensi', async () => {
+  it('meminta konfirmasi singkat sebelum mengirim presensi', async () => {
     const a = aksi();
-    const { getByText } = await render(<PresensiTampilan model={model()} aksi={a} />);
+    const { getByText, queryByText } = await render(<PresensiTampilan model={model()} aksi={a} />);
 
     await fireEvent.press(getByText('Presensi sekarang'));
     expect(a.onKirim).not.toHaveBeenCalled();
-    expect(getByText('Posisi kamu: 23 m dari Lab A201, akurasi ±12 m')).toBeTruthy();
+    expect(getByText('Apakah kamu yakin ingin presensi sekarang?')).toBeTruthy();
+    expect(queryByText('Posisi kamu: 23 m dari Lab A201, akurasi ±12 m')).toBeNull();
 
-    await fireEvent.press(getByText('Ya, presensi sekarang'));
+    await fireEvent.press(getByText('Ya'));
     expect(a.onKirim).toHaveBeenCalledTimes(1);
   });
 
-  it('menonaktifkan tombol dan menjelaskan jarak saat di luar radius', async () => {
+  it('menonaktifkan tombol dan menyembunyikan radius saat di luar area absen', async () => {
     const a = aksi();
     const m = model(
       { ukuran: { distanceMeters: 140, radiusMeters: 100, accuracyMeters: 12 } },
       { lokasi: { tahap: 'siap', posisi: { accuracyMeters: 12, mocked: false }, distanceMeters: 140 } }
     );
-    const { getByText, queryByText } = await render(<PresensiTampilan model={m} aksi={a} />);
+    const { getAllByText, getByText, queryByText } = await render(<PresensiTampilan model={m} aksi={a} />);
 
-    expect(getByText('Kamu berada 140 m dari Lab A201. Radius yang diizinkan 100 m.')).toBeTruthy();
-    expect(getByText('Kamu berada 140 m dari lab, radius 100 m')).toBeTruthy();
+    expect(getAllByText('Kamu berada di luar area absen.').length).toBeGreaterThan(0);
+    expect(queryByText('Radius')).toBeNull();
+    expect(queryByText('100 m')).toBeNull();
 
     await fireEvent.press(getByText('Presensi sekarang'));
-    expect(queryByText('Ya, presensi sekarang')).toBeNull();
+    expect(queryByText('Konfirmasi presensi')).toBeNull();
     expect(a.onKirim).not.toHaveBeenCalled();
   });
 
@@ -214,7 +216,7 @@ describe('<PresensiScreen />', () => {
 
     expect(jest.mocked(usePresensi)).toHaveBeenCalledWith('s1', { id: 'u1' });
     await fireEvent.press(getByText('Presensi sekarang'));
-    await fireEvent.press(getByText('Ya, presensi sekarang'));
+    await fireEvent.press(getByText('Ya'));
     expect(onKirim).toHaveBeenCalledTimes(1);
   });
 });

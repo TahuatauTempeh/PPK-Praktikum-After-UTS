@@ -20,7 +20,7 @@ test.describe('presensi luar radius', () => {
     await closeAdminDb();
   });
 
-  test('menolak presensi di luar radius tanpa menulis dokumen', async ({
+  test('menolak presensi di luar area absen tanpa menulis dokumen', async ({
     page,
   }) => {
     await login(page, 'praktikan2@test.local');
@@ -28,8 +28,9 @@ test.describe('presensi luar radius', () => {
     await openPresensi(page, SESSION_ID);
 
     await expect(page.getByRole('alert')).toContainText(
-      /Kamu berada .*Radius yang diizinkan/,
+      'Kamu berada di luar area absen.',
     );
+    await expect(page.getByText('Radius', { exact: true })).toHaveCount(0);
     await expect(
       page.getByRole('button', { name: 'Presensi sekarang' }),
     ).toBeDisabled();

@@ -6,7 +6,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { pesanGagalPresensi } from '@/lib/attendance-errors';
 import type { AksiLokasi, Kelayakan, StateKelayakan } from '@/lib/attendance-rules';
 import { Tombol } from '@/screens/praktikan/components/tombol';
 import { formatMeter, type UkuranLokasi } from '@/screens/praktikan/presensi-model';
@@ -22,7 +21,7 @@ const PESAN: Partial<Record<StateKelayakan, string>> = {
   'location-unavailable': 'Lokasi belum tersedia. Coba lagi di area terbuka.',
   'mock-location': 'Lokasi palsu terdeteksi. Matikan aplikasi pengubah lokasi, lalu periksa lagi.',
   'low-accuracy': 'Akurasi lokasi rendah. Tunggu sebentar lalu coba lagi.',
-  eligible: 'Kamu berada di dalam radius laboratorium.',
+  eligible: 'Kamu berada di area absen.',
 };
 
 const LABEL_AKSI: Record<AksiLokasi, string> = {
@@ -36,26 +35,17 @@ const LABEL_AKSI: Record<AksiLokasi, string> = {
 interface Props {
   kelayakan: Kelayakan;
   ukuran: UkuranLokasi;
-  laboratorium: string | null;
   onAksi: (aksi: AksiLokasi) => void;
 }
 
-export function PresensiKartuLokasi({ kelayakan, ukuran, laboratorium, onAksi }: Props) {
+export function PresensiKartuLokasi({ kelayakan, ukuran, onAksi }: Props) {
   const theme = useTheme();
   const { state, aksi } = kelayakan;
 
-  const pesan =
-    state === 'out-of-radius'
-      ? pesanGagalPresensi('OUT_OF_RADIUS', {
-          distanceMeters: ukuran.distanceMeters ?? undefined,
-          radiusMeters: ukuran.radiusMeters ?? undefined,
-          laboratoryName: laboratorium ?? undefined,
-        })
-      : (PESAN[state] ?? kelayakan.alasan);
+  const pesan = PESAN[state] ?? kelayakan.alasan;
 
   const angka: { label: string; nilai: string }[] = [];
   if (ukuran.distanceMeters !== null) angka.push({ label: 'Jarak ke lab', nilai: formatMeter(ukuran.distanceMeters) });
-  if (ukuran.radiusMeters !== null) angka.push({ label: 'Radius', nilai: formatMeter(ukuran.radiusMeters) });
   if (ukuran.accuracyMeters !== null) angka.push({ label: 'Akurasi', nilai: `±${formatMeter(ukuran.accuracyMeters)}` });
 
   // Setelah membuka pengaturan, praktikan perlu cara memeriksa ulang tanpa keluar halaman.

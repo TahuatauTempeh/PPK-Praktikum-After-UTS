@@ -240,10 +240,10 @@ Isi halaman:
 
 - Header dengan tombol kembali dan judul **Presensi**.
 - Kartu sesi: nama praktikum, kelas, tanggal, waktu WIB, ruang, laboratorium, asisten, dan status sesi.
-- Kartu pemeriksaan lokasi: status izin, status layanan lokasi, jarak ke lab, radius, akurasi, dan tombol **Periksa lokasi lagi**.
+- Kartu pemeriksaan lokasi: status izin, status layanan lokasi, jarak ke lab, akurasi, dan tombol **Periksa lokasi lagi**. Radius tidak ditampilkan ke praktikan.
 - Kartu status presensi: belum presensi, sudah presensi beserta waktu, atau sesi ditutup.
 - Footer aksi: **Presensi sekarang** hanya aktif bila seluruh syarat terpenuhi.
-- Bottom sheet konfirmasi berisi ringkasan sesi dan lokasi.
+- Bottom sheet konfirmasi singkat berisi pertanyaan dan tombol **Ya**/**Batal**, tanpa detail sesi atau lokasi.
 - State sukses menampilkan waktu tercatat, jarak, dan status baru.
 - Notice inline untuk setiap kegagalan, bukan hanya toast.
 
@@ -260,7 +260,7 @@ Aturan tampilan tombol:
 | Layanan lokasi mati | Nonaktif | Aktifkan layanan lokasi |
 | Lokasi belum tersedia | Nonaktif | Lokasi belum tersedia, coba lagi |
 | Akurasi rendah | Nonaktif | Akurasi lokasi terlalu rendah |
-| Di luar radius | Nonaktif | Kamu berada X m dari lab, radius Y m |
+| Di luar area absen | Nonaktif | Kamu berada di luar area absen. |
 | Semua syarat terpenuhi | Aktif | Presensi sekarang |
 
 ### 7.2 Validasi lokasi presensi
@@ -446,7 +446,7 @@ Untuk Android, pesan menyertakan `channelId: "praktikum"` agar memakai channel y
 | Layanan lokasi mati | Tombol **Buka pengaturan lokasi** dan **Periksa lagi** |
 | Lokasi belum tersedia / timeout | **Lokasi belum tersedia. Coba lagi di area terbuka.** |
 | Akurasi > 100 m | **Akurasi lokasi rendah. Tunggu sebentar lalu coba lagi.** |
-| Di luar radius | **Kamu berada X m dari lab. Radius Y m.** |
+| Di luar area absen | **Kamu berada di luar area absen.** |
 | Koneksi bermasalah saat presensi | **Koneksi bermasalah. Presensi tidak tercatat. Coba lagi.** |
 | Sesi berubah menjadi tertutup saat halaman terbuka | Tombol nonaktif dan notice realtime |
 | Izin notifikasi ditolak | Kartu status di Profil + **Buka pengaturan** |
@@ -487,10 +487,10 @@ Copy penting:
 - Judul: **Presensi**
 - Tombol utama: **Presensi sekarang**
 - Tombol periksa: **Periksa lokasi lagi**
-- Konfirmasi: **Ya, presensi sekarang**
+- Konfirmasi: **Ya**
 - Sukses: **Presensi berhasil**
 - Sukses detail: **Tercatat pukul 08.07 WIB · 23 m dari Lab A201**
-- Di luar radius: **Kamu berada 140 m dari Lab A201. Radius yang diizinkan 100 m.**
+- Di luar area absen: **Kamu berada di luar area absen.**
 - Izin ditolak: **Izin lokasi diperlukan untuk memastikan kamu berada di laboratorium.**
 - Sesi tutup: **Sesi sudah ditutup. Presensi tidak dapat dilakukan.**
 
@@ -501,6 +501,7 @@ Copy penting:
 - Bila sesi `open` dan pengguna belum presensi, tampilkan tombol **Buka halaman presensi**.
 - Bila sudah presensi, tampilkan waktu dan status hadir.
 - Bila sesi `scheduled` atau `closed`, tombol nonaktif dengan alasan.
+- Detail sesi tidak menampilkan jarak atau radius; bukti lokasi ada di halaman presensi. Radius tetap tampil di layar Lab untuk asisten.
 - Tidak ada penulisan presensi dari layar ini.
 
 ### 8.4 Pengelolaan laboratorium
@@ -1289,9 +1290,9 @@ Prioritas: **P0** wajib demo, **P1** wajib sebelum rilis, **P2** opsional.
 | FR-ATT-01 | Aplikasi menyediakan halaman presensi terpisah di `/praktikan/presensi/[id]`. | P0 | Rute dapat dibuka Praktikan; halaman memuat sesi berdasarkan `id`. | Dev 2 |
 | FR-ATT-02 | Halaman menampilkan nama praktikum, kelas, tanggal, waktu WIB, ruang, laboratorium, asisten, dan status sesi. | P0 | Semua field tampil; status berupa teks. | Dev 2 |
 | FR-ATT-03 | Tombol presensi hanya aktif bila sesi `open`, pengguna terdaftar, belum presensi, izin/layanan/lokasi valid, dan jarak ≤ radius. | P0 | Tabel keputusan PRD 11.2 terpenuhi. | Dev 2 |
-| FR-ATT-04 | Menekan tombol membuka konfirmasi berisi sesi dan lokasi. | P0 | Tidak ada penulisan sebelum konfirmasi. | Dev 2 |
+| FR-ATT-04 | Menekan tombol membuka konfirmasi singkat tanpa detail sesi atau lokasi. | P0 | Tidak ada penulisan sebelum konfirmasi. | Dev 2 |
 | FR-ATT-05 | Presensi dikirim ke callable `submitAttendance` setelah Blaze; selama Spark, fallback transaksi klien memakai validasi yang sama (14.1). | P0 | Callable memeriksa auth, role, sesi, enrollment, lab, jarak, akurasi, mock, duplikat; fallback memeriksa bagian yang bisa dilakukan rules. | Dev 2 |
-| FR-ATT-06 | Keberhasilan menampilkan waktu, jarak, radius, dan status hadir. | P0 | Data berasal dari respons callable; listener memperbarui status. | Dev 2 |
+| FR-ATT-06 | Keberhasilan menampilkan waktu, jarak, dan status hadir. | P0 | Data berasal dari respons callable; listener memperbarui status. | Dev 2 |
 | FR-ATT-07 | Presensi ganda ditolak dan catatan lama ditampilkan. | P0 | Tidak ada dokumen kedua; pesan menyebut waktu presensi. | Dev 2 |
 | FR-ATT-08 | Perubahan status sesi terlihat realtime; sesi ditutup menonaktifkan aksi. | P0 | Listener `listenSession` aktif; tombol berubah tanpa reload. | Dev 2 |
 | FR-ATT-09 | Rekap asisten dapat menampilkan bukti lokasi (jarak dan akurasi) bila field tersedia. | P2 | Baris lama tetap tampil; bukti lokasi bukan syarat demo. | Dev 2 |
@@ -1306,7 +1307,7 @@ Prioritas: **P0** wajib demo, **P1** wajib sebelum rilis, **P2** opsional.
 | FR-LOC-01 | Aplikasi meminta izin lokasi foreground saat pengguna membuka presensi/peta atau menekan tombol. | P0 | Tidak ada permintaan otomatis saat aplikasi pertama dibuka. | Dev 1/2/3 |
 | FR-LOC-02 | Aplikasi memeriksa `hasServicesEnabledAsync`. | P0 | Bila mati, tampil panduan dan tombol pengaturan. | Dev 1 |
 | FR-LOC-03 | Aplikasi mengambil posisi segar dengan timeout 15 detik. | P0 | Timeout menghasilkan state `LOCATION_UNAVAILABLE`. | Dev 1 |
-| FR-LOC-04 | Aplikasi menghitung jarak Haversine dan menampilkan jarak, radius, akurasi. | P0 | Nilai jarak sama dengan server untuk input yang sama. | Dev 1/2 |
+| FR-LOC-04 | Aplikasi menghitung jarak Haversine dan menampilkan jarak serta akurasi. Radius tetap menjadi acuan validasi tetapi tidak ditampilkan ke praktikan. | P0 | Nilai jarak sama dengan server untuk input yang sama. | Dev 1/2 |
 | FR-LOC-05 | Aplikasi membedakan izin ditolak, ditolak permanen, layanan mati, timeout, tidak tersedia, akurasi rendah, luar radius, dan valid. | P0 | Setiap state punya pesan dan aksi. | Dev 1/2 |
 | FR-LOC-06 | Tombol presensi nonaktif bila lokasi tidak valid. | P0 | Tidak ada panggilan callable saat state tidak valid. | Dev 2 |
 | FR-LOC-07 | Aplikasi tidak meminta izin background atau melacak lokasi di latar belakang. | P0 | Tidak ada `requestBackgroundPermissionsAsync`. | Dev 1 |
@@ -1587,7 +1588,7 @@ Aturan:
 | `locating` | Menunggu GPS | Spinner + timeout |
 | `location-unavailable` | Timeout/tidak ada fix | Coba lagi |
 | `low-accuracy` | Akurasi > 100 m | Coba lagi |
-| `out-of-radius` | Jarak > radius | Tampilkan jarak/radius |
+| `out-of-radius` | Jarak > radius | Tampilkan pesan area absen tanpa radius |
 | `eligible` | Semua syarat | Aktifkan tombol |
 | `submitting` | Menunggu callable | Tombol spinner |
 | `success` | Callable sukses | Waktu + jarak |
@@ -1908,8 +1909,8 @@ Legenda prioritas: **P0** wajib, **P1** wajib sebelum rilis, **P2** opsional.
 
 | ID | Prasyarat | Langkah | Hasil yang diharapkan | FR | Prioritas |
 |---|---|---|---|---|---|
-| UAT-ATT-01 | S1 `open`; `praktikan1` terdaftar; lokasi dalam radius A | Buka `/praktikan/presensi/S1`; izinkan lokasi; tekan **Presensi sekarang**; konfirmasi | Muncul jarak ±0 m, radius 100 m, akurasi; presensi berhasil; waktu WIB tampil; status hadir | FR-ATT-01..06, FR-LOC-03..06 | P0 |
-| UAT-ATT-02 | S1 `open`; `praktikan1` terdaftar dan belum presensi di sesi uji; lokasi luar radius | Buka halaman presensi sesi uji; periksa lokasi | Tombol nonaktif; pesan menampilkan jarak ±233 m dan radius 100 m; tidak ada catatan | FR-ATT-03, FR-LOC-04..06 | P0 |
+| UAT-ATT-01 | S1 `open`; `praktikan1` terdaftar; lokasi dalam radius A | Buka `/praktikan/presensi/S1`; izinkan lokasi; tekan **Presensi sekarang**; tekan **Ya** | Muncul jarak ±0 m dan akurasi; radius tidak ditampilkan; presensi berhasil; waktu WIB tampil; status hadir | FR-ATT-01..06, FR-LOC-03..06 | P0 |
+| UAT-ATT-02 | S1 `open`; `praktikan1` terdaftar dan belum presensi di sesi uji; lokasi luar area absen | Buka halaman presensi sesi uji; periksa lokasi | Tombol nonaktif; pesan **Kamu berada di luar area absen.**; radius tidak ditampilkan; tidak ada catatan | FR-ATT-03, FR-LOC-04..06 | P0 |
 | UAT-ATT-03 | Izin lokasi belum diberikan | Buka halaman presensi; tekan **Izinkan lokasi**; pilih **Tolak** | Pesan izin ditolak; tombol presensi nonaktif; tombol coba lagi tersedia | FR-LOC-01, FR-LOC-05, FR-DEV-01 | P0 |
 | UAT-ATT-04 | Izin lokasi ditolak permanen | Buka halaman presensi | Pesan **Izin lokasi diblokir**; tombol **Buka pengaturan** membuka settings | FR-LOC-05, FR-LOC-09 | P0 |
 | UAT-ATT-05 | Izin diberikan; layanan lokasi mati | Matikan lokasi perangkat; buka halaman presensi | Pesan **Layanan lokasi nonaktif**; tombol pengaturan; tidak ada panggilan presensi | FR-LOC-02, FR-DEV-02 | P0 |

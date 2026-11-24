@@ -64,6 +64,7 @@ export default function LoginScreen() {
           <View style={authStyles.form}>
             <AuthField
               label="Email"
+              testID="login-email"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -75,6 +76,7 @@ export default function LoginScreen() {
             />
             <AuthField
               label="Password"
+              testID="login-password"
               value={password}
               onChangeText={setPassword}
               secure
@@ -90,6 +92,7 @@ export default function LoginScreen() {
           ) : null}
 
           <Pressable
+            testID="login-submit"
             onPress={handleSubmit}
             disabled={submitting}
             accessibilityRole="button"

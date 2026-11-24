@@ -72,23 +72,20 @@ interface SubmitAttendanceResponse {
  */
 export const JALUR_PRESENSI = 'fallback' as 'callable' | 'fallback';
 
-/** `laboratoryName` hanya dipakai untuk pesan "di luar radius". */
 export function submitAttendanceWithLocation(
   sessionId: string,
   position: DevicePosition,
   profile: ProfilPresensi,
-  laboratoryName?: string,
 ): Promise<AttendanceSubmitResult> {
   return JALUR_PRESENSI === 'callable'
-    ? submitAttendanceViaCallable(sessionId, position, laboratoryName)
-    : submitAttendanceViaTransaction(sessionId, position, profile, laboratoryName);
+    ? submitAttendanceViaCallable(sessionId, position)
+    : submitAttendanceViaTransaction(sessionId, position, profile);
 }
 
 /** Kirim ke callable `submitAttendance` (PRD 10.3); server yang memvalidasi dan menulis. */
 export async function submitAttendanceViaCallable(
   sessionId: string,
   position: DevicePosition,
-  laboratoryName?: string,
 ): Promise<AttendanceSubmitResult> {
   try {
     const kirim = httpsCallable<SubmitAttendanceRequest, SubmitAttendanceResponse>(
@@ -109,7 +106,7 @@ export async function submitAttendanceViaCallable(
       radiusMeters: data.radiusMeters,
     };
   } catch (error) {
-    return hasilGagalDariGalat(error, laboratoryName);
+    return hasilGagalDariGalat(error);
   }
 }
 
