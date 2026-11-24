@@ -1,0 +1,28 @@
+appId: com.ppk.presensipraktikum
+name: Asisten melihat kehadiran
+tags:
+  - android
+  - e2e
+---
+- launchApp:
+    clearState: true
+    permissions:
+      location: allow
+      notifications: allow
+- runFlow:
+    file: ../subflows/login.yaml
+- extendedWaitUntil:
+    visible: "MENU"
+    timeout: 20000
+- openLink:
+    link: "presensipraktikum://asisten/sesi/e2e-session-closed"
+    browser: false
+- extendedWaitUntil:
+    visible: "Kelola sesi"
+    timeout: 20000
+- assertVisible: "Hasil presensi"
+- extendedWaitUntil:
+    visible: "Praktikan Satu"
+    timeout: 20000
+- assertVisible: "001"
+- assertVisible: "Hadir"

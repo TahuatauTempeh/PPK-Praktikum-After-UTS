@@ -90,4 +90,5 @@ run_flow() {
 
 run_flow presensi-dalam-radius 110.4383 -7.0519 praktikan1@test.local
 run_flow presensi-luar-radius 110.5 -7.25 praktikan2@test.local
+run_flow asisten-kehadiran 110.4383 -7.0519 asisten@test.local
 node e2e/android/verify.js
