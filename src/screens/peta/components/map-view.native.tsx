@@ -35,6 +35,11 @@ export function PlatformMapView({
   const styles = useThemedStyles(createStyles);
   const webViewRef = useRef<WebView<object> | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const onMapErrorRef = useRef(onMapError);
+
+  useEffect(() => {
+    onMapErrorRef.current = onMapError;
+  }, [onMapError]);
 
   const mapState = useMemo<OsmMapStatePayload>(
     () => ({
@@ -78,12 +83,12 @@ export function PlatformMapView({
   );
 
   useEffect(() => {
-    if (mapReady || !onMapError) return;
+    if (mapReady) return;
     const timer = setTimeout(() => {
-      onMapError();
+      onMapErrorRef.current?.();
     }, MAP_READY_TIMEOUT_MS);
     return () => clearTimeout(timer);
-  }, [mapReady, onMapError]);
+  }, [mapReady]);
 
   useEffect(() => {
     if (!mapReady) return;
