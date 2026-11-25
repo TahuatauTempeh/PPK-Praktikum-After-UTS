@@ -70,6 +70,8 @@
     "test:web": "firebase emulators:exec --only auth,firestore --project demo-ppk-e2e \"node e2e/shared/seed.js --suite=critical && playwright test --config e2e/web/playwright.config.ts --project=critical\"",
     "test:web:full": "npx firebase emulators:exec --only auth,firestore --project demo-ppk-e2e \"node e2e/shared/seed.js --suite=full && playwright test --config e2e/web/playwright.config.ts --project=full\"",
     "android:e2e:build": "bash e2e/android/build-apk.sh",
+    "android:e2e:build:device": "E2E_TARGET=device-emulator bash e2e/android/build-apk.sh",
+    "android:e2e:build:live": "E2E_TARGET=live bash e2e/android/build-apk.sh",
     "test:android": "firebase emulators:exec --only auth,firestore --project demo-ppk-e2e \"node e2e/shared/seed.js --suite=critical && TIER=critical bash e2e/android/run.sh\"",
     "test:android:full": "npx firebase emulators:exec --only auth,firestore --project demo-ppk-e2e \"node e2e/shared/seed.js --suite=full && TIER=full bash e2e/android/run.sh\"",
     "uat:check": "node e2e/uat/check-coverage.js --strict",

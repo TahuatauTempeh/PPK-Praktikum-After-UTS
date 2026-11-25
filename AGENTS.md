@@ -136,7 +136,11 @@ git diff --check
 
 `npm run test:web` runs the 5 critical Playwright flows. `npm run test:android`
 runs the 3 critical Maestro flows and needs an API 35 emulator, Maestro, and
-`npm run android:e2e:build` first. Full UAT is available locally:
+`npm run android:e2e:build` first. Untuk perangkat fisik arm64, gunakan
+`npm run android:e2e:build:device` (backend emulator lewat `adb reverse`) atau
+`npm run android:e2e:build:live` (konfigurasi Firebase dari `.env`; build live
+menolak project demo dan mewajibkan `google-services.json` yang cocok). Full UAT
+is available locally:
 `npm run test:web:full` (all automatable web UAT IDs), `npm run test:android:full`
 (best-effort native flows), and `npm run uat:check` (65-ID matrix and tags).
 Full tier does not run in CI. Push notifications can use the Heroku worker

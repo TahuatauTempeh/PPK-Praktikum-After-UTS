@@ -384,7 +384,9 @@ Keterbatasan yang perlu diketahui:
 | `npm run test:ci` | Jalankan test sekali seperti CI |
 | `npm run test:rules` | Jalankan E2E Firestore rules di emulator (butuh Java 21+) |
 | `npm run test:web` | Jalankan 5 flow critical web Playwright (butuh Java 21+ dan Chromium) |
-| `npm run android:e2e:build` | Build APK release-like untuk E2E Android |
+| `npm run android:e2e:build` | Build APK release-like untuk E2E Android di emulator |
+| `npm run android:e2e:build:device` | Build APK arm64 untuk perangkat fisik dengan backend Firebase Emulator lewat `adb reverse` |
+| `npm run android:e2e:build:live` | Build APK arm64 dengan konfigurasi Firebase dari `.env` (bukan project demo) |
 | `npm run test:android` | Jalankan 3 flow critical Android Maestro (butuh APK + emulator API 35) |
 | `npm run verify` | Lint, typecheck, dan test sekaligus |
 | `npm --prefix functions test` | Jalankan test Cloud Functions |
