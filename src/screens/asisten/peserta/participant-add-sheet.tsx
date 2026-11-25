@@ -134,6 +134,7 @@ export function ParticipantAddSheet({ className, enrolledUserIds, onCancel, onSu
                 return (
                   <Pressable
                     key={user.id}
+                    testID={`peserta-pilih-${user.id}`}
                     accessibilityRole="button"
                     accessibilityState={{ selected }}
                     onPress={() => {
@@ -162,6 +163,7 @@ export function ParticipantAddSheet({ className, enrolledUserIds, onCancel, onSu
 
           <View style={styles.actions}>
             <Pressable
+              testID="peserta-simpan"
               accessibilityRole="button"
               disabled={submitting || !selectedUser}
               onPress={() => void handleConfirm(closeSheet)}

@@ -209,6 +209,7 @@ export default function ClassListScreen({
 
                 <View style={styles.rightActions}>
                   <Pressable
+                    testID={`kelas-edit-${item.id}`}
                     accessibilityRole="button"
                     onPress={() => {
                       setNotice(null);
@@ -219,6 +220,7 @@ export default function ClassListScreen({
                   </Pressable>
 
                   <Pressable
+                    testID={`kelas-hapus-${item.id}`}
                     accessibilityRole="button"
                     onPress={() => {
                       setNotice(null);

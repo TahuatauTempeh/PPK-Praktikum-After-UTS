@@ -68,6 +68,7 @@ export default function RegisterScreen() {
 
           <View style={authStyles.form}>
             <AuthField
+              testID="register-nama"
               label="Nama lengkap"
               value={name}
               onChangeText={setName}
@@ -77,6 +78,7 @@ export default function RegisterScreen() {
               error={errors.name}
             />
             <AuthField
+              testID="register-nim"
               label="NIM"
               value={nim}
               onChangeText={setNim}
@@ -86,6 +88,7 @@ export default function RegisterScreen() {
               error={errors.nim}
             />
             <AuthField
+              testID="register-email"
               label="Email"
               value={email}
               onChangeText={setEmail}
@@ -97,6 +100,7 @@ export default function RegisterScreen() {
               error={errors.email}
             />
             <AuthField
+              testID="register-password"
               label="Password"
               value={password}
               onChangeText={setPassword}
@@ -107,6 +111,7 @@ export default function RegisterScreen() {
               error={errors.password}
             />
             <AuthField
+              testID="register-konfirmasi"
               label="Konfirmasi password"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
@@ -123,6 +128,7 @@ export default function RegisterScreen() {
           ) : null}
 
           <Pressable
+            testID="register-submit"
             onPress={handleSubmit}
             disabled={submitting}
             accessibilityRole="button"

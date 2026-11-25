@@ -249,6 +249,7 @@ export function SessionFormSheet({
                     return (
                       <Pressable
                         key={item.id}
+                        testID={`sesi-lab-${item.id}`}
                         accessibilityRole="button"
                         accessibilityLabel={`Laboratorium ${item.name}${item.isActive ? '' : ', nonaktif'}`}
                         accessibilityState={{ selected }}
