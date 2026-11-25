@@ -61,7 +61,9 @@ fi
 unset SECRET_B64
 
 echo "Push ke Heroku..."
-git -C "$TMP_DIR" push heroku main
+# Repo deploy dibangun ulang dari commit lokal, jadi histori Heroku selalu
+# diganti. Ini normal untuk artefak deploy, bukan repo sumber.
+git -C "$TMP_DIR" push --force heroku main
 
 echo "Mengatur satu worker Basic..."
 heroku ps:scale worker=1 web=0 -a "$APP"
