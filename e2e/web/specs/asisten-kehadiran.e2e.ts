@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { login, waitForAsistenHome } from '../helpers';
+import { getAttendance, login, waitForAsistenHome } from '../helpers';
 
 test('asisten melihat kehadiran pada sesi tertutup', { tag: '@critical' }, async ({ page }) => {
   await login(page, 'asisten@test.local');
@@ -19,4 +19,15 @@ test('asisten melihat kehadiran pada sesi tertutup', { tag: '@critical' }, async
   ).toBeVisible();
   await expect(page.getByText('001', { exact: true })).toBeVisible();
   await expect(page.getByText('Hadir', { exact: true })).toBeVisible();
+
+  const attendance = await getAttendance('e2e-session-closed', 'e2e-praktikan1');
+  expect(attendance).toMatchObject({
+    sessionId: 'e2e-session-closed',
+    userId: 'e2e-praktikan1',
+    laboratoryId: 'e2e-lab',
+    source: 'location',
+    mocked: false,
+  });
+  expect(attendance?.latitude).toBeCloseTo(-7.0519, 3);
+  expect(attendance?.longitude).toBeCloseTo(110.4383, 3);
 });
