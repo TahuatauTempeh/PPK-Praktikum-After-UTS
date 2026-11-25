@@ -337,10 +337,18 @@ E2E Android dijalankan dengan Maestro pada emulator API 35. Build APK E2E
 (`npm run android:e2e:build`), boot emulator, lalu `npm run test:android`.
 Prasyarat: Android SDK, Maestro, Java 21+, dan KVM untuk CI.
 
-`npm run test:web` menjalankan 5 flow critical dan `npm run test:android`
-menjalankan 3 flow critical. Full UAT 65 ID, checklist manual 24 ID,
-`test:web:full`, `test:android:full`, dan `uat:check` belum tersedia di Phase 1;
-semuanya direncanakan pada Phase 2 setelah harness critical stabil.
+## E2E tiers
+
+- `npm run test:web` — 5 flow critical web (CI).
+- `npm run test:android` — 3 flow critical Android (CI).
+- `npm run test:web:full` — seluruh ID UAT web yang dapat diotomasi (lokal).
+- `npm run test:android:full` — flow native best-effort (lokal).
+- `npm run uat:check` — memeriksa matriks 65 ID dan tag test.
+
+Full tier membutuhkan Firebase Emulator, Java 21+, Chromium, dan untuk Android:
+API 35 emulator, Maestro, dan `npm run android:e2e:build`. Full tier tidak
+berjalan di CI. Checklist manual ada di `e2e/uat/manual-checklist.md` dan
+matriks di `e2e/uat/coverage.md`.
 
 Keterbatasan yang perlu diketahui:
 
@@ -381,7 +389,7 @@ Keterbatasan yang perlu diketahui:
 | `npx expo install --fix` | Samakan versi paket dengan SDK |
 | `npx expo install <paket>` | Pasang paket dengan versi yang cocok dengan SDK |
 
-Jalankan `npm run verify`, `npm run test:rules`, `npm run test:web`, `npm --prefix functions test`, `npm --prefix functions run build`, dan `git diff --check` sebelum membuka pull request. `test:rules` dan `test:web` membutuhkan Java 21+ dan Firebase Emulator; `test:web` juga membutuhkan Chromium. `test:web` di Phase 1 hanya menjalankan tier critical; full UAT belum ada. CI menjalankan langkah yang sama; lihat `.github/workflows/ci.yml`.
+Jalankan `npm run verify`, `npm run test:rules`, `npm run test:web`, `npm run test:web:full`, `npm run test:android:full`, `npm --prefix functions test`, `npm --prefix functions run build`, dan `git diff --check` sebelum membuka pull request. `test:rules` dan `test:web` membutuhkan Java 21+ dan Firebase Emulator; `test:web` juga membutuhkan Chromium. `test:web` menjalankan tier critical; full tier (`test:web:full`, `test:android:full`, dan `uat:check`) hanya berjalan lokal dan tidak di CI. CI menjalankan langkah yang sama untuk critical, rules, dan `uat:check`; lihat `.github/workflows/ci.yml`.
 
 ## 11. Build dengan EAS
 

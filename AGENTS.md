@@ -133,16 +133,20 @@ git diff --check
 
 `npm run test:web` runs the 5 critical Playwright flows. `npm run test:android`
 runs the 3 critical Maestro flows and needs an API 35 emulator, Maestro, and
-`npm run android:e2e:build` first. Full UAT (`test:web:full`,
-`test:android:full`, `uat:check`, 65-ID matrix, 24 manual checks) is Phase 2 and
-is not available yet.
+`npm run android:e2e:build` first. Full UAT is available locally:
+`npm run test:web:full` (all automatable web UAT IDs), `npm run test:android:full`
+(best-effort native flows), and `npm run uat:check` (65-ID matrix and tags).
+Full tier does not run in CI. Push notifications, native map markers, DEV-04,
+and DEV-07 remain manual/blocked; see `e2e/uat/manual-checklist.md`.
 
 `npm run test:rules` needs Java 21+ and the Firebase Emulator. If the default
 `java` is older, point `JAVA_HOME`/`PATH` at a newer JDK first.
 `npm run test:web` needs Java 21+, the Firebase Emulator, and Chromium
 (`npx playwright install chromium`).
 
-`npm run verify` runs lint, typecheck, and `test:ci` in order. CI also installs,
+`npm run verify` runs lint, typecheck, `test:ci`, and `uat:check` in order.
+`expo-doctor` stays advisory because this checkout has known version drift;
+REG-08 is evidenced by `npm run verify`, not by a new hard gate. CI also installs,
 tests, and builds `functions/`, runs `npm run test:rules` in the `rules-e2e`
 job, `npm run test:web` in the `web-e2e` job, and `npm run test:android` in the
 `android-e2e` job with Temurin 21. CI uses Node 24 (Expo SDK 58 accepts

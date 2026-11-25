@@ -1,16 +1,27 @@
 # Checklist Manual UAT
 
-Daftar 24 ID manual/blocked. Kolom `Bukti` diisi saat UAT manual (Task 9);
+Daftar ID manual/blocked. Kolom `Bukti` diisi saat UAT manual (Task 9);
 sebelum itu biarkan kosong.
 
 > **Catatan:** `UAT-DEV-04` dan `UAT-DEV-07` berstatus `blocked` karena perilaku
 > yang diharapkan belum ada di implementasi (known gap). Jangan menandainya
 > lulus dan jangan membuat test otomatis yang seolah-olah lulus.
+> `UAT-ATT-04` dipindahkan dari otomatis ke manual karena `pm revoke` pada
+> emulator menghasilkan state `denied` dengan `canAskAgain=true`, bukan
+> `blocked`; assertion otomatis tidak dapat membedakan keduanya tanpa melemahkan
+> perilaku yang diuji.
+>
+> **Status 25 November 2026:** checklist ini **belum dijalankan** sebagai UAT
+> manual. Kolom `Bukti` sengaja dibiarkan kosong. Jalankan di perangkat/akun
+> yang sesuai, lalu isi hasil aktual dan path bukti; jangan menandai lulus tanpa
+> bukti. ID notifikasi memerlukan Cloud Functions/push dan dua perangkat;
+> project E2E masih memakai konfigurasi demo/Spark.
 
 | ID | Langkah | Hasil yang diharapkan | Lingkungan | Bukti |
 |---|---|---|---|---|
 | UAT-ATT-06 | Buka presensi, tunggu 15 detik tanpa fix GPS | `Lokasi belum tersedia`; tombol coba lagi; tidak ada catatan | Perangkat/emulator dengan GPS dimatikan |  |
 | UAT-ATT-12 | Matikan koneksi, tekan presensi | `Koneksi bermasalah. Presensi tidak tercatat.`; tidak ada dokumen | Perangkat online lalu offline |  |
+| UAT-ATT-04 | Cabut izin lokasi lewat Pengaturan aplikasi, lalu buka presensi | `Izin lokasi diblokir`; tombol `Buka pengaturan`; presensi nonaktif | Android API 35 | Dipindahkan dari otomatis: `pm revoke` menghasilkan state `denied` dengan `canAskAgain=true`, bukan `blocked`. Verifikasi manual diperlukan. |
 | UAT-MAP-01 | Buka peta dengan tiga lab aktif | Tiga marker lab dan marker user muncul ≤ 3 detik | Android/iOS |  |
 | UAT-MAP-02 | Ubah lokasi emulator 20 m | Marker user bergerak tanpa reload | Emulator |  |
 | UAT-MAP-03 | Ketuk marker LAB-A | Panel nama, gedung/ruang, radius | Android/iOS |  |
