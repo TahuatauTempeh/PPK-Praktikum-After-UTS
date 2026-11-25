@@ -96,15 +96,17 @@ UAT; `UAT-ATT-04` dipindahkan ke manual.
 - Android: 3 critical dan 8 full, dua run full berturut-turut lulus tanpa retry.
 - `uat:check` strict: `UAT coverage valid: 65 baris, 43 spec Playwright.`
 - `npm run verify`, `npm run test:rules`, dan `git diff --check` lulus.
-- Tidak ada koneksi ke project produksi: seluruh run memakai project demo
-  `demo-ppk-e2e` dan `seed.js` menolak project non-`demo-`.
+- Suite otomatis demo tidak memakai project produksi: seluruh run memakai
+  project demo `demo-ppk-e2e` dan `seed.js` menolak project non-`demo-`.
+- UAT push live terpisah dijalankan di project `praktikum-ppk-3` pada
+  25 November 2026; data uji sudah dibersihkan dan buktinya ada di
+  `e2e/uat/live-uat-2026-11-25.md`.
 - Tidak ada perubahan `firestore.rules` untuk test.
-- Checklist manual **belum dijalankan** pada run ini; belum ada ID manual yang
-  memiliki bukti. Jalankan `e2e/uat/manual-checklist.md` di perangkat/akun yang
-  sesuai sebelum menutup gap manual.
+- Checklist manual belum sepenuhnya dijalankan. UAT push live dan 6 flow
+  perangkat sudah dijalankan pada 25 November 2026; ID manual lain tetap belum
+  punya bukti dan belum boleh ditandai lulus.
 - `blocked/gap` yang tersisa: `UAT-ATT-04` (dipindahkan ke manual karena
   `pm revoke` menghasilkan `denied`/`canAskAgain=true`, bukan `blocked`),
-  `UAT-DEV-04`, `UAT-DEV-07`, seluruh `UAT-NOT-*` (push dapat memakai worker
-  Heroku tanpa Blaze, tetapi tetap memerlukan dua perangkat/akun dan kredensial
-  Expo/FCM V1), serta pemeriksaan visual peta native `UAT-MAP-01..03` dan
-  `UAT-MAP-09`.
+  `UAT-DEV-04`, `UAT-DEV-07`, `UAT-NOT-09` (parsial), `UAT-NOT-12` (belum live),
+  serta pemeriksaan visual peta native `UAT-MAP-01..03` dan `UAT-MAP-09`.
+  `UAT-NOT-01`..`08`, `11`, `13`, dan `14` sudah punya bukti live.

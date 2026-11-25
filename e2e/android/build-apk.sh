@@ -45,16 +45,26 @@ else
 fi
 
 created_placeholder=0
+GS_BACKUP=""
 
 cleanup() {
   rm -rf android
   if [[ "$created_placeholder" == "1" ]]; then
     rm -f google-services.json
   fi
+  if [[ -n "$GS_BACKUP" && -f "$GS_BACKUP" ]]; then
+    mv "$GS_BACKUP" google-services.json
+  fi
 }
 trap cleanup EXIT
 
-if [[ "$TARGET" != "live" && ! -f google-services.json ]]; then
+if [[ "$TARGET" != "live" ]]; then
+  # Build demo harus memakai project demo, bukan google-services.json produksi
+  # yang mungkin ada di checkout lokal.
+  if [[ -f google-services.json ]]; then
+    GS_BACKUP="google-services.json.e2e-backup"
+    mv google-services.json "$GS_BACKUP"
+  fi
   cp e2e/android/fixtures/gs-placeholder.json google-services.json
   created_placeholder=1
 fi

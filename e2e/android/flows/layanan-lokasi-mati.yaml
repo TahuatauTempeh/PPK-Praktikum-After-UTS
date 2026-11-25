@@ -21,5 +21,10 @@ tags:
 - extendedWaitUntil:
     visible: "Layanan lokasi nonaktif. Aktifkan lokasi perangkat, lalu periksa lagi."
     timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Buka pengaturan lokasi"
+    direction: DOWN
+    timeout: 15000
 - assertVisible:
     text: "Buka pengaturan lokasi"

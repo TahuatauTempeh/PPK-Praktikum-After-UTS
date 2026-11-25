@@ -11,12 +11,12 @@ sebelum itu biarkan kosong.
 > `blocked`; assertion otomatis tidak dapat membedakan keduanya tanpa melemahkan
 > perilaku yang diuji.
 >
-> **Status 25 November 2026:** checklist ini **belum dijalankan** sebagai UAT
-> manual. Kolom `Bukti` sengaja dibiarkan kosong. Jalankan di perangkat/akun
-> yang sesuai, lalu isi hasil aktual dan path bukti; jangan menandai lulus tanpa
-> bukti. ID notifikasi memerlukan worker Heroku (lihat `functions/README.md`)
-> atau Cloud Functions, dua perangkat/akun, serta kredensial Expo/FCM V1;
-> project E2E masih memakai konfigurasi demo/Spark.
+> **Status 25 November 2026:** UAT push live dan 6 flow perangkat sudah
+> dijalankan di A55; bukti lengkap ada di
+> `e2e/uat/live-uat-2026-11-25.md`. Kolom `Bukti` untuk ID yang sudah diuji
+> diisi di dokumen itu; ID lain tetap belum boleh ditandai lulus tanpa bukti.
+> ID notifikasi memerlukan worker Heroku (lihat `functions/README.md`) atau
+> Cloud Functions, dua perangkat/akun, serta kredensial Expo/FCM V1.
 
 | ID | Langkah | Hasil yang diharapkan | Lingkungan | Bukti |
 |---|---|---|---|---|
@@ -45,3 +45,17 @@ sebelum itu biarkan kosong.
 | UAT-DEV-03 | GPS tidak tersedia; buka presensi | State lokasi belum tersedia; tombol coba lagi | Perangkat |  |
 | UAT-DEV-04 | Matikan koneksi; buka peta | Cache/empty state dan banner koneksi; tidak crash | Perangkat |  |
 | UAT-DEV-07 | Buka detail sesi lama tanpa lab sebagai asisten | Peringatan `Laboratorium belum diatur`; buka sesi ditolak | Web/Android |  |
+
+## Ringkasan bukti live 25 November 2026
+
+- Lulus: `UAT-NOT-01`..`08`, `UAT-NOT-11`, `UAT-NOT-13`, `UAT-NOT-14`.
+- Parsial: `UAT-NOT-09` (`user-fixed` + revoke tetap `canAskAgain=true`; app
+  menampilkan `Belum diizinkan`, bukan `Ditolak`).
+- Belum dijalankan live: `UAT-NOT-12` (dedupe sudah dicakup unit test worker),
+  `UAT-ATT-04`, `UAT-ATT-06`, `UAT-ATT-12`, `UAT-MAP-01`..`03`, `UAT-MAP-09`,
+  `UAT-DEV-01`..`04`, `UAT-DEV-07`.
+- Flow perangkat yang lulus: `asisten-kehadiran`, `izin-lokasi-ditolak`,
+  `layanan-lokasi-mati`, `sesi-tanpa-lab`, `izin-native`,
+  `kesan-pesan-native`.
+- Flow radius tetap di emulator karena lokasi uji di perangkat fisik ditandai
+  `mocked=true` dan ditolak aplikasi.

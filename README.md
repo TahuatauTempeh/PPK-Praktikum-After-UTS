@@ -346,6 +346,8 @@ Prasyarat: Android SDK, Maestro, Java 21+, dan KVM untuk CI.
 - `npm run test:android` — 3 flow critical Android (CI).
 - `npm run test:web:full` — seluruh ID UAT web yang dapat diotomasi (lokal).
 - `npm run test:android:full` — flow native best-effort (lokal).
+- `npm run test:android:device` — 6 flow non-radius di perangkat fisik arm64
+  (butuh `adb reverse`, `ALLOW_REAL_DEVICE=1` di script, dan APK device).
 - `npm run uat:check` — memeriksa matriks 65 ID dan tag test.
 
 Full tier membutuhkan Firebase Emulator, Java 21+, Chromium, dan untuk Android:
@@ -388,6 +390,7 @@ Keterbatasan yang perlu diketahui:
 | `npm run android:e2e:build:device` | Build APK arm64 untuk perangkat fisik dengan backend Firebase Emulator lewat `adb reverse` |
 | `npm run android:e2e:build:live` | Build APK arm64 dengan konfigurasi Firebase dari `.env` (bukan project demo) |
 | `npm run test:android` | Jalankan 3 flow critical Android Maestro (butuh APK + emulator API 35) |
+| `npm run test:android:device` | Jalankan 6 flow non-radius di perangkat fisik arm64 (butuh `ANDROID_SERIAL` dan APK device) |
 | `npm run verify` | Lint, typecheck, dan test sekaligus |
 | `npm --prefix functions test` | Jalankan test Cloud Functions |
 | `npm --prefix functions run build` | Build Cloud Functions |

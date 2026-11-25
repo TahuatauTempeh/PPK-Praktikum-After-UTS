@@ -139,8 +139,11 @@ runs the 3 critical Maestro flows and needs an API 35 emulator, Maestro, and
 `npm run android:e2e:build` first. Untuk perangkat fisik arm64, gunakan
 `npm run android:e2e:build:device` (backend emulator lewat `adb reverse`) atau
 `npm run android:e2e:build:live` (konfigurasi Firebase dari `.env`; build live
-menolak project demo dan mewajibkan `google-services.json` yang cocok). Full UAT
-is available locally:
+menolak project demo dan mewajibkan `google-services.json` yang cocok).
+`npm run test:android:device` menjalankan 6 flow non-radius di perangkat fisik
+dengan `MANIFEST=e2e/android/manifest.device.tsv`; flow radius tetap di emulator
+karena test provider pada perangkat fisik ditandai `mocked=true` dan ditolak
+aplikasi. Full UAT is available locally:
 `npm run test:web:full` (all automatable web UAT IDs), `npm run test:android:full`
 (best-effort native flows), and `npm run uat:check` (65-ID matrix and tags).
 Full tier does not run in CI. Push notifications can use the Heroku worker
