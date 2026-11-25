@@ -5,7 +5,7 @@
     "watch": "tsc -w",
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
-    "start": "npm run worker",
+    "start": "npm run shell",
     "worker": "node lib/worker.js",
     "heroku-postbuild": "npm run build",
     "deploy": "firebase deploy --only functions",
