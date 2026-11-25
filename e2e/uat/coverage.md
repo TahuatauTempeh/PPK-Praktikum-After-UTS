@@ -104,6 +104,7 @@ UAT; `UAT-ATT-04` dipindahkan ke manual.
   sesuai sebelum menutup gap manual.
 - `blocked/gap` yang tersisa: `UAT-ATT-04` (dipindahkan ke manual karena
   `pm revoke` menghasilkan `denied`/`canAskAgain=true`, bukan `blocked`),
-  `UAT-DEV-04`, `UAT-DEV-07`, seluruh `UAT-NOT-*` (push memerlukan
-  Functions/push dan dua perangkat; project masih Spark), serta pemeriksaan
-  visual peta native `UAT-MAP-01..03` dan `UAT-MAP-09`.
+  `UAT-DEV-04`, `UAT-DEV-07`, seluruh `UAT-NOT-*` (push dapat memakai worker
+  Heroku tanpa Blaze, tetapi tetap memerlukan dua perangkat/akun dan kredensial
+  Expo/FCM V1), serta pemeriksaan visual peta native `UAT-MAP-01..03` dan
+  `UAT-MAP-09`.

@@ -64,6 +64,8 @@ Di [Firebase Console](https://console.firebase.google.com/):
 
 > Project `praktikum-ppk-3` saat ini masih memakai paket **Spark**. Auth dan
 > Firestore berjalan, tetapi Cloud Functions Sprint 3 memerlukan paket **Blaze**.
+> Notifikasi push tetap bisa dijalankan tanpa Blaze lewat worker Heroku; lihat
+> [`functions/README.md`](functions/README.md).
 
 ### 3.2 Isi file `.env`
 
@@ -111,7 +113,8 @@ Ringkasan aturan:
 | `attendance` | pemilik atau asisten | praktikan membuat sendiri lewat fallback (ID `{sessionId}_{uid}`, satu kali); update/hapus oleh asisten |
 | `permissionRequests` | pemilik atau asisten | praktikan membuat (`pending`); asisten meninjau |
 | `auditLogs` | asisten | semua yang login boleh membuat catatan atas namanya; tidak bisa diubah/dihapus |
-| `notificationLogs` | asisten | hanya Cloud Functions (Admin SDK) |
+| `notificationLogs` | asisten | hanya Admin SDK (Cloud Functions atau worker Heroku) |
+| `notificationState` | tidak ada | hanya Admin SDK; baseline internal worker |
 | `invitationCodes` | semua yang login | admin membuat/menghapus |
 
 Catatan: rules `sessions` mengizinkan semua pengguna yang login membaca semua sesi. Pembatasan praktikan hanya melihat sesi kelasnya sendiri dilakukan di sisi aplikasi (lewat `enrollments`), bukan di rules.
@@ -356,7 +359,8 @@ Keterbatasan yang perlu diketahui:
 - **Presensi berbasis lokasi memakai jalur fallback (PRD 14.1).** Project masih Spark, jadi callable `submitAttendance` belum bisa dideploy. Aplikasi mencatat presensi lewat transaksi Firestore dengan validasi yang sama (`validasiPresensi`). Keputusan tim 23 November 2026.
 - **Klaim keamanan presensi diturunkan menjadi client-enforced untuk lokasi.** Setelah rules dideploy, server memeriksa: praktikan terdaftar di kelas, sesi `open`, lab aktif dan sama dengan sesi, radius sama dengan lab, akurasi ≤ 100 m, `distanceMeters ≤ radiusMeters`, `mocked == false`, waktu server, dan tidak ada presensi ganda. Jarak Haversine tidak bisa dihitung di rules, sehingga koordinat dan jarak dipercaya dari aplikasi. Jalur callable juga menerima koordinat dari perangkat, jadi tidak ada jalur yang bisa membuktikan koordinat asli.
 - **Pindah ke callable** setelah project Blaze: deploy `submitAttendance`, ganti `JALUR_PRESENSI` di `src/lib/attendance-service.ts` menjadi `'callable'`, lalu ubah rules create `attendance` menjadi `false`. Urutan ini penting supaya presensi tidak mati di tengah jalan.
-- Rules `attendance` (fallback) dan `notificationLogs` baru berlaku setelah rules dideploy ulang.
+- **Notifikasi push punya jalur worker Heroku tanpa Blaze.** `functions/src/worker.ts` memakai Firestore `onSnapshot` dan baseline `notificationState/*`; wrapper Cloud Functions tetap tersedia di `functions/src/notifications.ts`. Deploy dan batasannya ada di `functions/README.md`. Worker ini tidak memindahkan `submitAttendance`.
+- Rules `attendance` (fallback), `notificationLogs`, dan `notificationState` baru berlaku setelah rules dideploy ulang.
 - **Beranda, jadwal, rekap, dan detail sesi Asisten sudah Firestore-first**; `AssistantPreviewProvider` sudah dihapus. Sebagian layar Praktikan masih memakai `SessionContext` yang diisi `src/data/dummy.ts`, dan data itu hilang saat aplikasi dimuat ulang.
 - Layar jadwal Asisten menampilkan satu tanggal: hari ini bila ada sesi, jika tidak tanggal terdekat berikutnya, lalu tanggal terakhir. Untuk melihat semua sesi dan mengelolanya, pakai layar **Atur Sesi**.
 - Layar **Atur Sesi** tanpa filter kelas hanya menampilkan sesi milik asisten yang sedang login (`assistantId`).

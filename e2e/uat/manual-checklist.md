@@ -14,7 +14,8 @@ sebelum itu biarkan kosong.
 > **Status 25 November 2026:** checklist ini **belum dijalankan** sebagai UAT
 > manual. Kolom `Bukti` sengaja dibiarkan kosong. Jalankan di perangkat/akun
 > yang sesuai, lalu isi hasil aktual dan path bukti; jangan menandai lulus tanpa
-> bukti. ID notifikasi memerlukan Cloud Functions/push dan dua perangkat;
+> bukti. ID notifikasi memerlukan worker Heroku (lihat `functions/README.md`)
+> atau Cloud Functions, dua perangkat/akun, serta kredensial Expo/FCM V1;
 > project E2E masih memakai konfigurasi demo/Spark.
 
 | ID | Langkah | Hasil yang diharapkan | Lingkungan | Bukti |
