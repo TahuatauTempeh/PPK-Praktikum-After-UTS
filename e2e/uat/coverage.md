@@ -71,3 +71,39 @@ Status: `covered`, `partial`, `manual`, `blocked`, `rules`, `ci`, `pending`.
 | UAT-REG-06 | Ajukan dan tinjau izin | uat | web | e2e/web/specs/permissions.e2e.ts::[UAT-REG-06] tolak izin dan kunci setelah review | covered |
 | UAT-REG-07 | Tema terang dan gelap | uat | web | e2e/web/specs/regression.e2e.ts::[UAT-REG-07] tema terang dan gelap tetap terbaca | covered |
 | UAT-REG-08 | tsc lint dan expo-doctor | ci | ci | npm run verify | ci |
+
+## Catatan runtime
+
+| Tanggal | Suite | Hasil | Waktu |
+|---|---|---|---|
+| 2026-11-25 | Web critical (`npm run test:web`) | 5/5 passed | 1,3 menit |
+| 2026-11-25 | Web full run 1 (`npm run test:web:full`) | 43/43 passed | 6,6 menit |
+| 2026-11-25 | Web full run 2 (`npm run test:web:full`) | 43/43 passed | 6,2 menit |
+| 2026-11-25 | Android critical (`npm run test:android`) | 3/3 passed | 85 detik durasi flow |
+| 2026-11-25 | Android full run 1 (`npm run test:android:full`) | 8/8 passed | 246 detik durasi flow |
+| 2026-11-25 | Android full run 2 (`npm run test:android:full`) | 8/8 passed | 244 detik durasi flow |
+| 2026-11-25 | Rules (`npm run test:rules`) | 18/18 passed | — |
+| 2026-11-25 | Static (`npm run verify`) | 53 suite / 409 test Jest, `uat:check` valid | 4,5 detik Jest |
+
+APK Android dibangun dengan `npm run android:e2e:build` (release, x86_64) dan
+emulator API 35 (`PPKFresh`). Full Android menjalankan 3 flow critical + 5 flow
+UAT; `UAT-ATT-04` dipindahkan ke manual.
+
+## Hasil acceptance
+
+- Tanggal run: 25 November 2026.
+- Web: 5 critical dan 43 full, dua run full berturut-turut lulus tanpa retry.
+- Android: 3 critical dan 8 full, dua run full berturut-turut lulus tanpa retry.
+- `uat:check` strict: `UAT coverage valid: 65 baris, 43 spec Playwright.`
+- `npm run verify`, `npm run test:rules`, dan `git diff --check` lulus.
+- Tidak ada koneksi ke project produksi: seluruh run memakai project demo
+  `demo-ppk-e2e` dan `seed.js` menolak project non-`demo-`.
+- Tidak ada perubahan `firestore.rules` untuk test.
+- Checklist manual **belum dijalankan** pada run ini; belum ada ID manual yang
+  memiliki bukti. Jalankan `e2e/uat/manual-checklist.md` di perangkat/akun yang
+  sesuai sebelum menutup gap manual.
+- `blocked/gap` yang tersisa: `UAT-ATT-04` (dipindahkan ke manual karena
+  `pm revoke` menghasilkan `denied`/`canAskAgain=true`, bukan `blocked`),
+  `UAT-DEV-04`, `UAT-DEV-07`, seluruh `UAT-NOT-*` (push memerlukan
+  Functions/push dan dua perangkat; project masih Spark), serta pemeriksaan
+  visual peta native `UAT-MAP-01..03` dan `UAT-MAP-09`.
