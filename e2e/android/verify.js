@@ -86,6 +86,9 @@ async function main() {
   }
 
   for (const row of manifest) {
+    // Tier critical hanya menyeed flow critical; flow UAT di manifest yang
+    // sama tidak boleh diverifikasi pada run critical.
+    if (!run.flows[row.name]) continue;
     await verifyUat(row.name);
   }
 
