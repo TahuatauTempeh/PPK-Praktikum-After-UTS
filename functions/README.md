@@ -92,14 +92,21 @@ heroku config:set \
   FIREBASE_SERVICE_ACCOUNT_JSON="$(base64 -w0 /path/to/service-account.json)" \
   -a ppk-notifier
 
-# Deploy hanya folder functions/ sebagai root aplikasi
+# Deploy folder functions/ sebagai root aplikasi
+FIREBASE_SERVICE_ACCOUNT_FILE=/path/to/service-account.json \
+HEROKU_APP=ppk-notifier \
+./scripts/deploy-notifier.sh
+```
+
+Script deploy memakai `git archive`, jadi tidak membutuhkan `git-subtree`.
+Script juga menyimpan service account ke config var dan mengatur satu worker
+Basic. Jika ingin deploy manual, `git subtree` bisa dipakai bila terpasang:
+
+```bash
 git subtree split --prefix functions -b notifier-deploy
 git push heroku notifier-deploy:main
-
-# Satu worker Basic; Eco bisa tidur saat idle
 heroku ps:scale worker=1 web=0 -a ppk-notifier
 heroku ps:type worker=basic -a ppk-notifier
-
 heroku logs --tail -a ppk-notifier
 ```
 
