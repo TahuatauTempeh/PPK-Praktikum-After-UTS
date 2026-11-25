@@ -35,9 +35,12 @@ Sprint 3 features still in progress:
   `/praktikan/presensi/[id]` route is implemented, and the `submitAttendance`
   callable is implemented but not deployed. See `PRD.md` 14.1.
 - Notification rules exist (`notificationLogs` is read-only for assistants and
-  written by Cloud Functions), but the callable attendance lock-down is not
-  finalized. The fallback rules reject direct writes without the required
-  evidence; do not weaken them before the callable path is ready.
+  written by Admin SDK), but the callable attendance lock-down is not finalized.
+  The fallback rules reject direct writes without the required evidence; do not
+  weaken them before the callable path is ready.
+- Notifications can run without Blaze through the Heroku worker in
+  `functions/src/worker.ts`; the Cloud Functions wrappers remain in
+  `functions/src/notifications.ts`. See `functions/README.md`.
 
 ## Expo has changed — do not trust your training data
 
@@ -133,16 +136,29 @@ git diff --check
 
 `npm run test:web` runs the 5 critical Playwright flows. `npm run test:android`
 runs the 3 critical Maestro flows and needs an API 35 emulator, Maestro, and
-`npm run android:e2e:build` first. Full UAT (`test:web:full`,
-`test:android:full`, `uat:check`, 65-ID matrix, 24 manual checks) is Phase 2 and
-is not available yet.
+`npm run android:e2e:build` first. Untuk perangkat fisik arm64, gunakan
+`npm run android:e2e:build:device` (backend emulator lewat `adb reverse`) atau
+`npm run android:e2e:build:live` (konfigurasi Firebase dari `.env`; build live
+menolak project demo dan mewajibkan `google-services.json` yang cocok).
+`npm run test:android:device` menjalankan 6 flow non-radius di perangkat fisik
+dengan `MANIFEST=e2e/android/manifest.device.tsv`; flow radius tetap di emulator
+karena test provider pada perangkat fisik ditandai `mocked=true` dan ditolak
+aplikasi. Full UAT is available locally:
+`npm run test:web:full` (all automatable web UAT IDs), `npm run test:android:full`
+(best-effort native flows), and `npm run uat:check` (65-ID matrix and tags).
+Full tier does not run in CI. Push notifications can use the Heroku worker
+(no Blaze), but remain manual because they need two devices, Expo FCM V1
+credentials, and a live worker. Native map markers, DEV-04, and DEV-07 remain
+manual/blocked; see `e2e/uat/manual-checklist.md`.
 
 `npm run test:rules` needs Java 21+ and the Firebase Emulator. If the default
 `java` is older, point `JAVA_HOME`/`PATH` at a newer JDK first.
 `npm run test:web` needs Java 21+, the Firebase Emulator, and Chromium
 (`npx playwright install chromium`).
 
-`npm run verify` runs lint, typecheck, and `test:ci` in order. CI also installs,
+`npm run verify` runs lint, typecheck, `test:ci`, and `uat:check` in order.
+`expo-doctor` stays advisory because this checkout has known version drift;
+REG-08 is evidenced by `npm run verify`, not by a new hard gate. CI also installs,
 tests, and builds `functions/`, runs `npm run test:rules` in the `rules-e2e`
 job, `npm run test:web` in the `web-e2e` job, and `npm run test:android` in the
 `android-e2e` job with Temurin 21. CI uses Node 24 (Expo SDK 58 accepts
@@ -341,9 +357,9 @@ directly from screens.
 - `firestore.rules` is the authoritative access control layer. Client checks are
   UX guards, not a substitute.
 - The rules cover `users`, `classes`, `enrollments`, `sessions`, `laboratories`,
-  `notificationLogs`, `attendance`, `permissionRequests`, `kesanPesan`,
-  `auditLogs`, and `invitationCodes`. Fallback attendance rules are active; the
-  callable attendance lock-down is still pending.
+  `notificationLogs`, `notificationState`, `attendance`, `permissionRequests`,
+  `kesanPesan`, `auditLogs`, and `invitationCodes`. Fallback attendance rules are
+  active; the callable attendance lock-down is still pending.
 - Deploy rules to the team project after any change and test the affected role
   paths. CI runs `npm run test:rules` in the `rules-e2e` job.
 - Firestore has no schema. Keep `src/types/index.ts`, converters, and service
@@ -406,7 +422,8 @@ Profiles live in `eas.json`: `development` (development client, internal),
   device falls back to the list after the map fails to become ready.
 - **Firebase project is on Spark.** `praktikum-ppk-3` does not have billing
   enabled. Auth and Firestore work, but Cloud Functions from Sprint 3 cannot be
-  deployed until the project is upgraded to Blaze.
+  deployed until the project is upgraded to Blaze. Notifications can instead run
+  on the Heroku worker described in `functions/README.md`.
 - **Assistant preview data is gone; praktikan dummy data is not.** Home, jadwal,
   rekap, and session detail for assistants read Firestore, and
   `AssistantPreviewProvider` has been removed. Parts of `SessionContext` are

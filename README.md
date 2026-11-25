@@ -64,6 +64,8 @@ Di [Firebase Console](https://console.firebase.google.com/):
 
 > Project `praktikum-ppk-3` saat ini masih memakai paket **Spark**. Auth dan
 > Firestore berjalan, tetapi Cloud Functions Sprint 3 memerlukan paket **Blaze**.
+> Notifikasi push tetap bisa dijalankan tanpa Blaze lewat worker Heroku; lihat
+> [`functions/README.md`](functions/README.md).
 
 ### 3.2 Isi file `.env`
 
@@ -111,7 +113,8 @@ Ringkasan aturan:
 | `attendance` | pemilik atau asisten | praktikan membuat sendiri lewat fallback (ID `{sessionId}_{uid}`, satu kali); update/hapus oleh asisten |
 | `permissionRequests` | pemilik atau asisten | praktikan membuat (`pending`); asisten meninjau |
 | `auditLogs` | asisten | semua yang login boleh membuat catatan atas namanya; tidak bisa diubah/dihapus |
-| `notificationLogs` | asisten | hanya Cloud Functions (Admin SDK) |
+| `notificationLogs` | asisten | hanya Admin SDK (Cloud Functions atau worker Heroku) |
+| `notificationState` | tidak ada | hanya Admin SDK; baseline internal worker |
 | `invitationCodes` | semua yang login | admin membuat/menghapus |
 
 Catatan: rules `sessions` mengizinkan semua pengguna yang login membaca semua sesi. Pembatasan praktikan hanya melihat sesi kelasnya sendiri dilakukan di sisi aplikasi (lewat `enrollments`), bukan di rules.
@@ -337,10 +340,20 @@ E2E Android dijalankan dengan Maestro pada emulator API 35. Build APK E2E
 (`npm run android:e2e:build`), boot emulator, lalu `npm run test:android`.
 Prasyarat: Android SDK, Maestro, Java 21+, dan KVM untuk CI.
 
-`npm run test:web` menjalankan 5 flow critical dan `npm run test:android`
-menjalankan 3 flow critical. Full UAT 65 ID, checklist manual 24 ID,
-`test:web:full`, `test:android:full`, dan `uat:check` belum tersedia di Phase 1;
-semuanya direncanakan pada Phase 2 setelah harness critical stabil.
+## E2E tiers
+
+- `npm run test:web` — 5 flow critical web (CI).
+- `npm run test:android` — 3 flow critical Android (CI).
+- `npm run test:web:full` — seluruh ID UAT web yang dapat diotomasi (lokal).
+- `npm run test:android:full` — flow native best-effort (lokal).
+- `npm run test:android:device` — 6 flow non-radius di perangkat fisik arm64
+  (butuh `adb reverse`, `ALLOW_REAL_DEVICE=1` di script, dan APK device).
+- `npm run uat:check` — memeriksa matriks 65 ID dan tag test.
+
+Full tier membutuhkan Firebase Emulator, Java 21+, Chromium, dan untuk Android:
+API 35 emulator, Maestro, dan `npm run android:e2e:build`. Full tier tidak
+berjalan di CI. Checklist manual ada di `e2e/uat/manual-checklist.md` dan
+matriks di `e2e/uat/coverage.md`.
 
 Keterbatasan yang perlu diketahui:
 
@@ -348,7 +361,8 @@ Keterbatasan yang perlu diketahui:
 - **Presensi berbasis lokasi memakai jalur fallback (PRD 14.1).** Project masih Spark, jadi callable `submitAttendance` belum bisa dideploy. Aplikasi mencatat presensi lewat transaksi Firestore dengan validasi yang sama (`validasiPresensi`). Keputusan tim 23 November 2026.
 - **Klaim keamanan presensi diturunkan menjadi client-enforced untuk lokasi.** Setelah rules dideploy, server memeriksa: praktikan terdaftar di kelas, sesi `open`, lab aktif dan sama dengan sesi, radius sama dengan lab, akurasi ≤ 100 m, `distanceMeters ≤ radiusMeters`, `mocked == false`, waktu server, dan tidak ada presensi ganda. Jarak Haversine tidak bisa dihitung di rules, sehingga koordinat dan jarak dipercaya dari aplikasi. Jalur callable juga menerima koordinat dari perangkat, jadi tidak ada jalur yang bisa membuktikan koordinat asli.
 - **Pindah ke callable** setelah project Blaze: deploy `submitAttendance`, ganti `JALUR_PRESENSI` di `src/lib/attendance-service.ts` menjadi `'callable'`, lalu ubah rules create `attendance` menjadi `false`. Urutan ini penting supaya presensi tidak mati di tengah jalan.
-- Rules `attendance` (fallback) dan `notificationLogs` baru berlaku setelah rules dideploy ulang.
+- **Notifikasi push punya jalur worker Heroku tanpa Blaze.** `functions/src/worker.ts` memakai Firestore `onSnapshot` dan baseline `notificationState/*`; wrapper Cloud Functions tetap tersedia di `functions/src/notifications.ts`. Deploy dan batasannya ada di `functions/README.md`. Worker ini tidak memindahkan `submitAttendance`.
+- Rules `attendance` (fallback), `notificationLogs`, dan `notificationState` baru berlaku setelah rules dideploy ulang.
 - **Beranda, jadwal, rekap, dan detail sesi Asisten sudah Firestore-first**; `AssistantPreviewProvider` sudah dihapus. Sebagian layar Praktikan masih memakai `SessionContext` yang diisi `src/data/dummy.ts`, dan data itu hilang saat aplikasi dimuat ulang.
 - Layar jadwal Asisten menampilkan satu tanggal: hari ini bila ada sesi, jika tidak tanggal terdekat berikutnya, lalu tanggal terakhir. Untuk melihat semua sesi dan mengelolanya, pakai layar **Atur Sesi**.
 - Layar **Atur Sesi** tanpa filter kelas hanya menampilkan sesi milik asisten yang sedang login (`assistantId`).
@@ -372,8 +386,11 @@ Keterbatasan yang perlu diketahui:
 | `npm run test:ci` | Jalankan test sekali seperti CI |
 | `npm run test:rules` | Jalankan E2E Firestore rules di emulator (butuh Java 21+) |
 | `npm run test:web` | Jalankan 5 flow critical web Playwright (butuh Java 21+ dan Chromium) |
-| `npm run android:e2e:build` | Build APK release-like untuk E2E Android |
+| `npm run android:e2e:build` | Build APK release-like untuk E2E Android di emulator |
+| `npm run android:e2e:build:device` | Build APK arm64 untuk perangkat fisik dengan backend Firebase Emulator lewat `adb reverse` |
+| `npm run android:e2e:build:live` | Build APK arm64 dengan konfigurasi Firebase dari `.env` (bukan project demo) |
 | `npm run test:android` | Jalankan 3 flow critical Android Maestro (butuh APK + emulator API 35) |
+| `npm run test:android:device` | Jalankan 6 flow non-radius di perangkat fisik arm64 (butuh `ANDROID_SERIAL` dan APK device) |
 | `npm run verify` | Lint, typecheck, dan test sekaligus |
 | `npm --prefix functions test` | Jalankan test Cloud Functions |
 | `npm --prefix functions run build` | Build Cloud Functions |
@@ -381,7 +398,7 @@ Keterbatasan yang perlu diketahui:
 | `npx expo install --fix` | Samakan versi paket dengan SDK |
 | `npx expo install <paket>` | Pasang paket dengan versi yang cocok dengan SDK |
 
-Jalankan `npm run verify`, `npm run test:rules`, `npm run test:web`, `npm --prefix functions test`, `npm --prefix functions run build`, dan `git diff --check` sebelum membuka pull request. `test:rules` dan `test:web` membutuhkan Java 21+ dan Firebase Emulator; `test:web` juga membutuhkan Chromium. `test:web` di Phase 1 hanya menjalankan tier critical; full UAT belum ada. CI menjalankan langkah yang sama; lihat `.github/workflows/ci.yml`.
+Jalankan `npm run verify`, `npm run test:rules`, `npm run test:web`, `npm run test:web:full`, `npm run test:android:full`, `npm --prefix functions test`, `npm --prefix functions run build`, dan `git diff --check` sebelum membuka pull request. `test:rules` dan `test:web` membutuhkan Java 21+ dan Firebase Emulator; `test:web` juga membutuhkan Chromium. `test:web` menjalankan tier critical; full tier (`test:web:full`, `test:android:full`, dan `uat:check`) hanya berjalan lokal dan tidak di CI. CI menjalankan langkah yang sama untuk critical, rules, dan `uat:check`; lihat `.github/workflows/ci.yml`.
 
 ## 11. Build dengan EAS
 

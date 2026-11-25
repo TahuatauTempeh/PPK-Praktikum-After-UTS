@@ -18,7 +18,7 @@ const {
 } = require('firebase/firestore');
 
 const RULES = path.join(__dirname, '../../firestore.rules');
-const EXPECTED_SCENARIOS = 18;
+const EXPECTED_SCENARIOS = 20;
 const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8080';
 const [host, portText] = emulatorHost.split(':');
 const port = Number(portText ?? 8080);
@@ -106,6 +106,7 @@ function validAttendance(sessionId, overrides = {}) {
         userName: 'Praktikan Dua',
         userNim: '002',
       });
+      await setDoc(doc(db, 'notificationState', 'sessions'), { docs: {} });
     });
 
     const p1 = testEnv.authenticatedContext('p1').firestore();
@@ -178,6 +179,10 @@ function validAttendance(sessionId, overrides = {}) {
       assertSucceeds(updateDoc(doc(a1, 'attendance', 's1_p1'), {
         userName: 'Diubah Asisten',
       })));
+    await cek('praktikan tidak membaca baseline notifikasi', () =>
+      assertFails(getDoc(doc(p1, 'notificationState', 'sessions'))));
+    await cek('asisten tidak menulis baseline notifikasi', () =>
+      assertFails(setDoc(doc(a1, 'notificationState', 'sessions'), { docs: {} })));
 
     for (const [name, status] of hasil) {
       console.log(`${status}  ${name}`);

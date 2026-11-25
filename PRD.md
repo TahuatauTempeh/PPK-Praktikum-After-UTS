@@ -160,7 +160,7 @@ Prioritas: **P0** wajib demo, **P1** wajib sebelum rilis, **P2** opsional.
 | D-02 | Target: klien tidak lagi menulis `attendance` langsung setelah callable | Mencegah validasi ganda dan status sesi yang basi | Selama Spark memakai fallback rules; setelah callable, `attendance` create menjadi `false` |
 | D-03 | Radius disimpan per laboratorium, bukan per sesi | Data lebih sederhana, konsisten untuk semua sesi di lab yang sama | Sesi yang pindah ruang harus diubah ke lab lain |
 | D-04 | Sesi wajib memiliki `laboratoryId` sebelum dibuka | Presensi tidak mungkin divalidasi tanpa acuan lokasi | Sesi lama tanpa lab harus dilengkapi asisten |
-| D-05 | Notifikasi dikirim oleh Firestore trigger di Cloud Functions | Tidak bergantung pada aplikasi asisten tetap terbuka | Butuh Functions dan kredensial push |
+| D-05 | Notifikasi dikirim oleh trigger Firestore di Cloud Functions, atau worker listener Heroku saat Blaze tidak tersedia | Tidak bergantung pada aplikasi asisten tetap terbuka | Butuh Functions/Blaze atau worker yang selalu hidup, plus kredensial push |
 | D-06 | Expo Push Service dipakai, dengan FCM V1 di Android | Cross-platform, tidak menyimpan service account di aplikasi | Butuh EAS credentials dan `google-services.json` |
 | D-07 | Lokasi hanya foreground | Menghindari izin background dan privasi berlebihan | Tidak ada pelacakan saat aplikasi ditutup |
 | D-08 | Peta memakai Leaflet/OpenStreetMap di WebView native dan web | Tidak membutuhkan Google Maps API key dan tetap bisa berjalan di web | Peta butuh koneksi ke CDN/tile OSM; web default ke mode daftar dan fallback daftar bila peta gagal |
@@ -381,6 +381,12 @@ Aturan:
 - Data sesi dan kelas difilter di klien karena jumlahnya kecil; tidak perlu indeks komposit baru.
 
 ### 7.6 Push notification
+
+> **Status 25 November 2026:** notifikasi dapat dijalankan tanpa Blaze melalui
+> worker Heroku (`functions/src/worker.ts`) yang memakai Firestore
+> `onSnapshot` dan baseline `notificationState/*`. Trigger Cloud Functions tetap
+> tersedia di `functions/src/notifications.ts`. Deploy dan batasannya ada di
+> `functions/README.md`.
 
 #### Peristiwa dan penerima
 

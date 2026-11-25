@@ -1,0 +1,47 @@
+appId: com.ppk.presensipraktikum
+name: Ajukan izin native
+tags:
+  - android
+  - e2e
+  - uat
+---
+- launchApp:
+    clearState: true
+    permissions:
+      location: allow
+      notifications: allow
+- runFlow:
+    file: ../subflows/login.yaml
+- extendedWaitUntil:
+    visible: "Daftar sesi"
+    timeout: 20000
+- openLink:
+    link: "presensipraktikum://izin"
+    browser: false
+- tapOn:
+    id: "izin-sesi"
+- swipe:
+    start: 50%, 80%
+    end: 50%, 20%
+    duration: 400
+- swipe:
+    start: 50%, 80%
+    end: 50%, 20%
+    duration: 400
+- swipe:
+    start: 50%, 80%
+    end: 50%, 20%
+    duration: 400
+- extendedWaitUntil:
+    visible: ".*Sesi openPermission.*"
+    timeout: 10000
+- tapOn: ".*Sesi openPermission.*"
+- tapOn:
+    id: "izin-alasan"
+- inputText: ${REASON}
+- hideKeyboard
+- tapOn:
+    id: "izin-kirim"
+- extendedWaitUntil:
+    visible: ".*Izin terkirim.*"
+    timeout: 30000

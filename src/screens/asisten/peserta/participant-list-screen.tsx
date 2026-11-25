@@ -290,6 +290,7 @@ export default function ParticipantListScreen({
               </View>
 
               <Pressable
+                testID={`peserta-hapus-${item.id}`}
                 accessibilityRole="button"
                 onPress={() => {
                   setNotice(null);

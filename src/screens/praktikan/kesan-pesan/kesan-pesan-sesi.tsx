@@ -135,6 +135,7 @@ export function KesanPesanSesi({ sessionId, user }: KesanPesanSesiProps) {
           <View style={styles.kolom}>
             <Text style={[typography.caption, styles.tebal, { color: theme.colors.textPrimary }]}>Kesan dan pesan</Text>
             <TextInput
+              testID="kesan-alasan"
               accessibilityLabel="Kesan dan pesan"
               aria-required
               aria-invalid={!!galatTeks}
@@ -179,7 +180,7 @@ export function KesanPesanSesi({ sessionId, user }: KesanPesanSesiProps) {
           ) : null}
 
           <View style={styles.aksi}>
-            <Tombol label={mengirim ? 'Mengirim...' : 'Kirim kesan pesan'} disabled={mengirim} onPress={kirim} />
+            <Tombol testID="kesan-kirim" label={mengirim ? 'Mengirim...' : 'Kirim kesan pesan'} disabled={mengirim} onPress={kirim} />
             <Tombol
               label="Batal"
               varian="lembut"

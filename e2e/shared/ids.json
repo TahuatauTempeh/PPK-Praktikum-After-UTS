@@ -3,13 +3,26 @@
   "users": {
     "asisten": "e2e-asisten",
     "praktikan1": "e2e-praktikan1",
-    "praktikan2": "e2e-praktikan2"
+    "praktikan2": "e2e-praktikan2",
+    "admin": "e2e-admin",
+    "praktikan3": "e2e-praktikan3"
   },
-  "classes": { "a": "e2e-class" },
-  "labs": { "a": "e2e-lab" },
+  "classes": { "a": "e2e-class", "b": "e2e-class-b" },
+  "labs": { "a": "e2e-lab", "b": "e2e-lab-b", "inactive": "e2e-lab-c" },
   "sessions": {
     "open": "e2e-session-open",
     "openOut": "e2e-session-open-out",
-    "closed": "e2e-session-closed"
+    "closed": "e2e-session-closed",
+    "scheduled": "e2e-session-scheduled",
+    "scheduledNoLab": "e2e-session-scheduled-nolab",
+    "tomorrow": "e2e-session-tomorrow",
+    "openNoLab": "e2e-session-open-nolab",
+    "openInactiveLab": "e2e-session-open-inactive-lab",
+    "openDuplicate": "e2e-session-open-duplicate",
+    "openAccuracy": "e2e-session-open-accuracy",
+    "openRealtime": "e2e-session-open-realtime",
+    "openRecap": "e2e-session-open-recap",
+    "openPermission": "e2e-session-open-permission",
+    "openKesan": "e2e-session-open-kesan"
   }
 }

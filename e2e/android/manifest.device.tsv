@@ -1,0 +1,7 @@
+# name	tier	lon	lat	email	geo
+asisten-kehadiran	critical	110.4383	-7.0519	asisten@test.local	none
+izin-lokasi-ditolak	uat	110.4383	-7.0519	praktikan1@test.local	none
+layanan-lokasi-mati	uat	110.4383	-7.0519	praktikan1@test.local	off
+sesi-tanpa-lab	uat	110.4383	-7.0519	asisten@test.local	none
+izin-native	uat	110.4383	-7.0519	praktikan1@test.local	none
+kesan-pesan-native	uat	110.4383	-7.0519	praktikan1@test.local	none

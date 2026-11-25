@@ -1,0 +1,26 @@
+appId: com.ppk.presensipraktikum
+name: Izin lokasi dicabut
+tags:
+  - android
+  - e2e
+  - uat
+---
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: allow
+- runFlow:
+    file: ../subflows/login.yaml
+- extendedWaitUntil:
+    visible: "Daftar sesi"
+    timeout: 20000
+- openLink:
+    link: "presensipraktikum://praktikan/presensi/${SESSION_ID}"
+    browser: false
+- extendedWaitUntil:
+    visible: "Izin lokasi diblokir"
+    timeout: 30000
+- assertVisible: "Buka pengaturan"
+- assertVisible:
+    text: "Presensi sekarang"
+    enabled: false

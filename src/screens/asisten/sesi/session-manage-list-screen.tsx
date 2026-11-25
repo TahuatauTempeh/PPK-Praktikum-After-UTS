@@ -356,6 +356,7 @@ export default function SessionManageListScreen({
 
                 <View style={styles.cardActions}>
                   <Pressable
+                    testID={`sesi-edit-${item.id}`}
                     accessibilityRole="button"
                     onPress={() => {
                       setNotice(null);
@@ -366,6 +367,7 @@ export default function SessionManageListScreen({
                   </Pressable>
 
                   <Pressable
+                    testID={`sesi-hapus-${item.id}`}
                     accessibilityRole="button"
                     onPress={() => {
                       setNotice(null);

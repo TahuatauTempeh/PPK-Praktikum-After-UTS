@@ -74,6 +74,7 @@ export function ClassFormSheet({ initialClass, onCancel, onSubmit }: Props) {
             <View style={styles.field}>
               <AssistantText variant="label" style={styles.fieldLabel}>Nama Kelas *</AssistantText>
               <TextInput
+                testID="kelas-nama"
                 value={name}
                 onChangeText={value => {
                   setName(value);
@@ -91,6 +92,7 @@ export function ClassFormSheet({ initialClass, onCancel, onSubmit }: Props) {
             <View style={styles.field}>
               <AssistantText variant="label" style={styles.fieldLabel}>Deskripsi</AssistantText>
               <TextInput
+                testID="kelas-deskripsi"
                 value={description}
                 onChangeText={setDescription}
                 placeholder="Ringkasan materi atau catatan kelas (opsional)"
@@ -108,6 +110,7 @@ export function ClassFormSheet({ initialClass, onCancel, onSubmit }: Props) {
 
           <View style={styles.actions}>
             <Pressable
+              testID="kelas-simpan"
               accessibilityRole="button"
               disabled={submitting}
               onPress={() => void handleSave(closeSheet)}

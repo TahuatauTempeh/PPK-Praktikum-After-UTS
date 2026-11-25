@@ -4,32 +4,85 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
-source e2e/android/env.sh
-export E2E_ANDROID=1
+fail() {
+  printf 'ERROR: %s\n' "$*" >&2
+  exit 1
+}
 
-# Emulator E2E memakai x86_64; ABI lain hanya menambah waktu build.
-ABI="${E2E_ANDROID_ABI:-x86_64}"
+TARGET="${E2E_TARGET:-emulator}"
+
+case "$TARGET" in
+  emulator)
+    source e2e/android/env.sh
+    export E2E_ANDROID=1
+    ;;
+  device-emulator)
+    source e2e/android/env.sh
+    export EXPO_PUBLIC_FIREBASE_EMULATOR_HOST=127.0.0.1
+    export E2E_ANDROID=1
+    ;;
+  live)
+    [[ -f .env ]] || fail "Build live membutuhkan .env dengan konfigurasi Firebase."
+    set -a
+    # shellcheck disable=SC1091
+    source .env
+    set +a
+    unset EXPO_PUBLIC_FIREBASE_EMULATOR_HOST
+    [[ -f google-services.json ]] || fail "Build live membutuhkan google-services.json asli."
+    ;;
+  *)
+    fail "E2E_TARGET tidak dikenal: $TARGET (gunakan emulator, device-emulator, atau live)."
+    ;;
+esac
+
+# Emulator memakai x86_64; perangkat fisik memakai arm64-v8a.
+if [[ -n "${E2E_ANDROID_ABI:-}" ]]; then
+  ABI="$E2E_ANDROID_ABI"
+elif [[ "$TARGET" == "emulator" ]]; then
+  ABI="x86_64"
+else
+  ABI="arm64-v8a"
+fi
 
 created_placeholder=0
+GS_BACKUP=""
 
 cleanup() {
   rm -rf android
   if [[ "$created_placeholder" == "1" ]]; then
     rm -f google-services.json
   fi
+  if [[ -n "$GS_BACKUP" && -f "$GS_BACKUP" ]]; then
+    mv "$GS_BACKUP" google-services.json
+  fi
 }
 trap cleanup EXIT
 
-if [[ ! -f google-services.json ]]; then
+if [[ "$TARGET" != "live" ]]; then
+  # Build demo harus memakai project demo, bukan google-services.json produksi
+  # yang mungkin ada di checkout lokal.
+  if [[ -f google-services.json ]]; then
+    GS_BACKUP="google-services.json.e2e-backup"
+    mv google-services.json "$GS_BACKUP"
+  fi
   cp e2e/android/fixtures/gs-placeholder.json google-services.json
   created_placeholder=1
+fi
+
+if [[ "$TARGET" == "live" ]]; then
+  GS_PROJECT_ID="$(node -e "process.stdout.write(require('./google-services.json').project_info.project_id)")"
+  [[ "$GS_PROJECT_ID" == "${EXPO_PUBLIC_FIREBASE_PROJECT_ID:-}" ]] \
+    || fail "google-services.json ($GS_PROJECT_ID) tidak cocok dengan EXPO_PUBLIC_FIREBASE_PROJECT_ID."
+  [[ "$GS_PROJECT_ID" != demo-* ]] || fail "Build live tidak boleh memakai project demo-."
 fi
 
 rm -f e2e/android/artifacts/app-release.apk
 
 npx expo prebuild --platform android --clean --no-install
 
-grep -q 'android:usesCleartextTraffic="true"' android/app/src/main/AndroidManifest.xml
+if [[ "$TARGET" != "live" ]]; then
+  grep -q 'android:usesCleartextTraffic="true"' android/app/src/main/AndroidManifest.xml
+fi
 
 (cd android && ./gradlew assembleRelease -PreactNativeArchitectures="$ABI")
 

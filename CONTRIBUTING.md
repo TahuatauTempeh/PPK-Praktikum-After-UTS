@@ -535,11 +535,14 @@ Android E2E tersedia lewat `npm run test:android` (Maestro, emulator API 35,
 Java 21+) dan menjalankan 3 flow critical; build APK dulu dengan
 `npm run android:e2e:build` dan boot emulator. Prasyarat lokal: Android SDK,
 `adb`, Maestro, Java 21+, dan KVM untuk CI. `npm run test:android` bukan bagian
-dari `npm run verify`. Full UAT 65 ID, checklist manual 24 ID, `test:web:full`,
-`test:android:full`, dan `uat:check` belum tersedia di Phase 1. Yang belum
-dicakup otomatis: seluruh jalur CRUD Firestore end-to-end dan build native.
-Perubahan pada area itu tetap memerlukan pengujian manual. Skenario harness
-rules saat ini fokus pada `attendance`; rules koleksi lain belum dicakup.
+dari `npm run verify`. Full UAT tersedia lokal lewat `npm run test:web:full`
+(seluruh ID UAT web yang dapat diotomasi) dan `npm run test:android:full` (flow
+native best-effort); `npm run uat:check` memeriksa matriks 65 ID dan tag test.
+Full tier tidak berjalan di CI. Yang belum dicakup otomatis: push notification,
+marker peta native, DEV-04, DEV-07, dan build native. Perubahan pada area itu
+tetap memerlukan pengujian manual; lihat `e2e/uat/manual-checklist.md`. Skenario
+harness rules saat ini fokus pada `attendance`; rules koleksi lain belum
+dicakup.
 
 ## Menjalankan Verifikasi Lokal
 

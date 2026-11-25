@@ -27,7 +27,7 @@ module.exports = defineConfig([
     },
   },
   {
-    files: ['**/*.test.{ts,tsx}', 'jest.setup.ts'],
+    files: ['**/*.test.{js,ts,tsx}', 'jest.setup.ts'],
     languageOptions: {
       globals: globals.jest,
     },

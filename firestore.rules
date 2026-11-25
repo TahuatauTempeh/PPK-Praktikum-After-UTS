@@ -200,12 +200,18 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // ─── 8. NotificationLogs Collection (Sprint 3, Dev 4 via Functions) ─────
-    // Hanya Cloud Functions (Admin SDK) yang menulis; asisten boleh membaca.
+    // ─── 8. NotificationLogs Collection (Sprint 3, Dev 4 via Admin SDK) ─────
+    // Hanya Admin SDK (Cloud Functions atau worker Heroku) yang menulis;
+    // asisten boleh membaca.
 
     match /notificationLogs/{logKey} {
       allow read: if isAsisten();
       allow write: if false;
+    }
+
+    // Baseline internal worker notifikasi. Tidak boleh diakses klien.
+    match /notificationState/{docId} {
+      allow read, write: if false;
     }
 
     // ─── 8a. KesanPesan Collection (kesan pesan sesi + label AI) ────────────
