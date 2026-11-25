@@ -1,0 +1,30 @@
+appId: com.ppk.presensipraktikum
+name: Kirim kesan pesan native
+tags:
+  - android
+  - e2e
+  - uat
+---
+- launchApp:
+    clearState: true
+    permissions:
+      location: allow
+      notifications: allow
+- runFlow:
+    file: ../subflows/login.yaml
+- extendedWaitUntil:
+    visible: "Daftar sesi"
+    timeout: 20000
+- openLink:
+    link: "presensipraktikum://praktikan/sesi/${SESSION_ID}"
+    browser: false
+- tapOn: "Tulis kesan pesan"
+- tapOn:
+    id: "kesan-alasan"
+- inputText: "Kesan dari flow native Android."
+- hideKeyboard
+- tapOn:
+    id: "kesan-kirim"
+- extendedWaitUntil:
+    visible: "Kesan dan pesan kamu"
+    timeout: 30000

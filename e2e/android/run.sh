@@ -53,7 +53,27 @@ stop_geo() {
     GEO_PID=""
   fi
 }
-trap stop_geo EXIT
+
+restore_device() {
+  "${ADB[@]}" shell settings put secure location_mode 3 >/dev/null 2>&1 || true
+  "${ADB[@]}" shell pm grant com.ppk.presensipraktikum android.permission.ACCESS_FINE_LOCATION >/dev/null 2>&1 || true
+  "${ADB[@]}" shell pm grant com.ppk.presensipraktikum android.permission.ACCESS_COARSE_LOCATION >/dev/null 2>&1 || true
+}
+
+prepare_flow() {
+  local name="$1"
+  case "$name" in
+    izin-lokasi-dicabut)
+      "${ADB[@]}" shell pm revoke com.ppk.presensipraktikum android.permission.ACCESS_FINE_LOCATION >/dev/null 2>&1 || true
+      "${ADB[@]}" shell pm revoke com.ppk.presensipraktikum android.permission.ACCESS_COARSE_LOCATION >/dev/null 2>&1 || true
+      ;;
+    layanan-lokasi-mati)
+      "${ADB[@]}" shell settings put secure location_mode 0
+      ;;
+  esac
+}
+
+trap 'stop_geo; restore_device' EXIT
 
 start_geo() {
   local lon="$1"
@@ -81,6 +101,7 @@ run_flow() {
   [[ -n "$session_id" ]] || fail "Session ID untuk flow $name tidak ada di run.json."
 
   printf '\n== %s ==\n' "$name"
+  prepare_flow "$name"
   start_geo "$lon" "$lat"
 
   set +e
@@ -93,12 +114,14 @@ run_flow() {
     -e SESSION_ID="$session_id" \
     -e EMAIL="$email" \
     -e PASSWORD="$PASSWORD" \
+    -e REASON="$(node -e "const j=require('./$RUN_JSON');const f=j.flows['$name']??{};process.stdout.write(f.reason??'')")" \
     "${MAESTRO_DEVICE_ARGS[@]}" \
-    "$FLOWS/$name.yaml"
+    "$FLOWS/$name.yaml" </dev/null
   local status=$?
   set -e
 
   stop_geo
+  restore_device
 
   if [[ $status -ne 0 ]]; then
     "${ADB[@]}" logcat -d > "$ARTIFACTS/logcat.txt" 2>/dev/null || true
@@ -107,9 +130,9 @@ run_flow() {
   fi
 }
 
-while IFS=$'\t' read -r name tier lon lat email; do
+while IFS=$'\t' read -r -u 3 name tier lon lat email; do
   [[ -z "$name" || "$name" == \#* ]] && continue
   run_flow "$name" "$tier" "$lon" "$lat" "$email"
-done < "$MANIFEST"
+done 3< "$MANIFEST"
 
 TIER="$TIER" node e2e/android/verify.js

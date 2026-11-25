@@ -2,3 +2,8 @@
 presensi-dalam-radius	critical	110.4383	-7.0519	praktikan1@test.local
 presensi-luar-radius	critical	110.5	-7.25	praktikan2@test.local
 asisten-kehadiran	critical	110.4383	-7.0519	asisten@test.local
+izin-lokasi-ditolak	uat	110.4383	-7.0519	praktikan1@test.local
+layanan-lokasi-mati	uat	110.4383	-7.0519	praktikan1@test.local
+sesi-tanpa-lab	uat	110.4383	-7.0519	asisten@test.local
+izin-native	uat	110.4383	-7.0519	praktikan1@test.local
+kesan-pesan-native	uat	110.4383	-7.0519	praktikan1@test.local

@@ -1,0 +1,26 @@
+appId: com.ppk.presensipraktikum
+name: Sesi tanpa laboratorium
+tags:
+  - android
+  - e2e
+  - uat
+---
+- launchApp:
+    clearState: true
+    permissions:
+      location: allow
+      notifications: allow
+- runFlow:
+    file: ../subflows/login.yaml
+- extendedWaitUntil:
+    visible: "MENU"
+    timeout: 20000
+- openLink:
+    link: "presensipraktikum://asisten/sesi/${SESSION_ID}"
+    browser: false
+- tapOn:
+    id: "sesi-buka"
+- tapOn: "Ya, buka sesi"
+- extendedWaitUntil:
+    visible: "Lengkapi laboratorium sesi terlebih dahulu."
+    timeout: 20000
