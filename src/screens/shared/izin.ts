@@ -4,8 +4,7 @@
 
 import type { Timestamp } from 'firebase/firestore';
 
-import type { AiLabel } from '@/lib/ai-service';
-import type { PermissionRequest, PermissionStatus } from '@/lib/permission-service';
+import type { PermissionStatus } from '@/lib/permission-service';
 import type { Session } from '@/types';
 
 export const STATUS_IZIN: Record<PermissionStatus, string> = {
@@ -13,22 +12,6 @@ export const STATUS_IZIN: Record<PermissionStatus, string> = {
   approved: 'Diterima',
   rejected: 'Ditolak',
 };
-
-const LABEL_AI: Record<AiLabel, string> = {
-  positif: 'Positif',
-  netral: 'Netral',
-  negatif: 'Negatif',
-};
-
-/** "Negatif · keyakinan 69%", atau null bila AI gagal atau tidak mengenali alasannya. */
-export function ringkasAi(izin: Pick<PermissionRequest, 'aiLabel' | 'aiConfidence'>): string | null {
-  if (!izin.aiLabel) return null;
-  const persen = izin.aiConfidence === null ? '' : ` · keyakinan ${Math.round(izin.aiConfidence * 100)}%`;
-  return `${LABEL_AI[izin.aiLabel]}${persen}`;
-}
-
-export const AI_TIDAK_TERSEDIA = 'Hasil AI tidak tersedia';
-export const KETERANGAN_AI = 'Perkiraan nada kalimat dari model sentimen, bukan penilaian alasan.';
 
 export type KeadaanSesi = 'memuat' | 'siap' | 'galat';
 

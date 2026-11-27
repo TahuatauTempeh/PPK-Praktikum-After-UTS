@@ -15,12 +15,9 @@ import { useUserPraktikan } from '@/screens/praktikan/guard';
 import { urutkanSesi } from '@/screens/praktikan/selectors';
 import { usePraktikanSchedule } from '@/screens/praktikan/use-praktikan-schedule';
 import {
-  AI_TIDAK_TERSEDIA,
-  KETERANGAN_AI,
   STATUS_IZIN,
   formatWaktuIzin,
   namaSesi,
-  ringkasAi,
   type KeadaanSesi,
 } from '@/screens/shared/izin';
 import { fonts, typography, useTheme } from '@/theme';
@@ -137,7 +134,6 @@ export default function IzinScreen() {
 
 function KartuIzin({ izin, session, keadaanSesi }: { izin: PermissionRequest; session?: Session; keadaanSesi: KeadaanSesi }) {
   const theme = useTheme();
-  const ai = ringkasAi(izin);
   const warna = {
     pending: { latar: theme.colors.softSurface, teks: theme.colors.textSecondary },
     approved: { latar: theme.colors.successSoft, teks: theme.colors.success },
@@ -171,12 +167,6 @@ function KartuIzin({ izin, session, keadaanSesi }: { izin: PermissionRequest; se
       </View>
 
       <Text style={[typography.body, { color: theme.colors.textPrimary }]}>{izin.reason}</Text>
-
-      <View style={[styles.bagian, { borderTopColor: theme.colors.hairline }]}>
-        <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>Analisis AI</Text>
-        <Text style={[typography.caption, styles.tebal, { color: theme.colors.textPrimary }]}>{ai ?? AI_TIDAK_TERSEDIA}</Text>
-        {ai ? <Text style={[typography.caption, { color: theme.colors.textSecondary }]}>{KETERANGAN_AI}</Text> : null}
-      </View>
 
       {izin.status !== 'pending' ? (
         <View style={[styles.bagian, { borderTopColor: theme.colors.hairline }]}>

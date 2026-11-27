@@ -63,7 +63,7 @@ export function FormIzin({ user, sessions, sesiBerizin, memuatSesi, galatSesi: g
     sedangKirim.current = true;
     setMengirim(true);
     try {
-      const { izin, tertunda } = await ajukanIzin({
+      const { tertunda } = await ajukanIzin({
         sessionId,
         userId: user.id,
         userName: user.name,
@@ -72,12 +72,11 @@ export function FormIzin({ user, sessions, sesiBerizin, memuatSesi, galatSesi: g
       });
       setSessionId('');
       setAlasan('');
-      const status = tertunda
-        ? 'Kamu sedang offline. Izin disimpan di perangkat dan terkirim otomatis saat koneksi kembali.'
-        : 'Izin terkirim dan menunggu tinjauan asisten.';
       setHasil({
         jenis: 'sukses',
-        pesan: izin.aiLabel ? status : `${status} Hasil AI tidak tersedia untuk alasan ini.`,
+        pesan: tertunda
+          ? 'Kamu sedang offline. Izin disimpan di perangkat dan terkirim otomatis saat koneksi kembali.'
+          : 'Izin terkirim dan menunggu tinjauan asisten.',
       });
     } catch (error) {
       setHasil({ jenis: 'galat', pesan: pesanGalatIzin(error) });

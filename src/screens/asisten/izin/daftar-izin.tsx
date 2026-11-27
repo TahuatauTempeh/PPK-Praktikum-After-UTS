@@ -8,7 +8,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { pantauSemuaIzin, type PermissionRequest, type PermissionStatus } from '@/lib/permission-service';
 import { HeroCard } from '@/screens/shared/components/hero-card';
-import { AI_TIDAK_TERSEDIA, STATUS_IZIN, formatWaktuIzin, namaSesi, ringkasAi } from '@/screens/shared/izin';
+import { STATUS_IZIN, formatWaktuIzin, namaSesi } from '@/screens/shared/izin';
 import { tokens, useThemedStyles, useTheme, type Theme } from '@/theme';
 
 import { AssistantScreen } from '../components/assistant-screen';
@@ -184,7 +184,6 @@ export default function DaftarIzin({ onBack, onOpen }: Props) {
 function IzinCard({ item, sessionName, onOpen }: { item: PermissionRequest; sessionName: string; onOpen: () => void }) {
   const styles = useThemedStyles(gaya);
   const pending = item.status === 'pending';
-  const ai = ringkasAi(item);
 
   return (
     <View style={styles.card}>
@@ -199,15 +198,6 @@ function IzinCard({ item, sessionName, onOpen }: { item: PermissionRequest; sess
       </View>
 
       <AssistantText numberOfLines={3}>{item.reason}</AssistantText>
-
-      <View style={styles.aiRow}>
-        <AssistantText variant="caption" tone="secondary">
-          Analisis AI
-        </AssistantText>
-        <AssistantText variant="caption" style={styles.aiValue}>
-          {ai ?? AI_TIDAK_TERSEDIA}
-        </AssistantText>
-      </View>
 
       <Pressable
         accessibilityRole="button"
@@ -301,8 +291,6 @@ const gaya = (theme: Theme) =>
     nameRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 },
     name: { flex: 1, minWidth: 0, fontSize: 15, lineHeight: 20, fontFamily: tokens.fonts.bold, letterSpacing: -0.2 },
     meta: { fontSize: 11, lineHeight: 16 },
-    aiRow: { gap: 4, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.colors.hairline },
-    aiValue: { fontFamily: tokens.fonts.semibold },
     badge: {
       flexDirection: 'row',
       alignItems: 'center',

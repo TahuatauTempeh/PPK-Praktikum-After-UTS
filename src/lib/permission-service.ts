@@ -1,7 +1,7 @@
 /**
  * Layanan koleksi permissionRequests (task 4.3, 4.4, 4.7).
- * Skema mengikuti `src/types/index.ts` dan README; aiLabel berisi label sentimen
- * dari ai-service.
+ * Skema mengikuti `src/types/index.ts` dan README. Izin tidak dianalisis AI; dokumen lama yang
+ * masih punya aiLabel/aiConfidence diabaikan.
  */
 
 import {
@@ -20,7 +20,6 @@ import {
   type DocumentSnapshot,
 } from 'firebase/firestore';
 
-import { analisisAlasan, type AiLabel } from '@/lib/ai-service';
 import { logActionInBatch } from '@/lib/firebase/audit';
 import { mapFirebaseError } from '@/lib/firebase/errors';
 import { COLLECTIONS, getDb } from '@/lib/firebase/firestore';
@@ -33,8 +32,6 @@ export interface PermissionRequest {
   userId: string;
   userName: string;
   reason: string;
-  aiLabel: AiLabel | null;
-  aiConfidence: number | null;
   status: PermissionStatus;
   reviewedBy: string | null;
   reviewedAt: Timestamp | null;
@@ -76,7 +73,6 @@ export function pesanGalatIzin(error: unknown): string {
   return PESAN[kodeGalat(error)] ?? mapFirebaseError(error).message;
 }
 
-const AI_LABELS: readonly AiLabel[] = ['negatif', 'netral', 'positif'];
 const STATUSES: readonly PermissionStatus[] = ['pending', 'approved', 'rejected'];
 
 function teks(nilai: unknown): string {
@@ -99,8 +95,6 @@ export function toPermissionRequest(snapshot: DocumentSnapshot<DocumentData>): P
     userId: teks(data.userId),
     userName: teks(data.userName),
     reason: teks(data.reason),
-    aiLabel: AI_LABELS.includes(data.aiLabel) ? data.aiLabel : null,
-    aiConfidence: typeof data.aiConfidence === 'number' ? data.aiConfidence : null,
     status: STATUSES.includes(data.status) ? data.status : 'pending',
     reviewedBy: teksAtauNull(data.reviewedBy),
     reviewedAt: waktu(data.reviewedAt),
@@ -179,15 +173,12 @@ export async function ajukanIzin(input: AjukanIzinInput): Promise<HasilAjukan> {
   const gandaDiServer = await cekGandaDiServer(input.userId, input.sessionId);
   if (gandaDiServer) throw galat(KODE.duplikat);
 
-  const ai = await analisisAlasan(reason);
   const ref = doc(collection(getDb(), COLLECTIONS.permissionRequests));
   const data = {
     sessionId: input.sessionId,
     userId: input.userId,
     userName: input.userName,
     reason,
-    aiLabel: ai.label,
-    aiConfidence: ai.confidence,
     status: 'pending' as const,
     reviewedBy: null,
     reviewedAt: null,

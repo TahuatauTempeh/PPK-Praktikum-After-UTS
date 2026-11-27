@@ -371,7 +371,8 @@ platform secara langsung dari layar.
   fallback aktif; nilai itu masih client-enforced sampai callable ter-deploy.
 - Izin berstatus `pending`, `approved`, atau `rejected`; praktikan hanya membuat
   `pending`, asisten yang meninjau.
-- Label AI bersifat saran. `null` berarti hasil tidak tersedia, bukan `netral`.
+- AI hanya dipakai untuk kesan pesan, tidak untuk izin. Labelnya bersifat saran;
+  `null` berarti hasil tidak tersedia, bukan `netral`.
 - Setiap tambah/ubah/hapus data praktikum harus menulis audit log lewat
   `logAction`/`logActionInBatch`.
 - ID enrollment adalah `{classId}_{uid}`. Jangan membuat mekanisme duplikat lain.
@@ -593,7 +594,8 @@ Uji alur yang terdampak secara manual:
 - CRUD kelas, peserta, dan sesi;
 - buka/tutup sesi;
 - presensi saat sesi `open`, penolakan saat `closed`, dan pencegahan duplikat;
-- pengajuan izin, hasil AI, dan peninjauan asisten;
+- pengajuan izin dan peninjauan asisten (tanpa hasil AI);
+- kesan pesan setelah sesi ditutup dan label AI di sisi asisten;
 - promosi peran di tab Admin.
 
 Untuk perubahan UI native, uji di Android development build, bukan hanya web.

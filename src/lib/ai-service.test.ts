@@ -1,6 +1,6 @@
 import { createSentimentClassifier, type SentimentPrediction } from '../../ai/sentiment';
 
-import { analisisAlasan, analisisSentimen } from './ai-service';
+import { analisisSentimen } from './ai-service';
 
 jest.mock('../../ai/sentiment', () => ({
   createSentimentClassifier: jest.fn(),
@@ -18,7 +18,7 @@ const hasilPositif: SentimentPrediction = {
   experimental: true,
 };
 
-describe('analisisAlasan', () => {
+describe('analisisSentimen', () => {
   beforeAll(() => {
     createClassifierMock.mockReturnValue((text: string): SentimentPrediction => {
       if (text === 'tanpa-hasil') {
@@ -38,14 +38,14 @@ describe('analisisAlasan', () => {
   });
 
   it('mengembalikan label dan confidence dari skor model', async () => {
-    const hasil = await analisisAlasan('alasan yang jelas');
+    const hasil = await analisisSentimen('teks yang jelas');
 
     expect(hasil.label).toBe('positif');
     expect(hasil.confidence).toBeCloseTo(0.67, 2);
   });
 
   it('mengembalikan null saat model tidak menemukan kata yang dikenal', async () => {
-    await expect(analisisAlasan('tanpa-hasil')).resolves.toEqual({
+    await expect(analisisSentimen('tanpa-hasil')).resolves.toEqual({
       label: null,
       confidence: null,
     });
@@ -54,22 +54,16 @@ describe('analisisAlasan', () => {
   it('mengembalikan null dan tidak melempar saat model gagal', async () => {
     jest.spyOn(console, 'warn').mockImplementation(() => {});
 
-    await expect(analisisAlasan('melempar')).resolves.toEqual({
+    await expect(analisisSentimen('melempar')).resolves.toEqual({
       label: null,
       confidence: null,
     });
   });
 
   it('mengembalikan null saat batas waktu habis', async () => {
-    await expect(analisisAlasan('alasan yang jelas', 0)).resolves.toEqual({
+    await expect(analisisSentimen('teks yang jelas', 0)).resolves.toEqual({
       label: null,
       confidence: null,
     });
-  });
-});
-
-describe('analisisSentimen', () => {
-  it('memakai fungsi yang sama dengan analisisAlasan untuk fitur izin', () => {
-    expect(analisisAlasan).toBe(analisisSentimen);
   });
 });

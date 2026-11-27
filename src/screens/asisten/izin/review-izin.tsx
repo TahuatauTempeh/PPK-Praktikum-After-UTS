@@ -9,7 +9,7 @@ import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react
 
 import { useAuth } from '@/context/auth-context';
 import { pantauIzin, pesanGalatIzin, tinjauIzin, type PermissionRequest } from '@/lib/permission-service';
-import { AI_TIDAK_TERSEDIA, KETERANGAN_AI, formatWaktuIzin, namaSesi, ringkasAi } from '@/screens/shared/izin';
+import { formatWaktuIzin, namaSesi } from '@/screens/shared/izin';
 import { tokens, useThemedStyles, useTheme, type Theme } from '@/theme';
 
 import { AssistantScreen } from '../components/assistant-screen';
@@ -96,7 +96,6 @@ export default function ReviewIzin({ id, onBack }: Props) {
   const session = sessions.find(item => item.id === request.sessionId);
   const sessionName = namaSesi(session, keadaanSesi);
   const pending = request.status === 'pending';
-  const ai = ringkasAi(request);
   const reviewer = request.reviewedBy && request.reviewedBy === profile?.id ? 'kamu' : 'asisten';
 
   async function save(decision: 'approved' | 'rejected') {
@@ -167,16 +166,6 @@ export default function ReviewIzin({ id, onBack }: Props) {
             <AssistantText variant="sectionTitle" accessibilityRole="header">Alasan</AssistantText>
             <View style={styles.panel}>
               <AssistantText>{request.reason}</AssistantText>
-            </View>
-          </View>
-
-          <View style={styles.section}>
-            <AssistantText variant="sectionTitle" accessibilityRole="header">Analisis AI</AssistantText>
-            <View style={styles.panel}>
-              <AssistantText variant="label">{ai ?? AI_TIDAK_TERSEDIA}</AssistantText>
-              <AssistantText variant="caption" tone="secondary">
-                {ai ? KETERANGAN_AI : 'Model tidak mengenali kata dalam alasan ini, jadi tinjau alasannya langsung.'}
-              </AssistantText>
             </View>
           </View>
 

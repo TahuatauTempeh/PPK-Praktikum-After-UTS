@@ -51,8 +51,8 @@ test('[UAT-REG-06] tolak izin dan kunci setelah review', { tag: '@uat' }, async 
   await expect(chip).toBeDisabled();
 });
 
-test('[extra] label AI tampil atau null aman', { tag: '@uat' }, async ({ page, scenario }) => {
-  const reason = `Alasan yang jelas untuk UAT label AI ${Date.now()}.`;
+test('[extra] izin terkirim tanpa analisis AI', { tag: '@uat' }, async ({ page, scenario }) => {
+  const reason = `Alasan yang jelas untuk UAT izin tanpa AI ${Date.now()}.`;
 
   await login(page, 'praktikan1@test.local');
   await waitForPraktikanHome(page);
@@ -64,9 +64,8 @@ test('[extra] label AI tampil atau null aman', { tag: '@uat' }, async ({ page, s
 
   await expect(page.getByText(/Izin terkirim/)).toBeVisible({ timeout: 30_000 });
 
-  // Riwayat seed juga punya label AI ("Negatif"), jadi cek kartu milik alasan ini.
+  // AI hanya dipakai di kesan pesan, jadi kartu izin tidak boleh menampilkan hasil AI.
   const kartu = page.getByText(reason, { exact: true }).locator('xpath=..');
-  await expect(
-    kartu.getByText(/^(Positif|Netral|Negatif|Hasil AI tidak tersedia)/),
-  ).toBeVisible({ timeout: 30_000 });
+  await expect(kartu).toBeVisible({ timeout: 30_000 });
+  await expect(kartu.getByText(/Analisis AI|Hasil AI tidak tersedia/)).toHaveCount(0);
 });
