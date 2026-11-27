@@ -1,6 +1,6 @@
 # Presensi Praktikum
 
-Aplikasi mobile (dan web) untuk presensi praktikum. Asisten mengelola kelas, peserta, dan sesi, lalu membuka dan menutup sesi. Praktikan mengisi presensi hanya saat sesi dibuka, dan bisa mengajukan izin yang dinilai awal oleh model sentimen lokal sebelum ditinjau asisten.
+Aplikasi mobile (dan web) untuk presensi praktikum. Asisten mengelola kelas, peserta, dan sesi, lalu membuka dan menutup sesi. Praktikan mengisi presensi hanya saat sesi dibuka, dan bisa mengajukan izin yang ditinjau asisten. Setelah sesi ditutup, praktikan yang hadir bisa menulis kesan pesan yang dinilai oleh model sentimen lokal.
 
 Dibuat dengan Expo (React Native) + Expo Router, dengan Firebase Authentication dan Cloud Firestore sebagai backend.
 
@@ -39,7 +39,7 @@ Versi di bawah diambil dari `package.json`. Selalu pasang paket Expo dengan `npx
 | Web | `react-native-web`, `react-dom` |
 | Lint | ESLint 9 + `eslint-config-expo` |
 
-Model AI (sentimen alasan izin) berada di folder `ai/` dan berjalan langsung di perangkat, tanpa internet dan tanpa dependensi tambahan.
+Model AI (sentimen kesan pesan) berada di folder `ai/` dan berjalan langsung di perangkat, tanpa internet dan tanpa dependensi tambahan.
 
 ## 2. Prasyarat
 
@@ -280,7 +280,7 @@ Penjagaan rute ada di `src/app/_layout.tsx` (`Stack.Protected`): pengguna tanpa 
 | `laboratories/{id}` | `name`, `code`, `building`, `floor`, `room`, `latitude`, `longitude`, `radiusMeters` (10–500), `description`, `isActive`, `createdAt`, `updatedAt`, `updatedBy` |
 | `sessions/{id}` | `classId`, `title`, `date` (`YYYY-MM-DD`), `startTime`, `endTime` (`HH:MM`), `room`, `assistantId`, `assistantName` (nama asisten saat sesi dibuat, kosong pada sesi lama), `laboratoryId`, `status` (`scheduled` / `open` / `closed`), `createdAt`, `openedAt`, `closedAt` |
 | `attendance/{sessionId}_{uid}` | `sessionId`, `userId`, `userName`, `userNim`, `recordedAt`, bukti lokasi (`latitude`, `longitude`, `accuracyMeters`, `distanceMeters`, `radiusMeters`, `laboratoryId`, `locationVerifiedAt`, `mocked`, `source`) |
-| `permissionRequests/{id}` | `userId`, `userName`, `sessionId`, `reason`, `status` (`pending` / `approved` / `rejected`), hasil AI (`aiLabel`, `aiConfidence`), peninjauan (`reviewedBy`, `reviewedAt`, `reviewNote`), `createdAt` |
+| `permissionRequests/{id}` | `userId`, `userName`, `sessionId`, `reason`, `status` (`pending` / `approved` / `rejected`), peninjauan (`reviewedBy`, `reviewedAt`, `reviewNote`), `createdAt` |
 | `kesanPesan/{sessionId}_{uid}` | `sessionId`, `classId`, `userId`, `userName`, `text` (10 sampai 500 karakter), hasil AI (`aiLabel`, `aiConfidence`; `null` berarti tidak terbaca), `createdAt`. Diisi praktikan yang hadir setelah sesi ditutup, satu kali per sesi; label AI hanya ditampilkan ke asisten |
 | `auditLogs/{id}` | `action`, `collection`, `docId`, `actorUid`, `actorRole`, `before`, `after`, `timestamp` |
 
@@ -333,7 +333,7 @@ Berdasarkan isi kode saat ini.
 | **Dev 1: Fondasi Sprint 3** | Ada: CRUD laboratorium + validasi, `listenAllClasses`, helper Haversine dan validasi radius, `device-location` foreground, `laboratoryId` pada sesi, guard lab aktif saat buka sesi, rules `laboratories` + validasi sesi, dan route peta. |
 | **Dev 2: Data praktikum** | Ada: CRUD kelas (`class-service`, layar Kelas), CRUD peserta (`enrollment-service`, layar Peserta, cegah daftar ganda), CRUD jadwal dan sesi (`session-service`, layar Atur Sesi, validasi tanggal dan jam), filter jadwal dan riwayat praktikan lewat enrollment (`usePraktikanSchedule`), dan audit log pada setiap tambah/ubah/hapus. Sebagian: penggantian seluruh data dummy ke Firestore belum tuntas (lihat keterbatasan). |
 | **Dev 3: Sesi, presensi & peta** | Ada: buka/tutup sesi dengan audit log, presensi hanya saat sesi `open`, pencegahan presensi ganda, rekap realtime, peta laboratorium OpenStreetMap/Leaflet, aktivitas Sekarang/Berikutnya, dan mode daftar. |
-| **Dev 4: Izin & AI** | Ada: form izin, modul AI dengan timeout dan fallback, penyimpanan `permissionRequests`, riwayat izin praktikan, daftar dan peninjauan izin oleh asisten. |
+| **Dev 4: Izin & AI** | Ada: form izin (tanpa analisis AI sejak Sprint 3), modul AI dengan timeout dan fallback (kini hanya untuk kesan pesan), penyimpanan `permissionRequests`, riwayat izin praktikan, daftar dan peninjauan izin oleh asisten. |
 | **E2E** | Ada: harness rules Firestore (18 skenario), 5 flow critical web Playwright (presensi, luar radius, kehadiran asisten, lab/siklus sesi, izin), dan 3 flow critical Android Maestro (presensi, luar radius, kehadiran asisten). |
 
 E2E Android dijalankan dengan Maestro pada emulator API 35. Build APK E2E

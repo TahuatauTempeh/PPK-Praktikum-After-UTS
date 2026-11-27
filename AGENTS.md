@@ -309,12 +309,14 @@ directly from screens.
 - Permission status values are `pending`, `approved`, and `rejected`.
 - A praktikan creates a `pending` request for their own `userId`; only an
   assistant may review it. Reviewed requests cannot be changed by the praktikan.
-- The local sentiment model returns `positif`, `netral`, `negatif`, or `null`.
-  It is advisory only: never auto-approve or auto-reject from the AI label.
-- `null` means “tidak terbaca / tidak tersedia”, not `netral`. The form must still
-  save the permission request and show “Hasil AI tidak tersedia”.
+- Permission requests are not analyzed by AI. Do not add an AI label to the
+  permission form, history, or review screens. Older documents may still carry
+  `aiLabel`/`aiConfidence`; the app ignores them.
+- The local sentiment model is used only for “kesan pesan”. It returns
+  `positif`, `netral`, `negatif`, or `null`; `null` means “tidak terbaca / tidak
+  tersedia”, not `netral`. The label is advisory and shown to assistants only.
 - `ai-service.ts` wraps the model with a timeout and fallback. Keep the model
-  on-device; do not send reasons to a network service.
+  on-device; do not send text to a network service.
 
 ### Audit log
 
@@ -373,9 +375,8 @@ directly from screens.
 
 The sentiment model lives in `ai/` (`model-edom.json`, `sentiment.js`) and runs
 on-device without network access. `src/lib/ai-service.ts` is the only app wrapper;
-use `analisisSentimen` (permissions still call its alias `analisisAlasan`) rather
-than importing the model directly. It labels permission reasons and session
-"kesan pesan" (`kesanPesan` collection); labels are shown to assistants only and
+use `analisisSentimen` rather than importing the model directly. It labels only
+session "kesan pesan" (`kesanPesan` collection); labels are shown to assistants only and
 `null` means unreadable, not neutral. The model was
 trained on course-evaluation comments, not practicum reasons, so treat its output
 as a weak signal. The training files mentioned in `ai/README.md` are not present
