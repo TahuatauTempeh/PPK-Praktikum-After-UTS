@@ -35,10 +35,6 @@ jest.mock('firebase/firestore', () => {
   };
 });
 
-jest.mock('@/lib/ai-service', () => ({
-  analisisAlasan: jest.fn(),
-}));
-
 jest.mock('@/lib/firebase/audit', () => ({
   logActionInBatch: jest.fn(),
 }));
@@ -92,29 +88,26 @@ describe('toPermissionRequest', () => {
       userId: 'u1',
       userName: 'Bunga Maharani',
       reason: 'Sakit dan sudah memberi surat.',
-      aiLabel: 'positif',
-      aiConfidence: 0.8,
       status: 'pending',
       reviewedBy: null,
       reviewNote: null,
       menungguServer: true,
     });
     expect(izin.createdAt).toBeInstanceOf(Timestamp);
+    // Dokumen lama masih punya hasil AI; izin tidak lagi memakai AI, jadi field itu dibuang.
+    expect(izin).not.toHaveProperty('aiLabel');
+    expect(izin).not.toHaveProperty('aiConfidence');
   });
 
   it('mengganti nilai yang tidak dikenal dengan default aman', () => {
     const izin = toPermissionRequest(
       snapshot('p2', {
-        aiLabel: 'tidak-dikenal',
-        aiConfidence: '0.9',
         status: 'menunggu',
         reviewedBy: '',
         createdAt: '2026-11-20',
       })
     );
 
-    expect(izin.aiLabel).toBeNull();
-    expect(izin.aiConfidence).toBeNull();
     expect(izin.status).toBe('pending');
     expect(izin.reviewedBy).toBeNull();
     expect(izin.createdAt).toBeNull();

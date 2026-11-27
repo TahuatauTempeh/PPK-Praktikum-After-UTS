@@ -1,6 +1,6 @@
 /**
  * Modul AI sentimen: menilai nada teks dengan model EDOM lokal di folder ai/.
- * Dipakai untuk alasan izin (task 4.2) dan kesan pesan sesi.
+ * Dipakai hanya untuk kesan pesan sesi.
  *
  * Model berjalan di perangkat, jadi tidak butuh internet. Labelnya positif/netral/negatif,
  * bukan valid/invalid: model dilatih dari komentar evaluasi perkuliahan, sehingga hasilnya
@@ -69,6 +69,3 @@ export async function analisisSentimen(teks: string, batasMs: number = AI_TIMEOU
     clearTimeout(penanda);
   }
 }
-
-/** Nama lama untuk fitur izin; perilakunya sama dengan analisisSentimen. */
-export const analisisAlasan = analisisSentimen;
